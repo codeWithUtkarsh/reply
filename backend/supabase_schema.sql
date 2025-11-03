@@ -50,6 +50,36 @@ CREATE TABLE IF NOT EXISTS quiz_results (
     correct_answers INT NOT NULL,
     total_questions INT NOT NULL,
     details JSONB NOT NULL,
+    weak_areas JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- NEW: User attempts table for tracking each answer attempt
+CREATE TABLE IF NOT EXISTS user_attempts (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    video_id VARCHAR(255) NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
+    question_id VARCHAR(255) NOT NULL,
+    question_type VARCHAR(50) NOT NULL, -- 'flashcard' or 'quiz'
+    selected_answer INT NOT NULL,
+    correct_answer INT NOT NULL,
+    is_correct BOOLEAN NOT NULL,
+    attempt_number INT DEFAULT 1,
+    timestamp FLOAT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- NEW: Learning reports table
+CREATE TABLE IF NOT EXISTS learning_reports (
+    id BIGSERIAL PRIMARY KEY,
+    report_id VARCHAR(255) UNIQUE NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    video_id VARCHAR(255) NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
+    quiz_id VARCHAR(255) REFERENCES quizzes(quiz_id) ON DELETE CASCADE,
+    word_frequency JSONB NOT NULL,
+    performance_stats JSONB NOT NULL,
+    attempt_breakdown JSONB NOT NULL,
+    key_takeaways TEXT[],
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -59,6 +89,11 @@ CREATE INDEX IF NOT EXISTS idx_questions_video_id ON questions(video_id);
 CREATE INDEX IF NOT EXISTS idx_quizzes_video_id ON quizzes(video_id);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_video ON user_progress(user_id, video_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_results_quiz_id ON quiz_results(quiz_id);
+CREATE INDEX IF NOT EXISTS idx_user_attempts_user_id ON user_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_attempts_video_id ON user_attempts(video_id);
+CREATE INDEX IF NOT EXISTS idx_user_attempts_question_id ON user_attempts(question_id);
+CREATE INDEX IF NOT EXISTS idx_learning_reports_report_id ON learning_reports(report_id);
+CREATE INDEX IF NOT EXISTS idx_learning_reports_user_video ON learning_reports(user_id, video_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
@@ -66,6 +101,8 @@ ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quizzes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quiz_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_reports ENABLE ROW LEVEL SECURITY;
 
 -- Policies (adjust based on your authentication needs)
 -- For now, allow all operations (modify for production)
@@ -83,4 +120,10 @@ CREATE POLICY "Allow all operations on user_progress" ON user_progress
     FOR ALL USING (true) WITH CHECK (true);
 
 CREATE POLICY "Allow all operations on quiz_results" ON quiz_results
+    FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on user_attempts" ON user_attempts
+    FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on learning_reports" ON learning_reports
     FOR ALL USING (true) WITH CHECK (true);
