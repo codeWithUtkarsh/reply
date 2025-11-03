@@ -156,6 +156,7 @@ export default function LearnPage() {
               videoUrl={videoData?.url}
               onTimeUpdate={setCurrentTime}
               seekTo={seekTimestamp}
+              shouldPause={showFlashcard}
             />
 
             {/* Quiz Section */}

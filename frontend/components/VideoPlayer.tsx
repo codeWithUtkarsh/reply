@@ -7,6 +7,7 @@ interface VideoPlayerProps {
   videoUrl: string;
   onTimeUpdate?: (currentTime: number) => void;
   seekTo?: number | null;
+  shouldPause?: boolean;
 }
 
 // Declare YouTube IFrame API types
@@ -21,6 +22,7 @@ export default function VideoPlayer({
   videoUrl,
   onTimeUpdate,
   seekTo,
+  shouldPause,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -137,6 +139,23 @@ export default function VideoPlayer({
       }
     }
   }, [seekTo, isYouTube, playerReady]);
+
+  // Handle pause/resume
+  useEffect(() => {
+    if (shouldPause === undefined) return;
+
+    if (shouldPause) {
+      // Pause the video
+      if (isYouTube && playerRef.current && playerReady) {
+        playerRef.current.pauseVideo();
+      } else if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    } else {
+      // Resume is handled by user clicking play
+      // We don't auto-resume to let the user control when to continue
+    }
+  }, [shouldPause, isYouTube, playerReady]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
