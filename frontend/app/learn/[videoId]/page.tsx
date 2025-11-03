@@ -5,13 +5,27 @@ import { useParams, useRouter } from 'next/navigation';
 import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
-import { videoApi, questionsApi, quizApi, FlashCard, Question, QuizResult } from '@/lib/api';
+import LearningReportComponent from '@/components/LearningReport';
+import { videoApi, questionsApi, quizApi, reportsApi, FlashCard, Question, QuizResult, LearningReport } from '@/lib/api';
 import { Loader2, BookOpen, CheckCircle, ArrowLeft } from 'lucide-react';
 
 export default function LearnPage() {
   const params = useParams();
   const router = useRouter();
   const videoId = params.videoId as string;
+
+  // Generate a simple user ID (in production, use actual auth)
+  const [userId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      let id = localStorage.getItem('preply_user_id');
+      if (!id) {
+        id = `user_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('preply_user_id', id);
+      }
+      return id;
+    }
+    return 'anonymous';
+  });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,6 +39,8 @@ export default function LearnPage() {
   const [quizData, setQuizData] = useState<{ quiz_id: string; questions: Question[] } | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [seekTimestamp, setSeekTimestamp] = useState<number | null>(null);
+  const [learningReport, setLearningReport] = useState<LearningReport | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   useEffect(() => {
     loadVideo();
@@ -62,8 +78,25 @@ export default function LearnPage() {
     }
   };
 
-  const handleFlashcardAnswer = (questionId: string, selectedAnswer: number) => {
+  const handleFlashcardAnswer = async (questionId: string, selectedAnswer: number) => {
     setAnsweredFlashcards((prev) => new Set([...prev, questionId]));
+
+    // Record the attempt in the database
+    if (currentFlashcard) {
+      try {
+        await reportsApi.recordAttempt(
+          userId,
+          videoId,
+          questionId,
+          'flashcard',
+          selectedAnswer,
+          currentFlashcard.question.correct_answer,
+          currentTime
+        );
+      } catch (err) {
+        console.error('Failed to record flashcard attempt:', err);
+      }
+    }
   };
 
   const handleCloseFlashcard = () => {
@@ -87,10 +120,39 @@ export default function LearnPage() {
     if (!quizData) return;
 
     try {
+      // Record all quiz attempts
+      for (const answer of answers) {
+        const question = quizData.questions.find(q => q.id === answer.question_id);
+        if (question) {
+          await reportsApi.recordAttempt(
+            userId,
+            videoId,
+            answer.question_id,
+            'quiz',
+            answer.selected_answer,
+            question.correct_answer,
+            answer.timestamp
+          );
+        }
+      }
+
+      // Submit quiz to get results
       const result = await quizApi.submitQuiz(quizData.quiz_id, answers);
       setQuizResult(result);
+
+      // Generate learning report
+      setGeneratingReport(true);
+      try {
+        const reportResponse = await reportsApi.generateReport(userId, videoId, quizData.quiz_id);
+        setLearningReport(reportResponse.report);
+      } catch (err) {
+        console.error('Failed to generate report:', err);
+      } finally {
+        setGeneratingReport(false);
+      }
     } catch (err: any) {
       alert('Failed to submit quiz');
+      console.error('Quiz submission error:', err);
     }
   };
 
@@ -160,7 +222,7 @@ export default function LearnPage() {
             />
 
             {/* Quiz Section */}
-            {showQuiz && quizData ? (
+            {showQuiz && quizData && !learningReport ? (
               <div className="mt-8">
                 <QuizComponent
                   questions={quizData.questions}
@@ -168,6 +230,20 @@ export default function LearnPage() {
                   onSubmit={handleSubmitQuiz}
                   onSeekTo={handleSeekTo}
                 />
+                {generatingReport && (
+                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                      <p className="text-blue-800 dark:text-blue-200">
+                        Generating your learning report...
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : learningReport ? (
+              <div className="mt-8">
+                <LearningReportComponent report={learningReport} />
               </div>
             ) : (
               !showQuiz &&

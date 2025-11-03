@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { Question, QuizResult } from '@/lib/api';
-import { CheckCircle, XCircle, Award, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Award, AlertCircle, Loader2 } from 'lucide-react';
 import { formatTime } from '@/lib/utils';
 
 interface QuizComponentProps {
   questions: Question[];
   quizId: string;
-  onSubmit: (answers: Array<{ question_id: string; selected_answer: number; timestamp: number }>) => void;
+  onSubmit: (answers: Array<{ question_id: string; selected_answer: number; timestamp: number }>) => Promise<void>;
   onSeekTo?: (timestamp: number) => void;
 }
 
@@ -20,8 +20,7 @@ export default function QuizComponent({
 }: QuizComponentProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [result, setResult] = useState<QuizResult | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
     setAnswers((prev) => ({
@@ -49,8 +48,14 @@ export default function QuizComponent({
       timestamp: 0,
     }));
 
-    onSubmit(formattedAnswers);
-    setSubmitted(true);
+    // Call the parent's onSubmit which will handle recording attempts and generating report
+    setSubmitting(true);
+    try {
+      await onSubmit(formattedAnswers);
+    } catch (err) {
+      console.error('Failed to submit quiz:', err);
+      setSubmitting(false);
+    }
   };
 
   const handleReviewSegment = (timestamp: number) => {
@@ -59,10 +64,7 @@ export default function QuizComponent({
     }
   };
 
-  if (submitted && result) {
-    return <QuizResults result={result} onReviewSegment={handleReviewSegment} />;
-  }
-
+  // Remove the internal result view since parent handles report display
   const question = questions[currentQuestion];
   const selectedAnswer = answers[question.id];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -138,10 +140,19 @@ export default function QuizComponent({
         {currentQuestion === questions.length - 1 ? (
           <button
             onClick={handleSubmitQuiz}
-            disabled={!allAnswered}
-            className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            disabled={!allAnswered || submitting}
+            className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
-            {allAnswered ? 'Submit Quiz' : `Answer ${questions.length - Object.keys(answers).length} more question(s)`}
+            {submitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Submitting...
+              </>
+            ) : allAnswered ? (
+              'Submit Quiz'
+            ) : (
+              `Answer ${questions.length - Object.keys(answers).length} more question(s)`
+            )}
           </button>
         ) : (
           <button
