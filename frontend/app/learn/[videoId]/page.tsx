@@ -273,39 +273,8 @@ export default function LearnPage() {
           {/* Compact Timeline Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sticky top-8">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                Progress
-              </h2>
-
-              {/* Compact Progress Bar */}
-              <div className="mb-4">
-                <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  <span>{answeredFlashcards.size}/{flashcards.length}</span>
-                  <span>
-                    {flashcards.length > 0
-                      ? Math.round((answeredFlashcards.size / flashcards.length) * 100)
-                      : 0}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                  <div
-                    className="bg-primary-600 h-1.5 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${
-                        flashcards.length > 0
-                          ? (answeredFlashcards.size / flashcards.length) * 100
-                          : 0
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-
               {/* Vertical Timeline */}
               <div className="space-y-1">
-                <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Timeline
-                </h3>
                 <div className="max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
                   <div className="relative">
                     {/* Timeline line */}
