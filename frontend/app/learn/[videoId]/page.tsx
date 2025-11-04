@@ -211,9 +211,9 @@ export default function LearnPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Video Player */}
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Video Player - Theater View */}
+          <div className="lg:col-span-3">
             <VideoPlayer
               videoUrl={videoData?.url}
               onTimeUpdate={setCurrentTime}
@@ -270,73 +270,114 @@ export default function LearnPage() {
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Tree Timeline Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 sticky top-8">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Learning Progress
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sticky top-8">
+              {/* Timeline Heading */}
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
+                Timeline
               </h2>
 
-              {/* Progress */}
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <span>Flashcards</span>
-                  <span>
-                    {answeredFlashcards.size}/{flashcards.length}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              {/* Tree Timeline */}
+              <div className="max-h-[calc(100vh-250px)] overflow-y-auto px-2">
+                <div className="relative">
+                  {/* Gray background line (full length) */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gray-300 dark:bg-gray-600 z-0"></div>
+
+                  {/* Green progress line (dynamic based on progress) */}
                   <div
-                    className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                    className="absolute left-1/2 transform -translate-x-1/2 top-0 w-0.5 bg-green-500 z-0 transition-all duration-300"
                     style={{
-                      width: `${
-                        flashcards.length > 0
-                          ? (answeredFlashcards.size / flashcards.length) * 100
-                          : 0
-                      }%`,
+                      height: `${flashcards.length > 0 ? (answeredFlashcards.size / flashcards.length) * 100 : 0}%`
                     }}
-                  />
-                </div>
-              </div>
+                  ></div>
 
-              {/* Flashcard List */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Upcoming Flashcards:
-                </h3>
-                <div className="max-h-96 overflow-y-auto space-y-2">
-                  {flashcards.map((fc, index) => {
-                    const isAnswered = answeredFlashcards.has(fc.question.id);
-                    const isPast = currentTime > fc.show_at_timestamp;
+                  {/* Timeline items */}
+                  <div className="space-y-6">
+                    {flashcards.map((fc, index) => {
+                      const isAnswered = answeredFlashcards.has(fc.question.id);
+                      const isPast = currentTime > fc.show_at_timestamp;
+                      const isCurrent = Math.abs(currentTime - fc.show_at_timestamp) < 2;
+                      const isLeft = index % 2 === 0;
 
-                    return (
-                      <div
-                        key={fc.question.id}
-                        className={`p-3 rounded-lg text-sm ${
-                          isAnswered
-                            ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800'
-                            : isPast
-                            ? 'bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800'
-                            : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            Flashcard {index + 1}
-                          </span>
-                          {isAnswered && (
-                            <CheckCircle className="w-4 h-4 text-green-600" />
+                      // Truncate question text for short takeaway
+                      const takeaway = fc.question.question_text.length > 60
+                        ? fc.question.question_text.substring(0, 60) + '...'
+                        : fc.question.question_text;
+
+                      return (
+                        <div
+                          key={fc.question.id}
+                          className={`relative flex items-center ${isLeft ? 'justify-start' : 'justify-end'}`}
+                        >
+                          {/* Left side content */}
+                          {isLeft && (
+                            <div className="w-[calc(50%-20px)] pr-3 text-right">
+                              <div className={`text-[10px] font-semibold mb-1 ${
+                                isAnswered
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : isCurrent
+                                  ? 'text-yellow-600 dark:text-yellow-400'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {Math.floor(fc.show_at_timestamp / 60)}:
+                                {Math.floor(fc.show_at_timestamp % 60).toString().padStart(2, '0')}
+                              </div>
+                              <p className={`text-[9px] leading-tight ${
+                                isAnswered
+                                  ? 'text-gray-700 dark:text-gray-300'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {takeaway}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Center circle */}
+                          <div className="relative z-10 flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs transition-all ${
+                              isAnswered
+                                ? 'bg-green-500 border-green-500 text-white shadow-md'
+                                : isCurrent
+                                ? 'bg-yellow-400 border-yellow-400 text-gray-900 animate-pulse shadow-lg'
+                                : isPast
+                                ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-md'
+                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 text-gray-600 dark:text-gray-300 shadow-sm'
+                            }`}>
+                              {isAnswered ? (
+                                <CheckCircle className="w-5 h-5" />
+                              ) : (
+                                index + 1
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right side content */}
+                          {!isLeft && (
+                            <div className="w-[calc(50%-20px)] pl-3 text-left">
+                              <div className={`text-[10px] font-semibold mb-1 ${
+                                isAnswered
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : isCurrent
+                                  ? 'text-yellow-600 dark:text-yellow-400'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {Math.floor(fc.show_at_timestamp / 60)}:
+                                {Math.floor(fc.show_at_timestamp % 60).toString().padStart(2, '0')}
+                              </div>
+                              <p className={`text-[9px] leading-tight ${
+                                isAnswered
+                                  ? 'text-gray-700 dark:text-gray-300'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {takeaway}
+                              </p>
+                            </div>
                           )}
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs">
-                          Appears at {Math.floor(fc.show_at_timestamp / 60)}:
-                          {Math.floor(fc.show_at_timestamp % 60)
-                            .toString()
-                            .padStart(2, '0')}
-                        </p>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -344,10 +385,10 @@ export default function LearnPage() {
               {answeredFlashcards.size === flashcards.length && flashcards.length > 0 && (
                 <button
                   onClick={handleStartQuiz}
-                  className="w-full mt-6 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full mt-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                 >
-                  <BookOpen className="w-5 h-5" />
-                  Take Final Quiz
+                  <BookOpen className="w-4 h-4" />
+                  Quiz
                 </button>
               )}
             </div>
