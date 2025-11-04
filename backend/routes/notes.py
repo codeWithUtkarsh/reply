@@ -35,11 +35,16 @@ async def generate_notes(request: GenerateNotesRequest):
         transcript_data = json.loads(video['transcript']) if isinstance(video['transcript'], str) else video['transcript']
         transcript_text = transcript_data.get('full_text', '')
 
+        print(f"Generating notes for video: {video['title']}")
+        print(f"Transcript length: {len(transcript_text)}")
+
         # Generate notes
         notes_data = await notes_generator.generate_notes(
             transcript_text=transcript_text,
             video_title=video['title']
         )
+
+        print(f"Notes generated successfully, notes_id: {notes_data.get('notes_id')}")
 
         # Add video_id to notes
         notes_data['video_id'] = request.video_id
@@ -47,13 +52,20 @@ async def generate_notes(request: GenerateNotesRequest):
         # Store notes
         stored_notes = await db.store_notes(notes_data)
 
+        print(f"Notes stored successfully")
+
         return {
             "message": "Notes generated successfully",
             "notes": stored_notes
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"Error generating notes: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 
 @router.get("/{video_id}")
