@@ -270,71 +270,105 @@ export default function LearnPage() {
             )}
           </div>
 
-          {/* Compact Timeline Sidebar */}
+          {/* Tree Timeline Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sticky top-8">
-              {/* Vertical Timeline */}
-              <div className="space-y-1">
-                <div className="max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
-                  <div className="relative">
-                    {/* Timeline line */}
-                    <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gray-300 dark:bg-gray-600"></div>
+              {/* Timeline Heading */}
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
+                Timeline
+              </h2>
 
-                    {/* Timeline items */}
-                    <div className="space-y-1">
-                      {flashcards.map((fc, index) => {
-                        const isAnswered = answeredFlashcards.has(fc.question.id);
-                        const isPast = currentTime > fc.show_at_timestamp;
-                        const isCurrent = Math.abs(currentTime - fc.show_at_timestamp) < 2;
+              {/* Tree Timeline */}
+              <div className="max-h-[calc(100vh-250px)] overflow-y-auto px-2">
+                <div className="relative">
+                  {/* Center vertical line */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-green-500 via-gray-300 to-gray-300 dark:via-gray-600 dark:to-gray-600"></div>
 
-                        return (
-                          <div
-                            key={fc.question.id}
-                            className="relative flex items-start gap-2"
-                          >
-                            {/* Timeline dot */}
-                            <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 ${
-                              isAnswered
-                                ? 'bg-green-500 border-green-500'
-                                : isCurrent
-                                ? 'bg-yellow-400 border-yellow-400 animate-pulse'
-                                : isPast
-                                ? 'bg-yellow-100 border-yellow-400 dark:bg-yellow-900/50'
-                                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
-                            }`}>
-                              {isAnswered ? (
-                                <CheckCircle className="w-3.5 h-3.5 text-white" />
-                              ) : (
-                                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">
-                                  {index + 1}
-                                </span>
-                              )}
-                            </div>
+                  {/* Timeline items */}
+                  <div className="space-y-6">
+                    {flashcards.map((fc, index) => {
+                      const isAnswered = answeredFlashcards.has(fc.question.id);
+                      const isPast = currentTime > fc.show_at_timestamp;
+                      const isCurrent = Math.abs(currentTime - fc.show_at_timestamp) < 2;
+                      const isLeft = index % 2 === 0;
 
-                            {/* Timeline content */}
-                            <div className={`flex-1 pb-2 ${isCurrent ? 'pt-0.5' : ''}`}>
-                              <div className={`text-[11px] leading-tight ${
+                      // Truncate question text for short takeaway
+                      const takeaway = fc.question.question_text.length > 60
+                        ? fc.question.question_text.substring(0, 60) + '...'
+                        : fc.question.question_text;
+
+                      return (
+                        <div
+                          key={fc.question.id}
+                          className={`relative flex items-center ${isLeft ? 'justify-start' : 'justify-end'}`}
+                        >
+                          {/* Left side content */}
+                          {isLeft && (
+                            <div className="w-[calc(50%-20px)] pr-3 text-right">
+                              <div className={`text-[10px] font-semibold mb-1 ${
                                 isAnswered
-                                  ? 'text-green-700 dark:text-green-400 font-medium'
+                                  ? 'text-green-600 dark:text-green-400'
                                   : isCurrent
-                                  ? 'text-yellow-700 dark:text-yellow-400 font-semibold'
-                                  : 'text-gray-600 dark:text-gray-400'
+                                  ? 'text-yellow-600 dark:text-yellow-400'
+                                  : 'text-gray-500 dark:text-gray-400'
                               }`}>
                                 {Math.floor(fc.show_at_timestamp / 60)}:
-                                {Math.floor(fc.show_at_timestamp % 60)
-                                  .toString()
-                                  .padStart(2, '0')}
+                                {Math.floor(fc.show_at_timestamp % 60).toString().padStart(2, '0')}
                               </div>
-                              {isCurrent && (
-                                <div className="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium">
-                                  Now
-                                </div>
+                              <p className={`text-[9px] leading-tight ${
+                                isAnswered
+                                  ? 'text-gray-700 dark:text-gray-300'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {takeaway}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Center circle */}
+                          <div className="relative z-10 flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs transition-all ${
+                              isAnswered
+                                ? 'bg-green-500 border-green-500 text-white'
+                                : isCurrent
+                                ? 'bg-yellow-400 border-yellow-400 text-gray-900 animate-pulse shadow-lg'
+                                : isPast
+                                ? 'bg-yellow-100 border-yellow-400 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300'
+                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 text-gray-600 dark:text-gray-300'
+                            }`}>
+                              {isAnswered ? (
+                                <CheckCircle className="w-5 h-5" />
+                              ) : (
+                                index + 1
                               )}
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          {/* Right side content */}
+                          {!isLeft && (
+                            <div className="w-[calc(50%-20px)] pl-3 text-left">
+                              <div className={`text-[10px] font-semibold mb-1 ${
+                                isAnswered
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : isCurrent
+                                  ? 'text-yellow-600 dark:text-yellow-400'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {Math.floor(fc.show_at_timestamp / 60)}:
+                                {Math.floor(fc.show_at_timestamp % 60).toString().padStart(2, '0')}
+                              </div>
+                              <p className={`text-[9px] leading-tight ${
+                                isAnswered
+                                  ? 'text-gray-700 dark:text-gray-300'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {takeaway}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
