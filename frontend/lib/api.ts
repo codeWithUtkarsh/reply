@@ -222,6 +222,7 @@ export interface NoteSection {
   heading: string;
   content: string;
   diagrams: NoteDiagram[];
+  images?: string[]; // Base64 encoded images
 }
 
 export interface VideoNotes {
