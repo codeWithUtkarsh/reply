@@ -151,6 +151,37 @@ class Database:
         result = query.execute()
         return result.data if result.data else []
 
+    async def store_notes(self, notes_data: Dict) -> Dict:
+        """Store video notes"""
+        data = {
+            "notes_id": notes_data['notes_id'],
+            "video_id": notes_data['video_id'],
+            "title": notes_data['title'],
+            "sections": json.dumps(notes_data['sections']),
+            "created_at": datetime.utcnow().isoformat()
+        }
+        result = self.client.table("video_notes").insert(data).execute()
+        return result.data[0] if result.data else None
+
+    async def get_notes_by_video(self, video_id: str) -> Optional[Dict]:
+        """Retrieve notes for a video"""
+        result = self.client.table("video_notes").select("*").eq("video_id", video_id).execute()
+        if result.data:
+            # Parse sections JSON
+            note = result.data[0]
+            note['sections'] = json.loads(note['sections']) if isinstance(note['sections'], str) else note['sections']
+            return note
+        return None
+
+    async def get_notes_by_id(self, notes_id: str) -> Optional[Dict]:
+        """Retrieve notes by notes_id"""
+        result = self.client.table("video_notes").select("*").eq("notes_id", notes_id).execute()
+        if result.data:
+            note = result.data[0]
+            note['sections'] = json.loads(note['sections']) if isinstance(note['sections'], str) else note['sections']
+            return note
+        return None
+
 
 # Create database instance
 db = Database()

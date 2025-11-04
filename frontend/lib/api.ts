@@ -212,4 +212,43 @@ export const reportsApi = {
   },
 };
 
+export interface NoteDiagram {
+  type: string;
+  code: string;
+  caption: string;
+}
+
+export interface NoteSection {
+  heading: string;
+  content: string;
+  diagrams: NoteDiagram[];
+}
+
+export interface VideoNotes {
+  notes_id: string;
+  video_id: string;
+  title: string;
+  sections: NoteSection[];
+  created_at?: string;
+}
+
+export const notesApi = {
+  generateNotes: async (videoId: string): Promise<{ message: string; notes: VideoNotes }> => {
+    const response = await api.post('/api/notes/generate', {
+      video_id: videoId,
+    });
+    return response.data;
+  },
+
+  getNotes: async (videoId: string): Promise<{ notes: VideoNotes }> => {
+    const response = await api.get(`/api/notes/${videoId}`);
+    return response.data;
+  },
+
+  getNotesById: async (notesId: string): Promise<{ notes: VideoNotes }> => {
+    const response = await api.get(`/api/notes/by-id/${notesId}`);
+    return response.data;
+  },
+};
+
 export default api;

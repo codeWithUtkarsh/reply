@@ -2,12 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
 import LearningReportComponent from '@/components/LearningReport';
-import { videoApi, questionsApi, quizApi, reportsApi, FlashCard, Question, QuizResult, LearningReport } from '@/lib/api';
-import { Loader2, BookOpen, CheckCircle, ArrowLeft } from 'lucide-react';
+import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
+import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
+
+// Dynamically import VideoNotes component to avoid SSR issues with Mermaid
+const VideoNotesComponent = dynamic(() => import('@/components/VideoNotes'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+    </div>
+  ),
+});
 
 export default function LearnPage() {
   const params = useParams();
@@ -49,6 +60,9 @@ export default function LearnPage() {
     }
     return true;
   });
+  const [videoNotes, setVideoNotes] = useState<VideoNotes | null>(null);
+  const [generatingNotes, setGeneratingNotes] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
     loadVideo();
@@ -178,6 +192,34 @@ export default function LearnPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('flashcard_learning_enabled', String(newValue));
     }
+  };
+
+  const handleGenerateNotes = async () => {
+    try {
+      setGeneratingNotes(true);
+      const response = await notesApi.generateNotes(videoId);
+      setVideoNotes(response.notes);
+      setShowNotes(true);
+    } catch (err: any) {
+      console.error('Failed to generate notes:', err);
+      alert('Failed to generate notes. Please try again.');
+    } finally {
+      setGeneratingNotes(false);
+    }
+  };
+
+  const handleShowNotes = async () => {
+    // Try to fetch existing notes first
+    if (!videoNotes) {
+      try {
+        const response = await notesApi.getNotes(videoId);
+        setVideoNotes(response.notes);
+      } catch (err) {
+        // Notes don't exist yet, that's okay
+        console.log('No existing notes found');
+      }
+    }
+    setShowNotes(true);
   };
 
   if (loading) {
@@ -441,8 +483,50 @@ export default function LearnPage() {
                 </button>
               )}
             </div>
+
+            {/* Notes Card - Separate Card Below Timeline */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3">
+              {/* Generate Notes Button */}
+              {!videoNotes && (
+                <button
+                  onClick={handleGenerateNotes}
+                  disabled={generatingNotes}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  {generatingNotes ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Generating Notes...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4" />
+                      Generate Notes
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* View Notes Button */}
+              {videoNotes && (
+                <button
+                  onClick={() => setShowNotes(!showNotes)}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  <FileText className="w-4 h-4" />
+                  {showNotes ? 'Hide Notes' : 'View Notes'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Video Notes Display */}
+        {showNotes && videoNotes && (
+          <div className="mt-8">
+            <VideoNotesComponent notes={videoNotes} />
+          </div>
+        )}
       </div>
 
       {/* Flashcard Modal */}

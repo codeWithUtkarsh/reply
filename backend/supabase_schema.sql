@@ -86,6 +86,16 @@ CREATE TABLE IF NOT EXISTS learning_reports (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- NEW: Video notes table
+CREATE TABLE IF NOT EXISTS video_notes (
+    id BIGSERIAL PRIMARY KEY,
+    notes_id VARCHAR(255) UNIQUE NOT NULL,
+    video_id VARCHAR(255) NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    sections JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_videos_video_id ON videos(video_id);
 CREATE INDEX IF NOT EXISTS idx_questions_video_id ON questions(video_id);
@@ -97,6 +107,8 @@ CREATE INDEX IF NOT EXISTS idx_user_attempts_video_id ON user_attempts(video_id)
 CREATE INDEX IF NOT EXISTS idx_user_attempts_question_id ON user_attempts(question_id);
 CREATE INDEX IF NOT EXISTS idx_learning_reports_report_id ON learning_reports(report_id);
 CREATE INDEX IF NOT EXISTS idx_learning_reports_user_video ON learning_reports(user_id, video_id);
+CREATE INDEX IF NOT EXISTS idx_video_notes_video_id ON video_notes(video_id);
+CREATE INDEX IF NOT EXISTS idx_video_notes_notes_id ON video_notes(notes_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
