@@ -130,42 +130,11 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
   return (
     <div className="w-full">
-      {/* Edit/Save Controls */}
-      <div className="flex justify-end mb-4 gap-2">
-        {!isEditMode ? (
-          <button
-            onClick={() => setIsEditMode(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit Notes
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={handleCancelEdit}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
-            >
-              <X className="w-4 h-4" />
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
-            >
-              <Save className="w-4 h-4" />
-              {isSaving ? 'Saving...' : 'Save'}
-            </button>
-          </>
-        )}
-      </div>
-
       {/* Single Continuous Notebook Page */}
       <div className="flex justify-center">
         <div
           ref={notesRef}
-          className="bg-white dark:bg-gray-800 shadow-2xl border border-gray-400 dark:border-gray-600 relative overflow-auto w-full max-w-5xl"
+          className="bg-white dark:bg-gray-800 shadow-2xl border border-gray-400 dark:border-gray-600 relative overflow-auto w-full"
           style={{
             minHeight: '297mm',
             backgroundImage: `
@@ -184,17 +153,51 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
         >
         {/* Content with proper padding */}
         <div className="p-8 pl-20">
+          {/* Buttons - Top Right */}
+          <div className="flex justify-end gap-2 mb-6">
+            {!isEditMode ? (
+              <>
+                <button
+                  onClick={() => setIsEditMode(true)}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              </>
+            )}
+          </div>
+
           {/* Notes Header */}
           <div className="mb-8 text-center">
-            <div className="flex items-center justify-center mb-3">
-              <FileText className="w-10 h-10 text-indigo-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Comic Neue, cursive' }}>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Comic Neue, cursive' }}>
               {notes.title}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Generated Video Notes
-            </p>
           </div>
 
           {/* All Sections - Continuous Flow */}
@@ -273,22 +276,11 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
           {/* Footer */}
           <div className="mt-8 text-center border-t-2 border-gray-300 dark:border-gray-600 pt-4 pb-4">
             <p
-              className="text-lg text-gray-500 dark:text-gray-400 mb-4"
+              className="text-lg text-gray-500 dark:text-gray-400"
               style={{ fontFamily: 'Caveat, cursive' }}
             >
               ~ End of Notes ~
             </p>
-
-            {/* Download Button - Center Bottom */}
-            {!isEditMode && (
-              <button
-                onClick={handleDownload}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md mx-auto"
-              >
-                <Download className="w-4 h-4" />
-                Download Notes
-              </button>
-            )}
           </div>
         </div>
         </div>
