@@ -281,8 +281,16 @@ export default function LearnPage() {
               {/* Tree Timeline */}
               <div className="max-h-[calc(100vh-250px)] overflow-y-auto px-2">
                 <div className="relative">
-                  {/* Center vertical line */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-green-500 via-gray-300 to-gray-300 dark:via-gray-600 dark:to-gray-600"></div>
+                  {/* Gray background line (full length) */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gray-300 dark:bg-gray-600 z-0"></div>
+
+                  {/* Green progress line (dynamic based on progress) */}
+                  <div
+                    className="absolute left-1/2 transform -translate-x-1/2 top-0 w-0.5 bg-green-500 z-0 transition-all duration-300"
+                    style={{
+                      height: `${flashcards.length > 0 ? (answeredFlashcards.size / flashcards.length) * 100 : 0}%`
+                    }}
+                  ></div>
 
                   {/* Timeline items */}
                   <div className="space-y-6">
@@ -329,12 +337,12 @@ export default function LearnPage() {
                           <div className="relative z-10 flex-shrink-0">
                             <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs transition-all ${
                               isAnswered
-                                ? 'bg-green-500 border-green-500 text-white'
+                                ? 'bg-green-500 border-green-500 text-white shadow-md'
                                 : isCurrent
                                 ? 'bg-yellow-400 border-yellow-400 text-gray-900 animate-pulse shadow-lg'
                                 : isPast
-                                ? 'bg-yellow-100 border-yellow-400 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300'
-                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 text-gray-600 dark:text-gray-300'
+                                ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-md'
+                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 text-gray-600 dark:text-gray-300 shadow-sm'
                             }`}>
                               {isAnswered ? (
                                 <CheckCircle className="w-5 h-5" />
