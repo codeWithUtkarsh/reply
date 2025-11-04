@@ -289,45 +289,46 @@ export default function LearnPage() {
           </div>
 
           {/* Tree Timeline Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
+            {/* Flashcard Learning Toggle - Separate Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Flashcard Learning
+                </span>
+                <button
+                  onClick={handleToggleFlashcardLearning}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                    flashcardLearningEnabled
+                      ? 'bg-green-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                  role="switch"
+                  aria-checked={flashcardLearningEnabled}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                {flashcardLearningEnabled
+                  ? 'Flashcards will appear during video'
+                  : 'Watch without interruptions'}
+              </p>
+            </div>
+
+            {/* Timeline Card */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sticky top-8">
               {/* Timeline Heading */}
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3 text-center">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
                 Timeline
               </h2>
 
-              {/* Flashcard Learning Toggle */}
-              <div className="mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    Flashcard Learning
-                  </span>
-                  <button
-                    onClick={handleToggleFlashcardLearning}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                      flashcardLearningEnabled
-                        ? 'bg-green-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
-                    role="switch"
-                    aria-checked={flashcardLearningEnabled}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
-                  {flashcardLearningEnabled
-                    ? 'Flashcards will appear during video'
-                    : 'Watch without interruptions'}
-                </p>
-              </div>
-
               {/* Tree Timeline */}
-              <div className="max-h-[calc(100vh-350px)] overflow-y-auto px-2">
+              <div className="max-h-[calc(100vh-300px)] overflow-y-auto px-2">
                 <div className="relative">
                   {/* Gray background line (full length) */}
                   <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gray-300 dark:bg-gray-600 z-0"></div>
