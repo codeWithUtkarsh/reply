@@ -80,6 +80,9 @@ CREATE TABLE IF NOT EXISTS learning_reports (
     performance_stats JSONB NOT NULL,
     attempt_breakdown JSONB NOT NULL,
     key_takeaways TEXT[],
+    video_type VARCHAR(100) DEFAULT 'General',
+    domain VARCHAR(100) DEFAULT 'Mixed',
+    main_topics TEXT[],
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

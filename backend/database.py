@@ -130,6 +130,9 @@ class Database:
             "performance_stats": json.dumps(report_data['performance_stats']),
             "attempt_breakdown": json.dumps(report_data['attempt_breakdown']),
             "key_takeaways": report_data['key_takeaways'],
+            "video_type": report_data.get('video_type', 'General'),
+            "domain": report_data.get('domain', 'Mixed'),
+            "main_topics": report_data.get('main_topics', []),
             "created_at": datetime.utcnow().isoformat()
         }
         result = self.client.table("learning_reports").insert(data).execute()

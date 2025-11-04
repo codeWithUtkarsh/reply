@@ -23,6 +23,8 @@
     "postcss": "8.4.31",
     "lucide-react": "0.294.0",
     "@supabase/supabase-js": "2.38.4",
-    "recharts": "2.10.3"
+    "recharts": "2.10.3",
+    "react-wordcloud": "1.2.7",
+    "d3-cloud": "1.2.7"
   }
 }

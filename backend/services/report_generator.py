@@ -2,10 +2,14 @@ from typing import List, Dict
 import re
 from collections import Counter
 import uuid
+from openai import OpenAI
+from config import settings
+import json
 
 
 class ReportGenerator:
     def __init__(self):
+        self.client = OpenAI(api_key=settings.openai_api_key)
         # Common stop words to filter out
         self.stop_words = {
             'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
@@ -18,8 +22,87 @@ class ReportGenerator:
             'after', 'above', 'below', 'between', 'under', 'again', 'further',
             'then', 'once', 'here', 'there', 'all', 'both', 'each', 'few', 'more',
             'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own',
-            'same', 'so', 'than', 'too', 'very', 's', 't', 'just', 'now'
+            'same', 'so', 'than', 'too', 'very', 's', 't', 'just', 'now', 'video'
         }
+
+    async def extract_semantic_keywords(self, transcript_text: str) -> Dict:
+        """
+        Use AI to extract semantically relevant keywords and classify video type
+        Returns: {
+            'keywords': {word: importance_score},
+            'video_type': str,
+            'main_topics': [str],
+            'domain': str
+        }
+        """
+        # Truncate transcript if too long (keep first 3000 chars for context)
+        text_sample = transcript_text[:3000] if len(transcript_text) > 3000 else transcript_text
+
+        prompt = f"""Analyze the following video transcript and provide:
+
+1. Video Type Classification (e.g., Educational, Tutorial, News, Entertainment, Documentary, Review, etc.)
+2. Main Domain/Subject (e.g., Technology, Science, Business, Health, etc.)
+3. Top 30 semantically important keywords with their relative importance (1-100)
+4. 3-5 main topics covered
+
+Transcript:
+{text_sample}
+
+Return your analysis in JSON format:
+{{
+  "video_type": "Educational/Tutorial/News/etc",
+  "domain": "Technology/Science/etc",
+  "keywords": {{"keyword1": 95, "keyword2": 88, ...}},
+  "main_topics": ["topic1", "topic2", "topic3"]
+}}
+
+Focus on:
+- Technical terms and domain-specific vocabulary
+- Key concepts and important entities
+- Action words that indicate main activities
+- Avoid generic words like "video", "today", "going", etc.
+"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert at analyzing video content and extracting key semantic information. You identify important keywords, classify content type, and understand domain-specific terminology."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.3,
+                response_format={"type": "json_object"}
+            )
+
+            result = json.loads(response.choices[0].message.content)
+
+            # Ensure keywords are in the right format
+            if 'keywords' in result and isinstance(result['keywords'], dict):
+                # Normalize scores to be between 20 and 100 for better word cloud visualization
+                max_score = max(result['keywords'].values()) if result['keywords'] else 100
+                normalized_keywords = {
+                    k: max(20, int((v / max_score) * 100))
+                    for k, v in result['keywords'].items()
+                }
+                result['keywords'] = normalized_keywords
+
+            return result
+
+        except Exception as e:
+            print(f"AI keyword extraction failed: {e}")
+            # Fallback to traditional method
+            return {
+                'video_type': 'General',
+                'domain': 'Mixed',
+                'keywords': self.generate_word_frequency(transcript_text, 30),
+                'main_topics': []
+            }
 
     def generate_word_frequency(self, transcript_text: str, top_n: int = 30) -> Dict[str, int]:
         """
@@ -147,11 +230,14 @@ class ReportGenerator:
         """
         Generate comprehensive learning report
         """
-        # Generate word frequency
-        word_frequency = self.generate_word_frequency(transcript_text)
+        # Use AI to extract semantic keywords and classify video
+        semantic_analysis = await self.extract_semantic_keywords(transcript_text)
 
-        # Extract key takeaways
-        key_takeaways = self.extract_key_takeaways(transcript_text, word_frequency)
+        # Extract key takeaways (using AI-identified keywords)
+        key_takeaways = self.extract_key_takeaways(
+            transcript_text,
+            semantic_analysis.get('keywords', {})
+        )
 
         # Analyze performance
         performance_stats = self.analyze_performance(attempts_data)
@@ -167,7 +253,10 @@ class ReportGenerator:
             'user_id': user_id,
             'video_id': video_id,
             'quiz_id': quiz_id,
-            'word_frequency': word_frequency,
+            'word_frequency': semantic_analysis.get('keywords', {}),
+            'video_type': semantic_analysis.get('video_type', 'General'),
+            'domain': semantic_analysis.get('domain', 'Mixed'),
+            'main_topics': semantic_analysis.get('main_topics', []),
             'performance_stats': performance_stats,
             'attempt_breakdown': attempt_breakdown,
             'key_takeaways': key_takeaways

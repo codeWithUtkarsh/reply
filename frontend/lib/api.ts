@@ -65,6 +65,9 @@ export interface LearningReport {
   video_id: string;
   quiz_id: string;
   word_frequency: { [key: string]: number };
+  video_type?: string;
+  domain?: string;
+  main_topics?: string[];
   performance_stats: {
     total_attempts: number;
     correct_count: number;
