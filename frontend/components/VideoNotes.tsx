@@ -1,8 +1,7 @@
 'use client';
 
 import { VideoNotes } from '@/lib/api';
-import { useEffect, useRef } from 'react';
-import mermaid from 'mermaid';
+import { useEffect, useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 
 interface VideoNotesProps {
@@ -11,38 +10,52 @@ interface VideoNotesProps {
 
 export default function VideoNotesComponent({ notes }: VideoNotesProps) {
   const diagramRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [mermaidLoaded, setMermaidLoaded] = useState(false);
 
   useEffect(() => {
-    // Initialize Mermaid
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'neutral',
-      securityLevel: 'loose',
-      fontFamily: 'Comic Neue, cursive',
-    });
+    // Dynamically import mermaid to avoid SSR issues
+    const loadMermaid = async () => {
+      try {
+        const mermaid = (await import('mermaid')).default;
 
-    // Render all diagrams
-    const renderDiagrams = async () => {
-      let diagramIndex = 0;
-      for (const section of notes.sections) {
-        for (const diagram of section.diagrams || []) {
-          const id = `mermaid-${diagramIndex}`;
-          const element = diagramRefs.current[id];
-          if (element && diagram.code) {
-            try {
-              const { svg } = await mermaid.render(id, diagram.code);
-              element.innerHTML = svg;
-            } catch (error) {
-              console.error('Failed to render diagram:', error);
-              element.innerHTML = `<div class="text-red-500 text-sm p-4 bg-red-50 rounded border border-red-200">Failed to render diagram</div>`;
+        // Initialize Mermaid
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'neutral',
+          securityLevel: 'loose',
+          fontFamily: 'Comic Neue, cursive',
+        });
+
+        setMermaidLoaded(true);
+
+        // Render all diagrams
+        const renderDiagrams = async () => {
+          let diagramIndex = 0;
+          for (const section of notes.sections) {
+            for (const diagram of section.diagrams || []) {
+              const id = `mermaid-${diagramIndex}`;
+              const element = diagramRefs.current[id];
+              if (element && diagram.code) {
+                try {
+                  const { svg } = await mermaid.render(id, diagram.code);
+                  element.innerHTML = svg;
+                } catch (error) {
+                  console.error('Failed to render diagram:', error);
+                  element.innerHTML = `<div class="text-red-500 text-sm p-4 bg-red-50 rounded border border-red-200">Failed to render diagram</div>`;
+                }
+              }
+              diagramIndex++;
             }
           }
-          diagramIndex++;
-        }
+        };
+
+        renderDiagrams();
+      } catch (error) {
+        console.error('Failed to load mermaid:', error);
       }
     };
 
-    renderDiagrams();
+    loadMermaid();
   }, [notes]);
 
   let globalDiagramIndex = 0;
