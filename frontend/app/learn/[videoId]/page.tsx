@@ -482,18 +482,21 @@ export default function LearnPage() {
                   Quiz
                 </button>
               )}
+            </div>
 
+            {/* Notes Card - Separate Card Below Timeline */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3">
               {/* Generate Notes Button */}
               {!videoNotes && (
                 <button
                   onClick={handleGenerateNotes}
                   disabled={generatingNotes}
-                  className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                 >
                   {generatingNotes ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Generating...
+                      Generating Notes...
                     </>
                   ) : (
                     <>
@@ -508,7 +511,7 @@ export default function LearnPage() {
               {videoNotes && (
                 <button
                   onClick={() => setShowNotes(!showNotes)}
-                  className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                 >
                   <FileText className="w-4 h-4" />
                   {showNotes ? 'Hide Notes' : 'View Notes'}
