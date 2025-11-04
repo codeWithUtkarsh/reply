@@ -1,8 +1,9 @@
 'use client';
 
 import { LearningReport } from '@/lib/api';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Award, TrendingUp, Brain, Target, BookOpen } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Award, TrendingUp, Brain, Target, BookOpen, Tag, Lightbulb } from 'lucide-react';
+import ReactWordcloud from 'react-wordcloud';
 
 interface LearningReportProps {
   report: LearningReport;
@@ -11,13 +12,11 @@ interface LearningReportProps {
 const COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
 export default function LearningReportComponent({ report }: LearningReportProps) {
-  // Prepare word frequency data for chart (top 10 words)
-  const wordFreqData = Object.entries(report.word_frequency)
-    .slice(0, 10)
-    .map(([word, count]) => ({
-      word,
-      count,
-    }));
+  // Prepare word cloud data from semantic keywords
+  const wordCloudData = Object.entries(report.word_frequency).map(([text, value]) => ({
+    text,
+    value,
+  }));
 
   // Prepare performance data for pie chart
   const performanceData = [
@@ -53,6 +52,54 @@ export default function LearningReportComponent({ report }: LearningReportProps)
           Your comprehensive performance analysis
         </p>
       </div>
+
+      {/* Video Classification */}
+      {(report.video_type || report.domain || (report.main_topics && report.main_topics.length > 0)) && (
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Tag className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              Content Analysis
+            </h3>
+          </div>
+
+          <div className="flex flex-wrap gap-3 mb-4">
+            {report.video_type && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-full font-semibold">
+                <span className="text-sm">Type:</span>
+                <span>{report.video_type}</span>
+              </div>
+            )}
+            {report.domain && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-full font-semibold">
+                <span className="text-sm">Domain:</span>
+                <span>{report.domain}</span>
+              </div>
+            )}
+          </div>
+
+          {report.main_topics && report.main_topics.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb className="w-4 h-4 text-indigo-600" />
+                <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                  Main Topics Covered:
+                </h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {report.main_topics.map((topic, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-white dark:bg-gray-700 border border-indigo-300 dark:border-indigo-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm"
+                  >
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Performance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -159,20 +206,31 @@ export default function LearningReportComponent({ report }: LearningReportProps)
         </div>
       </div>
 
-      {/* Word Frequency */}
+      {/* Semantic Keyword Word Cloud */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-          Key Topics (Word Frequency)
+          Key Topics & Semantic Keywords
         </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={wordFreqData} layout="horizontal">
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" />
-            <YAxis dataKey="word" type="category" width={100} />
-            <Tooltip />
-            <Bar dataKey="count" fill="#3b82f6" />
-          </BarChart>
-        </ResponsiveContainer>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          AI-extracted keywords based on semantic relevance and importance
+        </p>
+        <div className="w-full" style={{ height: '400px' }}>
+          <ReactWordcloud
+            words={wordCloudData}
+            options={{
+              rotations: 2,
+              rotationAngles: [0, 90],
+              fontSizes: [16, 80],
+              fontFamily: 'system-ui, sans-serif',
+              fontWeight: 'bold',
+              padding: 4,
+              scale: 'sqrt',
+              spiral: 'archimedean',
+              transitionDuration: 1000,
+              colors: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'],
+            }}
+          />
+        </div>
       </div>
 
       {/* Key Takeaways */}
