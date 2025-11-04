@@ -4,7 +4,6 @@ import { LearningReport } from '@/lib/api';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Award, TrendingUp, Brain, Target, BookOpen, Tag, Lightbulb } from 'lucide-react';
 import ReactWordcloud from 'react-wordcloud';
-import 'react-wordcloud/dist/styles.css';
 
 interface LearningReportProps {
   report: LearningReport;
