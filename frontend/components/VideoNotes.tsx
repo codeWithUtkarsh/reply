@@ -37,6 +37,7 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
               const element = diagramRefs.current[id];
               if (element && diagram.code) {
                 try {
+                  // Mermaid 11.x render returns a Promise with { svg }
                   const { svg } = await mermaid.render(id, diagram.code);
                   element.innerHTML = svg;
                 } catch (error) {
