@@ -5,7 +5,7 @@ from services.notes_generator import NotesGenerator
 from typing import Optional
 
 
-router = APIRouter(prefix="/notes", tags=["notes"])
+router = APIRouter()
 notes_generator = NotesGenerator()
 
 
