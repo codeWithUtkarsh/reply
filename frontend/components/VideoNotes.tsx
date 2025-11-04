@@ -62,98 +62,106 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
   let globalDiagramIndex = 0;
 
   return (
-    <div className="w-full">
-      {/* Notes Header */}
-      <div className="mb-8 text-center">
-        <div className="flex items-center justify-center mb-3">
-          <FileText className="w-10 h-10 text-indigo-600" />
-        </div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Comic Neue, cursive' }}>
-          {notes.title}
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Generated Video Notes
-        </p>
-      </div>
+    <div className="w-full flex justify-center">
+      {/* Single A4-style Notebook Page */}
+      <div
+        className="bg-white dark:bg-gray-800 shadow-2xl border border-gray-400 dark:border-gray-600 relative overflow-auto"
+        style={{
+          width: '210mm',
+          minHeight: '297mm',
+          maxWidth: '100%',
+          backgroundImage: `
+            linear-gradient(90deg, #e74c3c 1px, transparent 1px),
+            repeating-linear-gradient(
+              0deg,
+              transparent,
+              transparent 27px,
+              #d1e3f3 27px,
+              #d1e3f3 28px
+            )
+          `,
+          backgroundSize: '100% 100%, 100% 28px',
+          backgroundPosition: '60px 0, 0 0'
+        }}
+      >
+        {/* Content with proper padding */}
+        <div className="p-8 pl-20">
+          {/* Notes Header */}
+          <div className="mb-8 text-center">
+            <div className="flex items-center justify-center mb-3">
+              <FileText className="w-10 h-10 text-indigo-600" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Comic Neue, cursive' }}>
+              {notes.title}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Generated Video Notes
+            </p>
+          </div>
 
-      {/* Notes Content */}
-      <div className="space-y-8">
-        {notes.sections.map((section, sectionIndex) => (
-          <div
-            key={sectionIndex}
-            className="bg-white dark:from-gray-800 dark:to-gray-700 p-6 pl-20 rounded-lg shadow-md border border-gray-300 dark:border-gray-600 relative"
-            style={{
-              backgroundImage: `
-                linear-gradient(90deg, #e74c3c 1px, transparent 1px),
-                repeating-linear-gradient(
-                  0deg,
-                  transparent,
-                  transparent 27px,
-                  #d1e3f3 27px,
-                  #d1e3f3 28px
-                )
-              `,
-              backgroundSize: '100% 100%, 100% 28px',
-              backgroundPosition: '60px 0, 0 0'
-            }}
-          >
-            {/* Section Heading */}
-            <h2
-              className="text-2xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b-4 border-blue-400 dark:border-blue-600 inline-block"
+          {/* All Sections - Continuous Flow */}
+          <div className="space-y-6">
+            {notes.sections.map((section, sectionIndex) => (
+              <div key={sectionIndex}>
+                {/* Section Heading */}
+                <h2
+                  className="text-2xl font-bold text-gray-900 dark:text-white mb-3 pb-2 border-b-2 border-blue-400 dark:border-blue-600 inline-block"
+                  style={{ fontFamily: 'Caveat, cursive' }}
+                >
+                  {section.heading}
+                </h2>
+
+                {/* Section Content */}
+                <div
+                  className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed mb-4"
+                  style={{ fontFamily: 'Indie Flower, cursive', fontSize: '1rem', lineHeight: '28px' }}
+                >
+                  {section.content}
+                </div>
+
+                {/* Diagrams */}
+                {section.diagrams && section.diagrams.length > 0 && (
+                  <div className="my-4 space-y-4">
+                    {section.diagrams.map((diagram, diagIndex) => {
+                      const currentDiagramId = `mermaid-${globalDiagramIndex++}`;
+                      return (
+                        <div key={diagIndex} className="bg-blue-50 dark:bg-gray-900 p-3 rounded border border-blue-200 dark:border-blue-800">
+                          {/* Diagram */}
+                          <div
+                            ref={(el) => {
+                              diagramRefs.current[currentDiagramId] = el;
+                            }}
+                            className="flex justify-center items-center overflow-x-auto py-2"
+                          />
+
+                          {/* Caption */}
+                          {diagram.caption && (
+                            <p
+                              className="text-sm text-center text-gray-600 dark:text-gray-400 mt-2 italic"
+                              style={{ fontFamily: 'Indie Flower, cursive' }}
+                            >
+                              {diagram.caption}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="mt-8 text-center border-t-2 border-gray-300 dark:border-gray-600 pt-4">
+            <p
+              className="text-lg text-gray-500 dark:text-gray-400"
               style={{ fontFamily: 'Caveat, cursive' }}
             >
-              {section.heading}
-            </h2>
-
-            {/* Section Content */}
-            <div 
-              className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed mb-4"
-              style={{ fontFamily: 'Indie Flower, cursive', fontSize: '1.1rem' }}
-            >
-              {section.content}
-            </div>
-
-            {/* Diagrams */}
-            {section.diagrams && section.diagrams.length > 0 && (
-              <div className="mt-6 space-y-6">
-                {section.diagrams.map((diagram, diagIndex) => {
-                  const currentDiagramId = `mermaid-${globalDiagramIndex++}`;
-                  return (
-                    <div key={diagIndex} className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-inner border-2 border-indigo-200 dark:border-indigo-800">
-                      {/* Diagram */}
-                      <div 
-                        ref={(el) => {
-                          diagramRefs.current[currentDiagramId] = el;
-                        }}
-                        className="flex justify-center items-center overflow-x-auto py-4"
-                      />
-                      
-                      {/* Caption */}
-                      {diagram.caption && (
-                        <p 
-                          className="text-sm text-center text-gray-600 dark:text-gray-400 mt-2 italic"
-                          style={{ fontFamily: 'Indie Flower, cursive' }}
-                        >
-                          {diagram.caption}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+              ~ End of Notes ~
+            </p>
           </div>
-        ))}
-      </div>
-
-      {/* Doodle-style footer */}
-      <div className="mt-8 text-center">
-        <p 
-          className="text-lg text-gray-500 dark:text-gray-400"
-          style={{ fontFamily: 'Caveat, cursive' }}
-        >
-          ~ End of Notes ~
-        </p>
+        </div>
       </div>
     </div>
   );
