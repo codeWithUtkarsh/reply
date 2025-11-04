@@ -2,13 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
 import LearningReportComponent from '@/components/LearningReport';
-import VideoNotesComponent from '@/components/VideoNotes';
 import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
 import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
+
+// Dynamically import VideoNotes component to avoid SSR issues with Mermaid
+const VideoNotesComponent = dynamic(() => import('@/components/VideoNotes'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+    </div>
+  ),
+});
 
 export default function LearnPage() {
   const params = useParams();
