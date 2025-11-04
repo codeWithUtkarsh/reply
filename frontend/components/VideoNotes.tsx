@@ -2,7 +2,7 @@
 
 import { VideoNotes } from '@/lib/api';
 import { useEffect, useRef, useState } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 
 interface VideoNotesProps {
   notes: VideoNotes;
@@ -11,6 +11,7 @@ interface VideoNotesProps {
 export default function VideoNotesComponent({ notes }: VideoNotesProps) {
   const diagramRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
+  const notesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Dynamically import mermaid to avoid SSR issues
@@ -59,31 +60,74 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
     loadMermaid();
   }, [notes]);
 
+  const handleDownload = async () => {
+    try {
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+
+      if (notesRef.current) {
+        const canvas = await html2canvas(notesRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
+
+        // Convert to blob and download
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${notes.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_notes.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to download notes:', error);
+      alert('Failed to download notes. Please try again.');
+    }
+  };
+
   let globalDiagramIndex = 0;
 
   return (
-    <div className="w-full flex justify-center">
-      {/* Single A4-style Notebook Page */}
-      <div
-        className="bg-white dark:bg-gray-800 shadow-2xl border border-gray-400 dark:border-gray-600 relative overflow-auto"
-        style={{
-          width: '210mm',
-          minHeight: '297mm',
-          maxWidth: '100%',
-          backgroundImage: `
-            linear-gradient(90deg, #e74c3c 1px, transparent 1px),
-            repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 27px,
-              #d1e3f3 27px,
-              #d1e3f3 28px
-            )
-          `,
-          backgroundSize: '100% 100%, 100% 28px',
-          backgroundPosition: '60px 0, 0 0'
-        }}
-      >
+    <div className="w-full">
+      {/* Download Button */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={handleDownload}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
+        >
+          <Download className="w-4 h-4" />
+          Download Notes
+        </button>
+      </div>
+
+      {/* Single Continuous Notebook Page */}
+      <div className="flex justify-center">
+        <div
+          ref={notesRef}
+          className="bg-white dark:bg-gray-800 shadow-2xl border border-gray-400 dark:border-gray-600 relative overflow-auto w-full max-w-5xl"
+          style={{
+            minHeight: '297mm',
+            backgroundImage: `
+              linear-gradient(90deg, #e74c3c 1px, transparent 1px),
+              repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 27px,
+                #d1e3f3 27px,
+                #d1e3f3 28px
+              )
+            `,
+            backgroundSize: '100% 100%, 100% 28px',
+            backgroundPosition: '60px 0, 0 0'
+          }}
+        >
         {/* Content with proper padding */}
         <div className="p-8 pl-20">
           {/* Notes Header */}
@@ -161,6 +205,7 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
               ~ End of Notes ~
             </p>
           </div>
+        </div>
         </div>
       </div>
     </div>
