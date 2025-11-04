@@ -3,11 +3,11 @@ from openai import OpenAI
 import json
 from typing import Dict, List
 import uuid
-
+from config import settings
 
 class NotesGenerator:
     def __init__(self):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(api_key=settings.openai_api_key)
 
     async def generate_notes(self, transcript_text: str, video_title: str) -> Dict:
         """
