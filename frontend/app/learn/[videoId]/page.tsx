@@ -6,8 +6,9 @@ import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
 import LearningReportComponent from '@/components/LearningReport';
-import { videoApi, questionsApi, quizApi, reportsApi, FlashCard, Question, QuizResult, LearningReport } from '@/lib/api';
-import { Loader2, BookOpen, CheckCircle, ArrowLeft } from 'lucide-react';
+import VideoNotesComponent from '@/components/VideoNotes';
+import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
+import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
 
 export default function LearnPage() {
   const params = useParams();
@@ -49,6 +50,9 @@ export default function LearnPage() {
     }
     return true;
   });
+  const [videoNotes, setVideoNotes] = useState<VideoNotes | null>(null);
+  const [generatingNotes, setGeneratingNotes] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
     loadVideo();
@@ -178,6 +182,34 @@ export default function LearnPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('flashcard_learning_enabled', String(newValue));
     }
+  };
+
+  const handleGenerateNotes = async () => {
+    try {
+      setGeneratingNotes(true);
+      const response = await notesApi.generateNotes(videoId);
+      setVideoNotes(response.notes);
+      setShowNotes(true);
+    } catch (err: any) {
+      console.error('Failed to generate notes:', err);
+      alert('Failed to generate notes. Please try again.');
+    } finally {
+      setGeneratingNotes(false);
+    }
+  };
+
+  const handleShowNotes = async () => {
+    // Try to fetch existing notes first
+    if (!videoNotes) {
+      try {
+        const response = await notesApi.getNotes(videoId);
+        setVideoNotes(response.notes);
+      } catch (err) {
+        // Notes don't exist yet, that's okay
+        console.log('No existing notes found');
+      }
+    }
+    setShowNotes(true);
   };
 
   if (loading) {

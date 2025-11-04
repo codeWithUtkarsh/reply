@@ -25,6 +25,7 @@
     "@supabase/supabase-js": "2.38.4",
     "recharts": "2.10.3",
     "react-wordcloud": "1.2.7",
-    "d3-cloud": "1.2.7"
+    "d3-cloud": "1.2.7",
+    "mermaid": "10.6.1"
   }
 }
