@@ -81,15 +81,25 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
         {notes.sections.map((section, sectionIndex) => (
           <div
             key={sectionIndex}
-            className="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-gray-800 dark:to-gray-700 p-6 rounded-lg shadow-md border-2 border-amber-200 dark:border-gray-600"
-            style={{ 
-              backgroundImage: 'linear-gradient(0deg, rgba(0,0,0,0.02) 1px, transparent 1px)',
-              backgroundSize: '100% 24px'
+            className="bg-white dark:from-gray-800 dark:to-gray-700 p-6 pl-20 rounded-lg shadow-md border border-gray-300 dark:border-gray-600 relative"
+            style={{
+              backgroundImage: `
+                linear-gradient(90deg, #e74c3c 1px, transparent 1px),
+                repeating-linear-gradient(
+                  0deg,
+                  transparent,
+                  transparent 27px,
+                  #d1e3f3 27px,
+                  #d1e3f3 28px
+                )
+              `,
+              backgroundSize: '100% 100%, 100% 28px',
+              backgroundPosition: '60px 0, 0 0'
             }}
           >
             {/* Section Heading */}
-            <h2 
-              className="text-2xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b-4 border-amber-300 dark:border-amber-600 inline-block"
+            <h2
+              className="text-2xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b-4 border-blue-400 dark:border-blue-600 inline-block"
               style={{ fontFamily: 'Caveat, cursive' }}
             >
               {section.heading}
