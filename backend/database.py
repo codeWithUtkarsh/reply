@@ -182,6 +182,19 @@ class Database:
             return note
         return None
 
+    async def update_notes(self, notes_id: str, title: str, sections: List[Dict]) -> Dict:
+        """Update existing notes"""
+        data = {
+            "title": title,
+            "sections": json.dumps(sections),
+        }
+        result = self.client.table("video_notes").update(data).eq("notes_id", notes_id).execute()
+        if result.data:
+            note = result.data[0]
+            note['sections'] = json.loads(note['sections']) if isinstance(note['sections'], str) else note['sections']
+            return note
+        return None
+
 
 # Create database instance
 db = Database()

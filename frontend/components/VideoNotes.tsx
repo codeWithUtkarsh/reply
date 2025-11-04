@@ -1,8 +1,8 @@
 'use client';
 
-import { VideoNotes } from '@/lib/api';
+import { VideoNotes, NoteSection, notesApi } from '@/lib/api';
 import { useEffect, useRef, useState } from 'react';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Edit2, Save, X } from 'lucide-react';
 
 interface VideoNotesProps {
   notes: VideoNotes;
@@ -12,6 +12,9 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
   const diagramRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
   const notesRef = useRef<HTMLDivElement>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editableSections, setEditableSections] = useState<NoteSection[]>(notes.sections);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     // Dynamically import mermaid to avoid SSR issues
@@ -92,19 +95,70 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
     }
   };
 
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      await notesApi.updateNotes(notes.notes_id, {
+        title: notes.title,
+        sections: editableSections,
+      });
+      setIsEditMode(false);
+      alert('Notes saved successfully!');
+    } catch (error) {
+      console.error('Failed to save notes:', error);
+      alert('Failed to save notes. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditableSections(notes.sections);
+    setIsEditMode(false);
+  };
+
+  const handleSectionChange = (index: number, field: 'heading' | 'content', value: string) => {
+    const updatedSections = [...editableSections];
+    updatedSections[index] = {
+      ...updatedSections[index],
+      [field]: value,
+    };
+    setEditableSections(updatedSections);
+  };
+
   let globalDiagramIndex = 0;
 
   return (
     <div className="w-full">
-      {/* Download Button */}
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={handleDownload}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
-        >
-          <Download className="w-4 h-4" />
-          Download Notes
-        </button>
+      {/* Edit/Save Controls */}
+      <div className="flex justify-end mb-4 gap-2">
+        {!isEditMode ? (
+          <button
+            onClick={() => setIsEditMode(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
+          >
+            <Edit2 className="w-4 h-4" />
+            Edit Notes
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={handleCancelEdit}
+              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
+            >
+              <X className="w-4 h-4" />
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md"
+            >
+              <Save className="w-4 h-4" />
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Single Continuous Notebook Page */}
@@ -145,23 +199,43 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
           {/* All Sections - Continuous Flow */}
           <div className="space-y-6">
-            {notes.sections.map((section, sectionIndex) => (
+            {editableSections.map((section, sectionIndex) => (
               <div key={sectionIndex}>
                 {/* Section Heading */}
-                <h2
-                  className="text-2xl font-bold text-gray-900 dark:text-white mb-3 pb-2 border-b-2 border-blue-400 dark:border-blue-600 inline-block"
-                  style={{ fontFamily: 'Caveat, cursive' }}
-                >
-                  {section.heading}
-                </h2>
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={section.heading}
+                    onChange={(e) => handleSectionChange(sectionIndex, 'heading', e.target.value)}
+                    className="text-2xl font-bold text-gray-900 dark:text-white mb-3 pb-2 border-b-2 border-blue-400 dark:border-blue-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 w-full"
+                    style={{ fontFamily: 'Caveat, cursive' }}
+                  />
+                ) : (
+                  <h2
+                    className="text-2xl font-bold text-gray-900 dark:text-white mb-3 pb-2 border-b-2 border-blue-400 dark:border-blue-600 inline-block"
+                    style={{ fontFamily: 'Caveat, cursive' }}
+                  >
+                    {section.heading}
+                  </h2>
+                )}
 
                 {/* Section Content */}
-                <div
-                  className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed mb-4"
-                  style={{ fontFamily: 'Indie Flower, cursive', fontSize: '1rem', lineHeight: '28px' }}
-                >
-                  {section.content}
-                </div>
+                {isEditMode ? (
+                  <textarea
+                    value={section.content}
+                    onChange={(e) => handleSectionChange(sectionIndex, 'content', e.target.value)}
+                    className="text-gray-800 dark:text-gray-200 w-full leading-relaxed mb-4 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 py-1 min-h-[100px]"
+                    style={{ fontFamily: 'Indie Flower, cursive', fontSize: '1rem', lineHeight: '28px' }}
+                    rows={6}
+                  />
+                ) : (
+                  <div
+                    className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed mb-4"
+                    style={{ fontFamily: 'Indie Flower, cursive', fontSize: '1rem', lineHeight: '28px' }}
+                  >
+                    {section.content}
+                  </div>
+                )}
 
                 {/* Diagrams */}
                 {section.diagrams && section.diagrams.length > 0 && (
@@ -197,13 +271,24 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 text-center border-t-2 border-gray-300 dark:border-gray-600 pt-4">
+          <div className="mt-8 text-center border-t-2 border-gray-300 dark:border-gray-600 pt-4 pb-4">
             <p
-              className="text-lg text-gray-500 dark:text-gray-400"
+              className="text-lg text-gray-500 dark:text-gray-400 mb-4"
               style={{ fontFamily: 'Caveat, cursive' }}
             >
               ~ End of Notes ~
             </p>
+
+            {/* Download Button - Center Bottom */}
+            {!isEditMode && (
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-md mx-auto"
+              >
+                <Download className="w-4 h-4" />
+                Download Notes
+              </button>
+            )}
           </div>
         </div>
         </div>

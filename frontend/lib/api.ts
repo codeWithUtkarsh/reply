@@ -249,6 +249,11 @@ export const notesApi = {
     const response = await api.get(`/api/notes/by-id/${notesId}`);
     return response.data;
   },
+
+  updateNotes: async (notesId: string, data: { title: string; sections: NoteSection[] }): Promise<{ message: string; notes: VideoNotes }> => {
+    const response = await api.put(`/api/notes/${notesId}`, data);
+    return response.data;
+  },
 };
 
 export default api;

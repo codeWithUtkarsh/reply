@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from database import db
 from services.notes_generator import NotesGenerator
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 
 router = APIRouter()
@@ -11,6 +11,11 @@ notes_generator = NotesGenerator()
 
 class GenerateNotesRequest(BaseModel):
     video_id: str
+
+
+class UpdateNotesRequest(BaseModel):
+    title: str
+    sections: List[Dict[str, Any]]
 
 
 @router.post("/generate")
@@ -91,10 +96,41 @@ async def get_notes_by_id(notes_id: str):
         notes = await db.get_notes_by_id(notes_id)
         if not notes:
             raise HTTPException(status_code=404, detail="Notes not found")
-        
+
         return {"notes": notes}
 
     except HTTPException:
         raise
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/{notes_id}")
+async def update_notes(notes_id: str, request: UpdateNotesRequest):
+    """Update existing notes"""
+    try:
+        # Check if notes exist
+        existing_notes = await db.get_notes_by_id(notes_id)
+        if not existing_notes:
+            raise HTTPException(status_code=404, detail="Notes not found")
+
+        # Update notes
+        import json
+        updated_notes = await db.update_notes(
+            notes_id=notes_id,
+            title=request.title,
+            sections=request.sections
+        )
+
+        return {
+            "message": "Notes updated successfully",
+            "notes": updated_notes
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"Error updating notes: {error_detail}")
         raise HTTPException(status_code=500, detail=str(e))
