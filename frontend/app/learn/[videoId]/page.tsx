@@ -211,9 +211,9 @@ export default function LearnPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Video Player */}
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Video Player - Theater View */}
+          <div className="lg:col-span-3">
             <VideoPlayer
               videoUrl={videoData?.url}
               onTimeUpdate={setCurrentTime}
@@ -270,24 +270,26 @@ export default function LearnPage() {
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Compact Timeline Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 sticky top-8">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Learning Progress
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sticky top-8">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                Progress
               </h2>
 
-              {/* Progress */}
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <span>Flashcards</span>
+              {/* Compact Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  <span>{answeredFlashcards.size}/{flashcards.length}</span>
                   <span>
-                    {answeredFlashcards.size}/{flashcards.length}
+                    {flashcards.length > 0
+                      ? Math.round((answeredFlashcards.size / flashcards.length) * 100)
+                      : 0}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                   <div
-                    className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-primary-600 h-1.5 rounded-full transition-all duration-300"
                     style={{
                       width: `${
                         flashcards.length > 0
@@ -299,44 +301,72 @@ export default function LearnPage() {
                 </div>
               </div>
 
-              {/* Flashcard List */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Upcoming Flashcards:
+              {/* Vertical Timeline */}
+              <div className="space-y-1">
+                <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Timeline
                 </h3>
-                <div className="max-h-96 overflow-y-auto space-y-2">
-                  {flashcards.map((fc, index) => {
-                    const isAnswered = answeredFlashcards.has(fc.question.id);
-                    const isPast = currentTime > fc.show_at_timestamp;
+                <div className="max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gray-300 dark:bg-gray-600"></div>
 
-                    return (
-                      <div
-                        key={fc.question.id}
-                        className={`p-3 rounded-lg text-sm ${
-                          isAnswered
-                            ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800'
-                            : isPast
-                            ? 'bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800'
-                            : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            Flashcard {index + 1}
-                          </span>
-                          {isAnswered && (
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                          )}
-                        </div>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs">
-                          Appears at {Math.floor(fc.show_at_timestamp / 60)}:
-                          {Math.floor(fc.show_at_timestamp % 60)
-                            .toString()
-                            .padStart(2, '0')}
-                        </p>
-                      </div>
-                    );
-                  })}
+                    {/* Timeline items */}
+                    <div className="space-y-1">
+                      {flashcards.map((fc, index) => {
+                        const isAnswered = answeredFlashcards.has(fc.question.id);
+                        const isPast = currentTime > fc.show_at_timestamp;
+                        const isCurrent = Math.abs(currentTime - fc.show_at_timestamp) < 2;
+
+                        return (
+                          <div
+                            key={fc.question.id}
+                            className="relative flex items-start gap-2"
+                          >
+                            {/* Timeline dot */}
+                            <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 ${
+                              isAnswered
+                                ? 'bg-green-500 border-green-500'
+                                : isCurrent
+                                ? 'bg-yellow-400 border-yellow-400 animate-pulse'
+                                : isPast
+                                ? 'bg-yellow-100 border-yellow-400 dark:bg-yellow-900/50'
+                                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+                            }`}>
+                              {isAnswered ? (
+                                <CheckCircle className="w-3.5 h-3.5 text-white" />
+                              ) : (
+                                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">
+                                  {index + 1}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Timeline content */}
+                            <div className={`flex-1 pb-2 ${isCurrent ? 'pt-0.5' : ''}`}>
+                              <div className={`text-[11px] leading-tight ${
+                                isAnswered
+                                  ? 'text-green-700 dark:text-green-400 font-medium'
+                                  : isCurrent
+                                  ? 'text-yellow-700 dark:text-yellow-400 font-semibold'
+                                  : 'text-gray-600 dark:text-gray-400'
+                              }`}>
+                                {Math.floor(fc.show_at_timestamp / 60)}:
+                                {Math.floor(fc.show_at_timestamp % 60)
+                                  .toString()
+                                  .padStart(2, '0')}
+                              </div>
+                              {isCurrent && (
+                                <div className="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium">
+                                  Now
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -344,10 +374,10 @@ export default function LearnPage() {
               {answeredFlashcards.size === flashcards.length && flashcards.length > 0 && (
                 <button
                   onClick={handleStartQuiz}
-                  className="w-full mt-6 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full mt-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                 >
-                  <BookOpen className="w-5 h-5" />
-                  Take Final Quiz
+                  <BookOpen className="w-4 h-4" />
+                  Quiz
                 </button>
               )}
             </div>
