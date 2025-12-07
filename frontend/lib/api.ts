@@ -222,6 +222,7 @@ export interface NoteSection {
   heading: string;
   content: string;
   diagrams: NoteDiagram[];
+  images?: string[]; // Base64 encoded images
 }
 
 export interface VideoNotes {
@@ -247,6 +248,11 @@ export const notesApi = {
 
   getNotesById: async (notesId: string): Promise<{ notes: VideoNotes }> => {
     const response = await api.get(`/api/notes/by-id/${notesId}`);
+    return response.data;
+  },
+
+  updateNotes: async (notesId: string, data: { title: string; sections: NoteSection[] }): Promise<{ message: string; notes: VideoNotes }> => {
+    const response = await api.put(`/api/notes/${notesId}`, data);
     return response.data;
   },
 };

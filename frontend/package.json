@@ -26,6 +26,7 @@
     "recharts": "2.10.3",
     "react-wordcloud": "1.2.7",
     "d3-cloud": "1.2.7",
-    "mermaid": "11.12.1"
+    "mermaid": "11.12.1",
+    "html2canvas": "1.4.1"
   }
 }
