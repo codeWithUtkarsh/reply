@@ -144,30 +144,24 @@ export default function Home() {
         <section className="container mx-auto px-6 pt-20 pb-32">
           <div className="max-w-5xl mx-auto">
             {/* Central chip/icon */}
-            <div className="flex justify-center mb-12">
-              <div className="relative">
+            <div className="flex justify-center mb-12" style={{ perspective: '1000px' }}>
+              <div className="relative" style={{ transformStyle: 'preserve-3d' }}>
                 {/* Glowing lines from top */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-16 w-px h-16 bg-gradient-to-b from-transparent to-emerald-500/50"></div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-16 w-px h-12 bg-gradient-to-b from-transparent to-emerald-500 opacity-50 blur-sm"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-20 w-px h-20 bg-gradient-to-b from-transparent to-emerald-500/50"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-20 w-px h-16 bg-gradient-to-b from-transparent to-emerald-500 opacity-50 blur-sm"></div>
 
-                {/* Main chip */}
-                <div className="relative">
-                  <div className="absolute inset-0 bg-emerald-500/20 blur-2xl"></div>
-                  <div className="relative w-32 h-32 bg-gradient-to-b from-emerald-950 to-black border border-emerald-500/30 rounded-2xl p-6 flex items-center justify-center">
+                {/* Main chip with 3D effect */}
+                <div className="relative chip-3d">
+                  <div className="absolute inset-0 bg-emerald-500/30 blur-3xl"></div>
+                  <div className="relative w-48 h-48 bg-gradient-to-b from-emerald-950 to-black border-2 border-emerald-500/40 rounded-3xl p-8 flex items-center justify-center shadow-2xl">
                     <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-2 bg-emerald-500/10 rounded-lg flex items-center justify-center">
-                        <Play className="w-6 h-6 text-emerald-500" />
+                      <div className="w-16 h-16 mx-auto mb-3 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                        <Play className="w-8 h-8 text-emerald-500" />
                       </div>
-                      <div className="text-[10px] text-emerald-500 font-mono">PREPLY</div>
+                      <div className="text-sm text-emerald-500 font-mono tracking-wider">PREPLY</div>
                     </div>
                   </div>
                 </div>
-
-                {/* Corner accents */}
-                <div className="absolute -top-1 -left-1 w-3 h-3 border-l-2 border-t-2 border-emerald-500/50"></div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 border-r-2 border-t-2 border-emerald-500/50"></div>
-                <div className="absolute -bottom-1 -left-1 w-3 h-3 border-l-2 border-b-2 border-emerald-500/50"></div>
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 border-r-2 border-b-2 border-emerald-500/50"></div>
               </div>
             </div>
 
@@ -328,6 +322,18 @@ export default function Home() {
             border-color: rgba(6, 182, 212, 0.8);
             box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
           }
+        }
+
+        .chip-3d {
+          transform: translateZ(50px);
+          transition: transform 0.3s ease;
+          box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.5),
+            0 0 60px rgba(16, 185, 129, 0.3);
+        }
+
+        .chip-3d:hover {
+          transform: translateZ(70px) scale(1.05);
         }
       `}</style>
     </main>
