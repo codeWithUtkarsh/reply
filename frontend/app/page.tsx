@@ -463,15 +463,18 @@ interface ProblemCardProps {
 
 function ProblemCard({ icon, iconColor, stat, statColor, title, description }: ProblemCardProps) {
   return (
-    <div className="bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-2xl p-8 hover:border-gray-700 transition-all">
-      <div className={`${iconColor} mb-6`}>
-        {icon}
+    <div className="group relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-8 hover:border-emerald-500/30 transition-all">
+        <div className={`${iconColor} mb-6 opacity-60`}>
+          {icon}
+        </div>
+        <div className="text-4xl font-light text-white mb-3">
+          {stat}
+        </div>
+        <h3 className="text-xl font-light text-white mb-3">{title}</h3>
+        <p className="text-gray-500 text-sm leading-relaxed font-light">{description}</p>
       </div>
-      <div className={`text-4xl font-light ${statColor} mb-3`}>
-        {stat}
-      </div>
-      <h3 className="text-xl font-medium text-white mb-3">{title}</h3>
-      <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
     </div>
   );
 }
