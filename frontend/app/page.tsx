@@ -290,24 +290,27 @@ export default function Home() {
           position: absolute;
           width: 100%;
           height: 100%;
-          opacity: 0.4;
+          opacity: 1;
         }
 
         .circuit-box {
           position: absolute;
-          border: 1px solid rgba(6, 182, 212, 0.3);
-          background: rgba(6, 182, 212, 0.02);
+          border: 1px solid rgba(6, 182, 212, 0.6);
+          background: rgba(6, 182, 212, 0.05);
+          box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
           animation: pulse-circuit infinite ease-in-out;
         }
 
         @keyframes pulse-circuit {
           0%, 100% {
-            opacity: 0.1;
-            border-color: rgba(6, 182, 212, 0.2);
+            opacity: 0.3;
+            border-color: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 5px rgba(6, 182, 212, 0.1);
           }
           50% {
-            opacity: 0.4;
-            border-color: rgba(6, 182, 212, 0.5);
+            opacity: 0.8;
+            border-color: rgba(6, 182, 212, 0.8);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
           }
         }
       `}</style>
