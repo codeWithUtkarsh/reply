@@ -76,10 +76,16 @@ export default function Home() {
             <span className="text-xl font-semibold tracking-tight">PREPLY</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm">
-            <button className="text-gray-400 hover:text-white transition-colors">Overview</button>
-            <button className="text-gray-400 hover:text-white transition-colors">Technology</button>
-            <button className="text-gray-400 hover:text-white transition-colors">Features</button>
+          <div className="hidden md:flex items-center gap-4 text-sm">
+            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+              Overview
+            </button>
+            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+              Technology
+            </button>
+            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+              Features
+            </button>
           </div>
 
           <div className="flex items-center gap-3">
