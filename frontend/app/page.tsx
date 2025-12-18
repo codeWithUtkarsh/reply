@@ -48,12 +48,28 @@ export default function Home() {
       {/* Animated Circuit Board Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="circuit-background">
-          {[...Array(50)].map((_, i) => (
+          {/* Left side boxes */}
+          {[...Array(25)].map((_, i) => (
             <div
-              key={i}
+              key={`left-${i}`}
               className="circuit-box"
               style={{
-                left: `${Math.random() * 100}%`,
+                left: `${Math.random() * 25}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${20 + Math.random() * 150}px`,
+                height: `${20 + Math.random() * 150}px`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${3 + Math.random() * 4}s`,
+              }}
+            ></div>
+          ))}
+          {/* Right side boxes */}
+          {[...Array(25)].map((_, i) => (
+            <div
+              key={`right-${i}`}
+              className="circuit-box"
+              style={{
+                left: `${75 + Math.random() * 25}%`,
                 top: `${Math.random() * 100}%`,
                 width: `${20 + Math.random() * 150}px`,
                 height: `${20 + Math.random() * 150}px`,
