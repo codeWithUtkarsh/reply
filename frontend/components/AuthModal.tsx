@@ -66,29 +66,32 @@ export default function AuthModal({ isOpen, onClose, mode: initialMode }: AuthMo
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 relative">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-black border border-emerald-500/30 rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-purple-500/5 pointer-events-none"></div>
+
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="absolute top-4 right-4 text-gray-400 hover:text-emerald-400 transition-colors z-10"
         >
           <X className="w-6 h-6" />
         </button>
 
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 className="text-3xl font-light text-white mb-8 relative z-10">
           {mode === 'signin' ? 'Sign In' : 'Sign Up'}
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-light text-gray-300 mb-2"
             >
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-500/50 w-5 h-5" />
               <input
                 type="email"
                 id="email"
@@ -96,7 +99,7 @@ export default function AuthModal({ isOpen, onClose, mode: initialMode }: AuthMo
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all"
               />
             </div>
           </div>
@@ -104,12 +107,12 @@ export default function AuthModal({ isOpen, onClose, mode: initialMode }: AuthMo
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-light text-gray-300 mb-2"
             >
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-500/50 w-5 h-5" />
               <input
                 type="password"
                 id="password"
@@ -118,21 +121,21 @@ export default function AuthModal({ isOpen, onClose, mode: initialMode }: AuthMo
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all"
               />
             </div>
           </div>
 
           {error && (
-            <div className={`p-4 rounded-lg ${
+            <div className={`p-4 rounded-xl border ${
               error.includes('Success')
-                ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800'
-                : 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
+                ? 'bg-emerald-950/30 border-emerald-500/30'
+                : 'bg-red-950/30 border-red-500/30'
             }`}>
-              <p className={`text-sm ${
+              <p className={`text-sm font-light ${
                 error.includes('Success')
-                  ? 'text-green-800 dark:text-green-200'
-                  : 'text-red-800 dark:text-red-200'
+                  ? 'text-emerald-300'
+                  : 'text-red-300'
               }`}>
                 {error}
               </p>
@@ -142,7 +145,7 @@ export default function AuthModal({ isOpen, onClose, mode: initialMode }: AuthMo
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-600 text-white font-light py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
           >
             {loading ? (
               <>
@@ -155,31 +158,31 @@ export default function AuthModal({ isOpen, onClose, mode: initialMode }: AuthMo
           </button>
         </form>
 
-        <div className="mt-4">
+        <div className="mt-6 relative z-10">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+              <div className="w-full border-t border-emerald-500/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
+              <span className="px-3 bg-black text-gray-400 font-light">Or continue with</span>
             </div>
           </div>
 
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="mt-4 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="mt-6 w-full bg-black border border-emerald-500/30 hover:border-emerald-500/50 hover:bg-emerald-950/20 text-gray-200 font-light py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
           >
             <Chrome className="w-5 h-5" />
             Google
           </button>
         </div>
 
-        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-6 text-center text-sm text-gray-400 font-light relative z-10">
           {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
           <button
             onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-            className="text-primary-600 hover:text-primary-700 font-semibold"
+            className="text-emerald-400 hover:text-emerald-300 font-normal transition-colors"
           >
             {mode === 'signin' ? 'Sign Up' : 'Sign In'}
           </button>
