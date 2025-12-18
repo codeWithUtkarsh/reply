@@ -251,6 +251,74 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Problem with Video Learning Section */}
+        <section className="container mx-auto px-6 py-20 border-t border-gray-900">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-light mb-4">
+                The Problem with <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent font-normal">Video Learning</span>
+              </h2>
+              <p className="text-gray-500">Traditional video platforms aren't designed for learning. They're built for entertainment.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 15s1.5-2 4-2 4 2 4 2" transform="scale(1,-1) translate(0,-24)" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" strokeLinecap="round" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" strokeLinecap="round" />
+                  </svg>
+                }
+                iconColor="text-red-500"
+                stat="67%"
+                statColor="text-purple-400"
+                title="Poor Retention"
+                description="Students struggle to retain information from video lectures"
+              />
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />
+                  </svg>
+                }
+                iconColor="text-orange-500"
+                stat="85%"
+                statColor="text-purple-400"
+                title="Passive Watching"
+                description="Passive video watching leads to poor engagement and low retention"
+              />
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                }
+                iconColor="text-yellow-500"
+                stat="2+ hrs"
+                statColor="text-purple-400"
+                title="Wasted Time"
+                description="Students spend hours rewatching videos to find specific concepts"
+              />
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  </svg>
+                }
+                iconColor="text-gray-500"
+                stat="0%"
+                statColor="text-purple-400"
+                title="No Tracking"
+                description="No way to track comprehension in real-time while watching"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section className="container mx-auto px-6 py-20 border-t border-gray-900">
           <div className="max-w-3xl mx-auto text-center">
@@ -380,6 +448,30 @@ function ProcessStep({ number, title, description }: ProcessStepProps) {
         <h3 className="text-2xl font-light mb-3">{title}</h3>
         <p className="text-gray-500 leading-relaxed">{description}</p>
       </div>
+    </div>
+  );
+}
+
+interface ProblemCardProps {
+  icon: React.ReactNode;
+  iconColor: string;
+  stat: string;
+  statColor: string;
+  title: string;
+  description: string;
+}
+
+function ProblemCard({ icon, iconColor, stat, statColor, title, description }: ProblemCardProps) {
+  return (
+    <div className="bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-2xl p-8 hover:border-gray-700 transition-all">
+      <div className={`${iconColor} mb-6`}>
+        {icon}
+      </div>
+      <div className={`text-4xl font-light ${statColor} mb-3`}>
+        {stat}
+      </div>
+      <h3 className="text-xl font-medium text-white mb-3">{title}</h3>
+      <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
     </div>
   );
 }
