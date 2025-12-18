@@ -45,6 +45,26 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* Animated Circuit Board Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="circuit-background">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="circuit-box"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${20 + Math.random() * 150}px`,
+                height: `${20 + Math.random() * 150}px`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${3 + Math.random() * 4}s`,
+              }}
+            ></div>
+          ))}
+        </div>
+      </div>
+
       {/* Subtle grid background */}
       <div className="absolute inset-0 bg-grid opacity-[0.02]"></div>
 
@@ -264,6 +284,31 @@ export default function Home() {
 
         .bg-radial-gradient {
           background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05), transparent 50%);
+        }
+
+        .circuit-background {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          opacity: 0.4;
+        }
+
+        .circuit-box {
+          position: absolute;
+          border: 1px solid rgba(6, 182, 212, 0.3);
+          background: rgba(6, 182, 212, 0.02);
+          animation: pulse-circuit infinite ease-in-out;
+        }
+
+        @keyframes pulse-circuit {
+          0%, 100% {
+            opacity: 0.1;
+            border-color: rgba(6, 182, 212, 0.2);
+          }
+          50% {
+            opacity: 0.4;
+            border-color: rgba(6, 182, 212, 0.5);
+          }
         }
       `}</style>
     </main>
