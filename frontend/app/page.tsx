@@ -166,16 +166,19 @@ export default function Home() {
             </div>
 
             {/* Main heading */}
-            <h1 className="text-5xl md:text-7xl font-light text-center mb-6 tracking-tight">
-              Learn to Trust AI
+            <h1 className="text-5xl md:text-7xl font-light text-center mb-2 tracking-tight">
+              <span className="text-white">Learn </span>
+              <span className="text-white font-bold">3x Faster</span>
             </h1>
+            <h2 className="text-4xl md:text-6xl font-light text-center mb-8 tracking-tight">
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent">
+                From Any Video
+              </span>
+            </h2>
 
             {/* Subheading */}
-            <p className="text-center text-gray-400 text-lg md:text-xl mb-4 max-w-3xl mx-auto">
-              Introducing AI-Powered Learning. Ready for
-            </p>
-            <p className="text-center text-gray-400 text-lg md:text-xl mb-12 max-w-3xl mx-auto">
-              the Modern Education Era.
+            <p className="text-center text-gray-400 text-lg md:text-xl mb-4 max-w-3xl mx-auto leading-relaxed">
+              No Ads, AI-powered adaptive learning and quizzes. Cut down your preparation time by 50% <span className="text-white font-semibold">Never forget what you learn.</span>
             </p>
 
             {/* CTA Button */}
