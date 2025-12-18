@@ -1,44 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { videoApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { Play, Loader2, LogIn, UserPlus } from 'lucide-react';
+import { Play, LogIn, UserPlus, Sparkles, Brain, Trophy, BarChart } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
-import UserMenu from '@/components/UserMenu';
 
 export default function Home() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [videoUrl, setVideoUrl] = useState('');
-  const [title, setTitle] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!user) {
-      setAuthMode('signin');
-      setShowAuthModal(true);
-      return;
+  useEffect(() => {
+    // Redirect authenticated users to dashboard
+    if (user && !authLoading) {
+      router.push('/dashboard');
     }
-
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await videoApi.processVideo(videoUrl, title);
-      router.push(`/learn/${response.video_id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to process video');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, authLoading, router]);
 
   const openSignIn = () => {
     setAuthMode('signin');
@@ -50,16 +29,29 @@ export default function Home() {
     setShowAuthModal(true);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't show landing page if user is logged in
+  if (user) {
+    return null;
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Header with Auth */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-end">
-          {authLoading ? (
-            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
-          ) : user ? (
-            <UserMenu />
-          ) : (
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-4xl mx-auto">
+          {/* Header with Auth Buttons */}
+          <div className="flex justify-end mb-8">
             <div className="flex gap-2">
               <button
                 onClick={openSignIn}
@@ -76,120 +68,178 @@ export default function Home() {
                 Sign Up
               </button>
             </div>
-          )}
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center mb-4">
-              <Play className="w-12 h-12 text-primary-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Preply Video Learning
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
-              Learn from videos with AI-powered questions and quizzes
-            </p>
           </div>
 
-          {/* Video Input Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="videoUrl"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Video URL
-                </label>
-                <input
-                  type="url"
-                  id="videoUrl"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
+          {/* Hero Content */}
+          <div className="text-center mb-16">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <Play className="w-20 h-20 text-primary-600" />
+                <Sparkles className="w-8 h-8 text-yellow-500 absolute -top-2 -right-2 animate-pulse" />
               </div>
-
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Video Title (Optional)
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter a custom title..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-
-              {error && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading || !videoUrl}
-                className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing Video...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-5 h-5" />
-                    {user ? 'Start Learning' : 'Sign In to Start Learning'}
-                  </>
-                )}
-              </button>
-            </form>
-
-            {!user && !authLoading && (
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
-                  Please sign in or create an account to start learning
-                </p>
-              </div>
-            )}
-
-            {/* Features */}
-            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-                Features:
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>AI-generated questions during video playback</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Flashcards appear at key moments to test understanding</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Final 10-question quiz to assess comprehension</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Jump to specific video sections when answers are incorrect</span>
-                </li>
-              </ul>
             </div>
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+              Preply Video Learning
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8">
+              Transform YouTube videos into interactive learning experiences
+            </p>
+            <p className="text-lg text-gray-500 dark:text-gray-400 mb-10">
+              AI-powered questions, flashcards, and quizzes to enhance your learning
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <button
+                onClick={openSignUp}
+                className="flex items-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors text-lg shadow-lg"
+              >
+                <UserPlus className="w-5 h-5" />
+                Get Started Free
+              </button>
+              <button
+                onClick={openSignIn}
+                className="flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg transition-colors text-lg shadow-lg border border-gray-200 dark:border-gray-700"
+              >
+                <LogIn className="w-5 h-5" />
+                Sign In
+              </button>
+            </div>
+          </div>
+
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-2 gap-6 mb-16">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  AI-Powered Questions
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                Get intelligent questions at key moments during video playback to test your understanding in real-time
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Interactive Flashcards
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                Flashcards appear at strategic points to reinforce learning and ensure concept retention
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Comprehensive Quizzes
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                Take a final 10-question quiz to assess your overall comprehension and identify areas to review
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
+                  <BarChart className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Track Your Progress
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                Monitor your learning journey with detailed reports and insights on your performance
+              </p>
+            </div>
+          </div>
+
+          {/* How It Works */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+              How It Works
+            </h2>
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold">
+                  1
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Create an Account
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Sign up for free and get 10 credits to start learning
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold">
+                  2
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Create a Project
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Organize your learning by creating projects for different topics
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold">
+                  3
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Add a Video
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Paste any YouTube URL and let our AI process it for interactive learning
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold">
+                  4
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Start Learning
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Watch, answer questions, take quizzes, and track your progress
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Ready to Transform Your Learning?
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+              Join now and start learning smarter, not harder
+            </p>
+            <button
+              onClick={openSignUp}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors text-lg shadow-lg"
+            >
+              <UserPlus className="w-5 h-5" />
+              Create Free Account
+            </button>
           </div>
         </div>
       </div>
