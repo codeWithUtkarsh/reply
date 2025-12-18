@@ -1,139 +1,385 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { videoApi } from '@/lib/api';
-import { Play, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Play, LogIn, UserPlus, Lock, CheckCircle2, BarChart3, Zap } from 'lucide-react';
+import AuthModal from '@/components/AuthModal';
 
 export default function Home() {
   const router = useRouter();
-  const [videoUrl, setVideoUrl] = useState('');
-  const [title, setTitle] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { user, loading: authLoading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await videoApi.processVideo(videoUrl, title);
-      router.push(`/learn/${response.video_id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to process video');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push('/dashboard');
     }
+  }, [user, authLoading, router]);
+
+  const openSignIn = () => {
+    setAuthMode('signin');
+    setShowAuthModal(true);
   };
 
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center mb-4">
-              <Play className="w-12 h-12 text-primary-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Preply Video Learning
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
-              Learn from videos with AI-powered questions and quizzes
-            </p>
-          </div>
+  const openSignUp = () => {
+    setAuthMode('signup');
+    setShowAuthModal(true);
+  };
 
-          {/* Video Input Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="videoUrl"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Video URL
-                </label>
-                <input
-                  type="url"
-                  id="videoUrl"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Video Title (Optional)
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter a custom title..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-
-              {error && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading || !videoUrl}
-                className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing Video...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-5 h-5" />
-                    Start Learning
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Features */}
-            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-                Features:
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>AI-generated questions during video playback</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Flashcards appear at key moments to test understanding</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Final 10-question quiz to assess comprehension</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Jump to specific video sections when answers are incorrect</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400">Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  if (user) {
+    return null;
+  }
+
+  return (
+    <main className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* Animated Circuit Board Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="circuit-background">
+          {/* Left side boxes */}
+          {[...Array(25)].map((_, i) => (
+            <div
+              key={`left-${i}`}
+              className="circuit-box"
+              style={{
+                left: `${Math.random() * 25}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${20 + Math.random() * 150}px`,
+                height: `${20 + Math.random() * 150}px`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${3 + Math.random() * 4}s`,
+              }}
+            ></div>
+          ))}
+          {/* Right side boxes */}
+          {[...Array(25)].map((_, i) => (
+            <div
+              key={`right-${i}`}
+              className="circuit-box"
+              style={{
+                left: `${75 + Math.random() * 25}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${20 + Math.random() * 150}px`,
+                height: `${20 + Math.random() * 150}px`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${3 + Math.random() * 4}s`,
+              }}
+            ></div>
+          ))}
+        </div>
+      </div>
+
+      {/* Subtle grid background */}
+      <div className="absolute inset-0 bg-grid opacity-[0.02]"></div>
+
+      {/* Radial gradient overlay */}
+      <div className="absolute inset-0 bg-radial-gradient"></div>
+
+      {/* Lock icons in corners */}
+      <div className="absolute top-8 left-8 opacity-20">
+        <Lock className="w-8 h-8 text-gray-600" />
+      </div>
+      <div className="absolute top-8 right-8 opacity-20">
+        <Lock className="w-8 h-8 text-gray-600" />
+      </div>
+      <div className="absolute bottom-8 left-8 opacity-20">
+        <Lock className="w-8 h-8 text-gray-600" />
+      </div>
+      <div className="absolute bottom-8 right-8 opacity-20">
+        <Lock className="w-8 h-8 text-gray-600" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Navigation */}
+        <nav className="container mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center">
+              <Play className="w-4 h-4 text-emerald-500" />
+            </div>
+            <span className="text-xl font-semibold tracking-tight">PREPLY</span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-4 text-sm">
+            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+              Overview
+            </button>
+            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+              Technology
+            </button>
+            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+              Features
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={openSignIn}
+              className="px-6 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            >
+              Log In
+            </button>
+            <button
+              onClick={openSignUp}
+              className="px-6 py-2 text-sm font-medium bg-white text-black rounded hover:bg-gray-200 transition-colors"
+            >
+              Get Started
+            </button>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <section className="container mx-auto px-6 pt-20 pb-32">
+          <div className="max-w-5xl mx-auto">
+            {/* Central chip/icon */}
+            <div className="flex justify-center mb-12" style={{ perspective: '1000px' }}>
+              <div className="relative" style={{ transformStyle: 'preserve-3d' }}>
+                {/* Glowing lines from top */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-20 w-px h-20 bg-gradient-to-b from-transparent to-emerald-500/50"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-20 w-px h-16 bg-gradient-to-b from-transparent to-emerald-500 opacity-50 blur-sm"></div>
+
+                {/* Main chip with 3D effect */}
+                <div className="relative chip-3d">
+                  <div className="absolute inset-0 bg-emerald-500/30 blur-3xl"></div>
+                  <div className="relative w-48 h-48 bg-gradient-to-b from-emerald-950 to-black border-2 border-emerald-500/40 rounded-3xl p-8 flex items-center justify-center shadow-2xl">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-3 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                        <Play className="w-8 h-8 text-emerald-500" />
+                      </div>
+                      <div className="text-sm text-emerald-500 font-mono tracking-wider">PREPLY</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main heading */}
+            <h1 className="text-5xl md:text-7xl font-light text-center mb-2 tracking-tight">
+              <span className="text-white">Learn </span>
+              <span className="text-white font-bold">3x Faster</span>
+            </h1>
+            <h2 className="text-4xl md:text-6xl font-light text-center mb-8 tracking-tight">
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent">
+                From Any Video
+              </span>
+            </h2>
+
+            {/* Subheading */}
+            <p className="text-center text-gray-400 text-lg md:text-xl mb-4 max-w-3xl mx-auto leading-relaxed">
+              No Ads, AI-powered adaptive learning and quizzes. Cut down your preparation time by 50% <span className="text-white font-semibold">Never forget what you learn.</span>
+            </p>
+
+            {/* CTA Button */}
+            <div className="flex justify-center mb-20">
+              <button
+                onClick={openSignUp}
+                className="group relative px-8 py-3 bg-emerald-500 text-black font-medium rounded hover:bg-emerald-400 transition-all duration-300 flex items-center gap-2"
+              >
+                <Zap className="w-4 h-4" />
+                <span>Schedule Demo</span>
+              </button>
+            </div>
+
+            {/* Preorders text */}
+            <p className="text-center text-gray-600 text-sm mb-8">
+              Free Credits Available Now
+            </p>
+
+            {/* Bottom cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              <FeatureBox
+                icon={<CheckCircle2 className="w-5 h-5" />}
+                title="AI Questions"
+                subtitle="Smart Platform"
+              />
+              <FeatureBox
+                icon={<BarChart3 className="w-5 h-5" />}
+                title="Progress Tracking"
+                subtitle="Analytics"
+              />
+              <FeatureBox
+                icon={<Play className="w-5 h-5" />}
+                title="Video Learning"
+                subtitle="Interactive"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="container mx-auto px-6 py-20 border-t border-gray-900">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-light mb-4">How It Works</h2>
+              <p className="text-gray-500">Simple, powerful, effective</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12">
+              <ProcessStep
+                number="01"
+                title="Create Account"
+                description="Sign up in seconds and receive 10 free credits to start your learning journey."
+              />
+              <ProcessStep
+                number="02"
+                title="Add Videos"
+                description="Paste any YouTube URL and our AI will transform it into an interactive learning experience."
+              />
+              <ProcessStep
+                number="03"
+                title="Learn & Practice"
+                description="Engage with AI-generated questions, flashcards, and quizzes tailored to your pace."
+              />
+              <ProcessStep
+                number="04"
+                title="Track Progress"
+                description="Monitor your learning journey with detailed analytics and personalized insights."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="container mx-auto px-6 py-20 border-t border-gray-900">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl md:text-5xl font-light mb-6">
+              Ready to Transform Your Learning?
+            </h2>
+            <p className="text-gray-500 mb-8">
+              Join educators and students using AI-powered video learning
+            </p>
+            <button
+              onClick={openSignUp}
+              className="px-8 py-3 bg-white text-black font-medium rounded hover:bg-gray-200 transition-colors"
+            >
+              Get Started Free
+            </button>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="container mx-auto px-6 py-8 border-t border-gray-900">
+          <div className="flex justify-between items-center text-sm text-gray-600">
+            <p>&copy; 2024 Preply. All rights reserved.</p>
+            <div className="flex gap-6">
+              <button className="hover:text-gray-400 transition-colors">Privacy</button>
+              <button className="hover:text-gray-400 transition-colors">Terms</button>
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authMode}
+      />
+
+      <style jsx>{`
+        .bg-grid {
+          background-image:
+            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+          background-size: 100px 100px;
+        }
+
+        .bg-radial-gradient {
+          background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05), transparent 50%);
+        }
+
+        .circuit-background {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          opacity: 1;
+        }
+
+        .circuit-box {
+          position: absolute;
+          border: 1px solid rgba(6, 182, 212, 0.6);
+          background: rgba(6, 182, 212, 0.05);
+          box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+          animation: pulse-circuit infinite ease-in-out;
+        }
+
+        @keyframes pulse-circuit {
+          0%, 100% {
+            opacity: 0.3;
+            border-color: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 5px rgba(6, 182, 212, 0.1);
+          }
+          50% {
+            opacity: 0.8;
+            border-color: rgba(6, 182, 212, 0.8);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+          }
+        }
+
+        .chip-3d {
+          transform: translateZ(50px);
+          transition: transform 0.3s ease;
+          box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.5),
+            0 0 60px rgba(16, 185, 129, 0.3);
+        }
+
+        .chip-3d:hover {
+          transform: translateZ(70px) scale(1.05);
+        }
+      `}</style>
     </main>
+  );
+}
+
+interface FeatureBoxProps {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}
+
+function FeatureBox({ icon, title, subtitle }: FeatureBoxProps) {
+  return (
+    <div className="group relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-colors">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="text-emerald-500">{icon}</div>
+          <div className="text-xs text-gray-600 uppercase tracking-wider">{subtitle}</div>
+        </div>
+        <h3 className="text-lg font-medium">{title}</h3>
+      </div>
+    </div>
+  );
+}
+
+interface ProcessStepProps {
+  number: string;
+  title: string;
+  description: string;
+}
+
+function ProcessStep({ number, title, description }: ProcessStepProps) {
+  return (
+    <div className="flex gap-6">
+      <div className="flex-shrink-0">
+        <div className="text-5xl font-light text-gray-800">{number}</div>
+      </div>
+      <div>
+        <h3 className="text-2xl font-light mb-3">{title}</h3>
+        <p className="text-gray-500 leading-relaxed">{description}</p>
+      </div>
+    </div>
   );
 }
