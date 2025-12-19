@@ -518,117 +518,88 @@ export default function Home() {
         <section id="week-1" className="container mx-auto px-6 py-20 border-t border-gray-900 relative">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <div className="inline-block mb-6">
-                <div className="flex items-center gap-3 px-4 py-2 border border-emerald-500/30 rounded-full bg-emerald-950/20">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-emerald-400 font-light uppercase tracking-wider">Your First Week</span>
-                </div>
-              </div>
               <h2 className="text-4xl md:text-6xl font-light mb-6 leading-tight">
                 What Happens in <span className="text-white font-normal">Week 1</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">
-                Save hours of unfocused watching. Start practicing your skills from day one.
+                Compare traditional video learning with our AI-powered approach
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              {/* Left - Traditional Approach */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
-                <div className="relative bg-gradient-to-b from-gray-900 to-black border border-red-500/20 rounded-2xl p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-red-950/30 border border-red-500/30 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </div>
-                    <h3 className="text-2xl font-light text-white">Traditional Learning</h3>
-                  </div>
+            {/* Comparison Table */}
+            <div className="bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-2xl overflow-hidden">
+              <div className="grid md:grid-cols-3">
+                {/* Header Column */}
+                <div className="p-8 border-r border-gray-800">
+                  <div className="h-12"></div>
+                </div>
 
-                  <ul className="space-y-4">
-                    <WeekOneItem
-                      icon="⏱️"
-                      text="10+ hours watching videos"
-                      negative
-                    />
-                    <WeekOneItem
-                      icon="😴"
-                      text="Passive consumption, low retention"
-                      negative
-                    />
-                    <WeekOneItem
-                      icon="🔄"
-                      text="Rewatching to find key concepts"
-                      negative
-                    />
-                    <WeekOneItem
-                      icon="📝"
-                      text="Manual note-taking, no testing"
-                      negative
-                    />
-                    <WeekOneItem
-                      icon="❌"
-                      text="No progress tracking"
-                      negative
-                    />
-                  </ul>
+                {/* Traditional Column */}
+                <div className="p-8 border-r border-gray-800 bg-gray-900/30">
+                  <h3 className="text-xl font-light text-white mb-2">Traditional</h3>
+                  <p className="text-sm text-gray-500">Video Platforms</p>
+                </div>
+
+                {/* Preply Column */}
+                <div className="p-8 bg-emerald-950/20">
+                  <h3 className="text-xl font-light text-white mb-2">Preply</h3>
+                  <p className="text-sm text-emerald-500">AI-Powered Learning</p>
                 </div>
               </div>
 
-              {/* Right - With Preply */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent rounded-2xl"></div>
-                <div className="relative bg-gradient-to-b from-emerald-950 to-black border border-emerald-500/30 rounded-2xl p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-950/50 border border-emerald-500/50 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </div>
-                    <h3 className="text-2xl font-light text-white">With Preply</h3>
-                  </div>
-
-                  <ul className="space-y-4">
-                    <WeekOneItem
-                      icon="⚡"
-                      text="5 hours of focused learning"
-                    />
-                    <WeekOneItem
-                      icon="🎯"
-                      text="Active engagement with AI questions"
-                    />
-                    <WeekOneItem
-                      icon="🔍"
-                      text="Instant navigation to any concept"
-                    />
-                    <WeekOneItem
-                      icon="✅"
-                      text="Automated quizzes and flashcards"
-                    />
-                    <WeekOneItem
-                      icon="📊"
-                      text="Real-time comprehension tracking"
-                    />
-                  </ul>
-                </div>
-              </div>
+              {/* Rows */}
+              <ComparisonRow
+                feature="Time Investment"
+                traditional="10+ hours/week"
+                preply="5 hours/week"
+                traditionalNegative
+              />
+              <ComparisonRow
+                feature="Learning Style"
+                traditional="Passive watching"
+                preply="Active engagement"
+                traditionalNegative
+              />
+              <ComparisonRow
+                feature="Content Navigation"
+                traditional="Manual scrubbing"
+                preply="Instant concept search"
+                traditionalNegative
+              />
+              <ComparisonRow
+                feature="Knowledge Testing"
+                traditional="Manual notes only"
+                preply="Automated quizzes"
+                traditionalNegative
+              />
+              <ComparisonRow
+                feature="Progress Tracking"
+                traditional="None"
+                preply="Real-time analytics"
+                traditionalNegative
+              />
+              <ComparisonRow
+                feature="Retention Rate"
+                traditional="~30%"
+                preply="~90%"
+                traditionalNegative
+                noBorder
+              />
             </div>
 
             {/* Bottom Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <div className="text-center p-6 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl">
-                <div className="text-4xl font-light text-emerald-400 mb-2">50%</div>
-                <p className="text-gray-400 text-sm font-light">Less Time Spent</p>
+              <div className="text-center p-8 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl hover:border-emerald-500/30 transition-all">
+                <div className="text-5xl font-light text-emerald-400 mb-3">50%</div>
+                <p className="text-gray-300 font-light">Less Time Required</p>
               </div>
-              <div className="text-center p-6 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl">
-                <div className="text-4xl font-light text-emerald-400 mb-2">3x</div>
-                <p className="text-gray-400 text-sm font-light">Better Retention</p>
+              <div className="text-center p-8 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl hover:border-emerald-500/30 transition-all">
+                <div className="text-5xl font-light text-emerald-400 mb-3">3x</div>
+                <p className="text-gray-300 font-light">Better Retention</p>
               </div>
-              <div className="text-center p-6 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl">
-                <div className="text-4xl font-light text-emerald-400 mb-2">100%</div>
-                <p className="text-gray-400 text-sm font-light">Progress Tracked</p>
+              <div className="text-center p-8 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl hover:border-emerald-500/30 transition-all">
+                <div className="text-5xl font-light text-emerald-400 mb-3">90%</div>
+                <p className="text-gray-300 font-light">Knowledge Retention</p>
               </div>
             </div>
           </div>
@@ -772,20 +743,43 @@ interface ProblemCardProps {
   delay: string;
 }
 
-interface WeekOneItemProps {
-  icon: string;
-  text: string;
-  negative?: boolean;
+interface ComparisonRowProps {
+  feature: string;
+  traditional: string;
+  preply: string;
+  traditionalNegative?: boolean;
+  noBorder?: boolean;
 }
 
-function WeekOneItem({ icon, text, negative }: WeekOneItemProps) {
+function ComparisonRow({ feature, traditional, preply, traditionalNegative, noBorder }: ComparisonRowProps) {
   return (
-    <li className="flex items-start gap-3">
-      <span className="text-2xl mt-0.5">{icon}</span>
-      <span className={`text-base font-light ${negative ? 'text-gray-400' : 'text-gray-300'}`}>
-        {text}
-      </span>
-    </li>
+    <div className={`grid md:grid-cols-3 ${!noBorder ? 'border-t border-gray-800' : ''}`}>
+      {/* Feature Name */}
+      <div className="p-6 border-r border-gray-800">
+        <p className="text-gray-300 font-light">{feature}</p>
+      </div>
+
+      {/* Traditional Value */}
+      <div className="p-6 border-r border-gray-800 bg-gray-900/30">
+        <div className="flex items-center gap-3">
+          <svg className="w-5 h-5 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <p className="text-gray-400 font-light">{traditional}</p>
+        </div>
+      </div>
+
+      {/* Preply Value */}
+      <div className="p-6 bg-emerald-950/20">
+        <div className="flex items-center gap-3">
+          <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <p className="text-gray-200 font-light">{preply}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
