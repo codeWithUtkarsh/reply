@@ -515,91 +515,137 @@ export default function Home() {
         </section>
 
         {/* What Happens in Week 1 Section */}
-        <section id="week-1" className="container mx-auto px-6 py-20 border-t border-gray-900 relative">
-          <div className="max-w-6xl mx-auto">
+        <section id="week-1" className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
+          {/* Background accent */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl"></div>
+
+          <div className="max-w-6xl mx-auto relative z-10">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-6xl font-light mb-6 leading-tight">
-                What Happens in <span className="text-white font-normal">Week 1</span>
+                Transform Your First Week from <br />
+                <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-normal">Wasted Time</span> to{' '}
+                <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent font-normal">Mastery</span>
               </h2>
-              <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">
-                Compare traditional video learning with our AI-powered approach
+              <p className="text-gray-400 text-xl max-w-3xl mx-auto font-light">
+                While others spend <span className="text-red-400 font-normal">10+ hours watching</span>,
+                you'll achieve <span className="text-emerald-400 font-normal">3x better results</span> in half the time
               </p>
             </div>
 
-            {/* Comparison Table */}
-            <div className="bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="grid md:grid-cols-3">
-                {/* Header Column */}
-                <div className="p-8 border-r border-gray-800">
-                  <div className="h-12"></div>
-                </div>
+            {/* Before & After Visual */}
+            <div className="grid md:grid-cols-2 gap-8 mb-16">
+              {/* Traditional - The Problem */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-red-500/5 rounded-2xl"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-red-500/20 rounded-2xl p-8">
+                  <div className="flex items-start justify-between mb-8">
+                    <div>
+                      <div className="text-sm text-red-400 font-light uppercase tracking-wider mb-2">Before Preply</div>
+                      <h3 className="text-3xl font-light text-white">The Old Way</h3>
+                    </div>
+                    <div className="text-5xl font-light text-red-400">10h</div>
+                  </div>
 
-                {/* Traditional Column */}
-                <div className="p-8 border-r border-gray-800 bg-gray-900/30">
-                  <h3 className="text-xl font-light text-white mb-2">Traditional</h3>
-                  <p className="text-sm text-gray-500">Video Platforms</p>
-                </div>
+                  <div className="space-y-4 mb-8">
+                    <ImpactItem
+                      text="Hours lost rewatching videos"
+                      negative
+                    />
+                    <ImpactItem
+                      text="Passive learning, poor retention"
+                      negative
+                    />
+                    <ImpactItem
+                      text="No way to verify understanding"
+                      negative
+                    />
+                    <ImpactItem
+                      text="Forget 70% within days"
+                      negative
+                    />
+                  </div>
 
-                {/* Preply Column */}
-                <div className="p-8 bg-emerald-950/20">
-                  <h3 className="text-xl font-light text-white mb-2">Preply</h3>
-                  <p className="text-sm text-emerald-500">AI-Powered Learning</p>
+                  <div className="pt-6 border-t border-red-500/10">
+                    <div className="text-sm text-gray-500">Retention Rate</div>
+                    <div className="text-3xl font-light text-red-400">30%</div>
+                  </div>
                 </div>
               </div>
 
-              {/* Rows */}
-              <ComparisonRow
-                feature="Time Investment"
-                traditional="10+ hours/week"
-                preply="5 hours/week"
-                traditionalNegative
-              />
-              <ComparisonRow
-                feature="Learning Style"
-                traditional="Passive watching"
-                preply="Active engagement"
-                traditionalNegative
-              />
-              <ComparisonRow
-                feature="Content Navigation"
-                traditional="Manual scrubbing"
-                preply="Instant concept search"
-                traditionalNegative
-              />
-              <ComparisonRow
-                feature="Knowledge Testing"
-                traditional="Manual notes only"
-                preply="Automated quizzes"
-                traditionalNegative
-              />
-              <ComparisonRow
-                feature="Progress Tracking"
-                traditional="None"
-                preply="Real-time analytics"
-                traditionalNegative
-              />
-              <ComparisonRow
-                feature="Retention Rate"
-                traditional="~30%"
-                preply="~90%"
-                traditionalNegative
-                noBorder
-              />
+              {/* With Preply - The Solution */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-emerald-950 to-black border-2 border-emerald-500/40 rounded-2xl p-8">
+                  <div className="flex items-start justify-between mb-8">
+                    <div>
+                      <div className="text-sm text-emerald-400 font-light uppercase tracking-wider mb-2">With Preply</div>
+                      <h3 className="text-3xl font-light text-white">The Smart Way</h3>
+                    </div>
+                    <div className="text-5xl font-light text-emerald-400">5h</div>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    <ImpactItem
+                      text="AI-powered active learning"
+                    />
+                    <ImpactItem
+                      text="Instant concept navigation"
+                    />
+                    <ImpactItem
+                      text="Continuous knowledge testing"
+                    />
+                    <ImpactItem
+                      text="90% retention guaranteed"
+                    />
+                  </div>
+
+                  <div className="pt-6 border-t border-emerald-500/20">
+                    <div className="text-sm text-gray-400">Retention Rate</div>
+                    <div className="text-3xl font-light text-emerald-400">90%</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Bottom Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <div className="text-center p-8 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl hover:border-emerald-500/30 transition-all">
-                <div className="text-5xl font-light text-emerald-400 mb-3">50%</div>
-                <p className="text-gray-300 font-light">Less Time Required</p>
+            {/* Impact Stats */}
+            <div className="bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-2xl p-8 md:p-12">
+              <div className="text-center mb-10">
+                <h3 className="text-2xl md:text-3xl font-light text-white mb-3">
+                  The Real Impact
+                </h3>
+                <p className="text-gray-400">Measurable results from day one</p>
               </div>
-              <div className="text-center p-8 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl hover:border-emerald-500/30 transition-all">
-                <div className="text-5xl font-light text-emerald-400 mb-3">3x</div>
-                <p className="text-gray-300 font-light">Better Retention</p>
-              </div>
-              <div className="text-center p-8 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl hover:border-emerald-500/30 transition-all">
-                <div className="text-5xl font-light text-emerald-400 mb-3">90%</div>
-                <p className="text-gray-300 font-light">Knowledge Retention</p>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center group">
+                  <div className="mb-4">
+                    <div className="text-6xl font-light text-emerald-400 mb-2 group-hover:scale-110 transition-transform">50%</div>
+                    <div className="text-sm text-emerald-500 uppercase tracking-wider">Time Saved</div>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Reclaim <span className="text-white font-normal">5+ hours weekly</span> for actual practice
+                  </p>
+                </div>
+
+                <div className="text-center group border-x border-gray-800">
+                  <div className="mb-4">
+                    <div className="text-6xl font-light text-emerald-400 mb-2 group-hover:scale-110 transition-transform">3x</div>
+                    <div className="text-sm text-emerald-500 uppercase tracking-wider">Faster Mastery</div>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Learn in <span className="text-white font-normal">1 week</span> what takes others a month
+                  </p>
+                </div>
+
+                <div className="text-center group">
+                  <div className="mb-4">
+                    <div className="text-6xl font-light text-emerald-400 mb-2 group-hover:scale-110 transition-transform">90%</div>
+                    <div className="text-sm text-emerald-500 uppercase tracking-wider">Retention</div>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    <span className="text-white font-normal">Remember what you learn</span>, not just watch it
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -743,42 +789,27 @@ interface ProblemCardProps {
   delay: string;
 }
 
-interface ComparisonRowProps {
-  feature: string;
-  traditional: string;
-  preply: string;
-  traditionalNegative?: boolean;
-  noBorder?: boolean;
+interface ImpactItemProps {
+  text: string;
+  negative?: boolean;
 }
 
-function ComparisonRow({ feature, traditional, preply, traditionalNegative, noBorder }: ComparisonRowProps) {
+function ImpactItem({ text, negative }: ImpactItemProps) {
   return (
-    <div className={`grid md:grid-cols-3 ${!noBorder ? 'border-t border-gray-800' : ''}`}>
-      {/* Feature Name */}
-      <div className="p-6 border-r border-gray-800">
-        <p className="text-gray-300 font-light">{feature}</p>
-      </div>
-
-      {/* Traditional Value */}
-      <div className="p-6 border-r border-gray-800 bg-gray-900/30">
-        <div className="flex items-center gap-3">
-          <svg className="w-5 h-5 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-          <p className="text-gray-400 font-light">{traditional}</p>
-        </div>
-      </div>
-
-      {/* Preply Value */}
-      <div className="p-6 bg-emerald-950/20">
-        <div className="flex items-center gap-3">
-          <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          <p className="text-gray-200 font-light">{preply}</p>
-        </div>
-      </div>
+    <div className="flex items-start gap-3">
+      {negative ? (
+        <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      ) : (
+        <svg className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      )}
+      <p className={`${negative ? 'text-gray-400' : 'text-gray-200'} font-light`}>
+        {text}
+      </p>
     </div>
   );
 }
