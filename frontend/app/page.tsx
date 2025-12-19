@@ -104,19 +104,39 @@ export default function Home() {
       {/* Content */}
       <div className="relative z-10">
         {/* Navigation */}
-        <nav className="container mx-auto px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-2 relative">
-            {/* Glowing lines from logo */}
-            <div className="absolute left-full top-1/2 ml-4 w-32 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
-            <div className="absolute left-full top-1/2 ml-4 w-24 h-px bg-gradient-to-r from-emerald-500 to-transparent blur-sm"></div>
+        <nav className="container mx-auto px-6 py-6 relative">
+          <div className="flex items-center justify-between">
+            {/* Logo - Left */}
+            <div className="flex items-center gap-2 relative">
+              {/* Glowing lines from logo */}
+              <div className="absolute left-full top-1/2 ml-4 w-32 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+              <div className="absolute left-full top-1/2 ml-4 w-24 h-px bg-gradient-to-r from-emerald-500 to-transparent blur-sm"></div>
 
-            <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center">
-              <Play className="w-4 h-4 text-emerald-500" />
+              <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center">
+                <Play className="w-4 h-4 text-emerald-500" />
+              </div>
+              <span className="text-xl font-semibold tracking-tight">PREPLY</span>
             </div>
-            <span className="text-xl font-semibold tracking-tight">PREPLY</span>
+
+            {/* Auth buttons - Right */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={openSignIn}
+                className="px-6 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              >
+                Log In
+              </button>
+              <button
+                onClick={openSignUp}
+                className="px-6 py-2 text-sm font-medium bg-white text-black rounded hover:bg-gray-200 transition-colors"
+              >
+                Get Started
+              </button>
+            </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-1 px-2 py-2 bg-gradient-to-b from-gray-900/50 to-black/50 border border-gray-800 rounded-full backdrop-blur-sm">
+          {/* Navigation - Absolutely centered */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 px-2 py-2 bg-gradient-to-b from-gray-900/50 to-black/50 border border-gray-800 rounded-full backdrop-blur-sm">
             <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
               Overview
             </button>
@@ -125,21 +145,6 @@ export default function Home() {
             </button>
             <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
               Features
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={openSignIn}
-              className="px-6 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
-            >
-              Log In
-            </button>
-            <button
-              onClick={openSignUp}
-              className="px-6 py-2 text-sm font-medium bg-white text-black rounded hover:bg-gray-200 transition-colors"
-            >
-              Get Started
             </button>
           </div>
         </nav>
