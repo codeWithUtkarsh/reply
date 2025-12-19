@@ -105,21 +105,25 @@ export default function Home() {
       <div className="relative z-10">
         {/* Navigation */}
         <nav className="container mx-auto px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
+            {/* Glowing lines from logo */}
+            <div className="absolute left-full top-1/2 ml-4 w-32 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+            <div className="absolute left-full top-1/2 ml-4 w-24 h-px bg-gradient-to-r from-emerald-500 to-transparent blur-sm"></div>
+
             <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center">
               <Play className="w-4 h-4 text-emerald-500" />
             </div>
             <span className="text-xl font-semibold tracking-tight">PREPLY</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-4 text-sm">
-            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+          <div className="hidden md:flex items-center gap-1 px-2 py-2 bg-gradient-to-b from-gray-900/50 to-black/50 border border-gray-800 rounded-full backdrop-blur-sm">
+            <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
               Overview
             </button>
-            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+            <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
               Technology
             </button>
-            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
+            <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
               Features
             </button>
           </div>
