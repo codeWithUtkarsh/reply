@@ -252,13 +252,26 @@ export default function Home() {
         </section>
 
         {/* Problem with Video Learning Section */}
-        <section className="container mx-auto px-6 py-20 border-t border-gray-900">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-light mb-4">
-                The Problem with <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent font-normal">Video Learning</span>
+        <section className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-20 left-10 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl"></div>
+
+          <div className="max-w-6xl mx-auto relative z-10">
+            <div className="text-center mb-20">
+              <div className="inline-block mb-6">
+                <div className="flex items-center gap-3 px-4 py-2 border border-red-500/30 rounded-full bg-red-950/20">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-red-400 font-light uppercase tracking-wider">The Challenge</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-light mb-6 leading-tight">
+                The Problem with <br />
+                <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent font-normal">Video Learning</span>
               </h2>
-              <p className="text-gray-500">Traditional video platforms aren't designed for learning. They're built for entertainment.</p>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">
+                Traditional video platforms aren't designed for learning. They're built for entertainment.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -272,10 +285,11 @@ export default function Home() {
                   </svg>
                 }
                 iconColor="text-red-500"
+                glowColor="red"
                 stat="67%"
-                statColor="text-purple-400"
                 title="Poor Retention"
                 description="Students struggle to retain information from video lectures"
+                delay="0"
               />
               <ProblemCard
                 icon={
@@ -285,10 +299,11 @@ export default function Home() {
                   </svg>
                 }
                 iconColor="text-orange-500"
+                glowColor="orange"
                 stat="85%"
-                statColor="text-purple-400"
                 title="Passive Watching"
                 description="Passive video watching leads to poor engagement and low retention"
+                delay="100"
               />
               <ProblemCard
                 icon={
@@ -298,10 +313,11 @@ export default function Home() {
                   </svg>
                 }
                 iconColor="text-yellow-500"
+                glowColor="yellow"
                 stat="2+ hrs"
-                statColor="text-purple-400"
                 title="Wasted Time"
                 description="Students spend hours rewatching videos to find specific concepts"
+                delay="200"
               />
               <ProblemCard
                 icon={
@@ -309,11 +325,12 @@ export default function Home() {
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                   </svg>
                 }
-                iconColor="text-gray-500"
+                iconColor="text-gray-400"
+                glowColor="gray"
                 stat="0%"
-                statColor="text-purple-400"
                 title="No Tracking"
                 description="No way to track comprehension in real-time while watching"
+                delay="300"
               />
             </div>
           </div>
@@ -406,6 +423,22 @@ export default function Home() {
         .chip-3d:hover {
           transform: translateZ(70px) scale(1.05);
         }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .problem-card-animate {
+          animation: fadeInUp 0.6s ease-out forwards;
+          opacity: 0;
+        }
       `}</style>
     </main>
   );
@@ -455,25 +488,70 @@ function ProcessStep({ number, title, description }: ProcessStepProps) {
 interface ProblemCardProps {
   icon: React.ReactNode;
   iconColor: string;
+  glowColor: string;
   stat: string;
-  statColor: string;
   title: string;
   description: string;
+  delay: string;
 }
 
-function ProblemCard({ icon, iconColor, stat, statColor, title, description }: ProblemCardProps) {
+function ProblemCard({ icon, iconColor, glowColor, stat, title, description, delay }: ProblemCardProps) {
+  const glowColors: Record<string, string> = {
+    red: 'group-hover:shadow-red-500/20',
+    orange: 'group-hover:shadow-orange-500/20',
+    yellow: 'group-hover:shadow-yellow-500/20',
+    gray: 'group-hover:shadow-gray-500/20',
+  };
+
+  const borderColors: Record<string, string> = {
+    red: 'group-hover:border-red-500/30',
+    orange: 'group-hover:border-orange-500/30',
+    yellow: 'group-hover:border-yellow-500/30',
+    gray: 'group-hover:border-gray-500/30',
+  };
+
   return (
-    <div className="group relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
-      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-8 hover:border-emerald-500/30 transition-all">
-        <div className={`${iconColor} mb-6 opacity-60`}>
-          {icon}
+    <div
+      className="group relative problem-card-animate"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {/* Animated border gradient */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500"></div>
+
+      {/* Main card */}
+      <div className={`relative bg-gradient-to-br from-gray-900 via-black to-gray-900 border border-gray-800 ${borderColors[glowColor]} rounded-2xl p-8 transition-all duration-500 ${glowColors[glowColor]} shadow-xl group-hover:shadow-2xl group-hover:-translate-y-1`}>
+        {/* Icon container with floating animation */}
+        <div className="relative mb-6">
+          <div className={`absolute inset-0 ${iconColor} opacity-20 blur-xl group-hover:opacity-40 transition-opacity`}></div>
+          <div className={`relative ${iconColor} transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+            {icon}
+          </div>
         </div>
-        <div className="text-4xl font-light text-white mb-3">
-          {stat}
+
+        {/* Stat with counter effect feel */}
+        <div className="relative mb-4">
+          <div className={`text-5xl font-light text-white mb-1 transform group-hover:scale-105 transition-transform duration-300`}>
+            {stat}
+          </div>
+          <div className={`h-1 w-12 ${iconColor} opacity-50 rounded-full`}></div>
         </div>
-        <h3 className="text-xl font-light text-white mb-3">{title}</h3>
-        <p className="text-gray-500 text-sm leading-relaxed font-light">{description}</p>
+
+        {/* Title */}
+        <h3 className="text-xl font-light text-white mb-3 group-hover:text-gray-100 transition-colors">
+          {title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-gray-500 text-sm leading-relaxed font-light group-hover:text-gray-400 transition-colors">
+          {description}
+        </p>
+
+        {/* Decorative corner element */}
+        <div className={`absolute bottom-4 right-4 w-8 h-8 ${iconColor} opacity-5 group-hover:opacity-10 transition-opacity`}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+          </svg>
+        </div>
       </div>
     </div>
   );
