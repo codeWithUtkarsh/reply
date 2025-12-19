@@ -70,6 +70,13 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const scrollToFeatures = () => {
+    const element = document.getElementById('features');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -185,7 +192,10 @@ export default function Home() {
             <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
               Technology
             </button>
-            <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
+            <button
+              onClick={scrollToFeatures}
+              className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
+            >
               Features
             </button>
           </div>
@@ -233,7 +243,7 @@ export default function Home() {
             </p>
 
             {/* CTA Button */}
-            <div className="flex justify-center mb-20">
+            <div className="flex justify-center">
               <button
                 onClick={openSignUp}
                 className="group relative px-8 py-3 bg-emerald-500 text-black font-medium rounded hover:bg-emerald-400 transition-all duration-300 flex items-center gap-2"
@@ -242,35 +252,11 @@ export default function Home() {
                 <span>Schedule Demo</span>
               </button>
             </div>
-
-            {/* Preorders text */}
-            <p className="text-center text-gray-600 text-sm mb-8">
-              Free Credits Available Now
-            </p>
-
-            {/* Bottom cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <FeatureBox
-                icon={<CheckCircle2 className="w-5 h-5" />}
-                title="AI Questions"
-                subtitle="Smart Platform"
-              />
-              <FeatureBox
-                icon={<BarChart3 className="w-5 h-5" />}
-                title="Progress Tracking"
-                subtitle="Analytics"
-              />
-              <FeatureBox
-                icon={<Play className="w-5 h-5" />}
-                title="Video Learning"
-                subtitle="Interactive"
-              />
-            </div>
           </div>
         </section>
 
         {/* Fancy Carousel Feature Section */}
-        <section className="container mx-auto px-6 py-20 border-t border-gray-900 relative">
+        <section id="features" className="container mx-auto px-6 py-20 border-t border-gray-900 relative">
           <div className="max-w-7xl mx-auto">
             <div className="relative h-[500px] md:h-[600px] overflow-hidden rounded-3xl">
               {/* Carousel slides */}
@@ -613,27 +599,6 @@ export default function Home() {
         }
       `}</style>
     </main>
-  );
-}
-
-interface FeatureBoxProps {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-}
-
-function FeatureBox({ icon, title, subtitle }: FeatureBoxProps) {
-  return (
-    <div className="group relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
-      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-colors">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="text-emerald-500">{icon}</div>
-          <div className="text-xs text-gray-600 uppercase tracking-wider">{subtitle}</div>
-        </div>
-        <h3 className="text-lg font-medium">{title}</h3>
-      </div>
-    </div>
   );
 }
 
