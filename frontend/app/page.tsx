@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Play, LogIn, UserPlus, Lock, CheckCircle2, BarChart3, Zap } from 'lucide-react';
+import { Play, LogIn, UserPlus, Lock, CheckCircle2, BarChart3, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 
 export default function Home() {
@@ -11,6 +11,7 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -27,6 +28,47 @@ export default function Home() {
     setAuthMode('signup');
     setShowAuthModal(true);
   };
+
+  const features = [
+    {
+      icon: <CheckCircle2 className="w-8 h-8" />,
+      label: 'SMART PLATFORM',
+      title: 'AI Questions',
+      description: 'Get intelligent questions generated from any video content to test your understanding',
+      gradient: 'from-emerald-500/20 to-teal-500/20',
+      iconColor: 'text-emerald-500',
+    },
+    {
+      icon: <BarChart3 className="w-8 h-8" />,
+      label: 'ANALYTICS',
+      title: 'Progress Tracking',
+      description: 'Monitor your learning journey with detailed analytics and insights',
+      gradient: 'from-blue-500/20 to-cyan-500/20',
+      iconColor: 'text-blue-500',
+    },
+    {
+      icon: <Play className="w-8 h-8" />,
+      label: 'INTERACTIVE',
+      title: 'Video Learning',
+      description: 'Transform any video into an interactive learning experience with AI',
+      gradient: 'from-purple-500/20 to-pink-500/20',
+      iconColor: 'text-purple-500',
+    },
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % features.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + features.length) % features.length);
+  };
+
+  // Auto-play carousel
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (authLoading) {
     return (
@@ -223,6 +265,127 @@ export default function Home() {
                 title="Video Learning"
                 subtitle="Interactive"
               />
+            </div>
+          </div>
+        </section>
+
+        {/* Fancy Carousel Feature Section */}
+        <section className="container mx-auto px-6 py-20 border-t border-gray-900 relative">
+          <div className="max-w-7xl mx-auto">
+            <div className="relative h-[500px] md:h-[600px] overflow-hidden rounded-3xl">
+              {/* Carousel slides */}
+              {features.map((feature, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                    index === currentSlide
+                      ? 'opacity-100 translate-x-0 scale-100'
+                      : index < currentSlide
+                      ? 'opacity-0 -translate-x-full scale-95'
+                      : 'opacity-0 translate-x-full scale-95'
+                  }`}
+                >
+                  {/* Background gradient */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient}`}></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+
+                  {/* Animated particles */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    {[...Array(20)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+                        style={{
+                          left: `${Math.random() * 100}%`,
+                          top: `${Math.random() * 100}%`,
+                          animationDelay: `${Math.random() * 3}s`,
+                          animationDuration: `${2 + Math.random() * 3}s`,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative h-full flex items-center">
+                    <div className="container mx-auto px-8 md:px-16">
+                      <div className="max-w-3xl">
+                        {/* Icon */}
+                        <div className={`mb-8 ${feature.iconColor} transform transition-transform duration-700 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/10">
+                            {feature.icon}
+                          </div>
+                        </div>
+
+                        {/* Label */}
+                        <div className={`mb-4 transition-all duration-700 delay-100 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          <span className={`text-sm font-light uppercase tracking-widest ${feature.iconColor}`}>
+                            {feature.label}
+                          </span>
+                        </div>
+
+                        {/* Title */}
+                        <h2 className={`text-5xl md:text-7xl font-light text-white mb-6 transition-all duration-700 delay-200 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          {feature.title}
+                        </h2>
+
+                        {/* Description */}
+                        <p className={`text-xl text-gray-300 font-light mb-8 max-w-2xl transition-all duration-700 delay-300 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          {feature.description}
+                        </p>
+
+                        {/* CTA Button */}
+                        <div className={`transition-all duration-700 delay-400 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          <button
+                            onClick={openSignUp}
+                            className="px-8 py-4 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
+                          >
+                            Learn More
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Navigation Arrows */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all z-10 group"
+              >
+                <ChevronLeft className="w-6 h-6 group-hover:scale-125 transition-transform" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all z-10 group"
+              >
+                <ChevronRight className="w-6 h-6 group-hover:scale-125 transition-transform" />
+              </button>
+
+              {/* Dot Indicators */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+                {features.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      index === currentSlide
+                        ? 'w-12 bg-white'
+                        : 'w-2 bg-white/40 hover:bg-white/60'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </section>
