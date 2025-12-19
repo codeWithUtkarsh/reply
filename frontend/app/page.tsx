@@ -396,39 +396,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="container mx-auto px-6 py-20 border-t border-gray-900">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-light mb-4">How It Works</h2>
-              <p className="text-gray-500">Simple, powerful, effective</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-12">
-              <ProcessStep
-                number="01"
-                title="Create Account"
-                description="Sign up in seconds and receive 10 free credits to start your learning journey."
-              />
-              <ProcessStep
-                number="02"
-                title="Add Videos"
-                description="Paste any YouTube URL and our AI will transform it into an interactive learning experience."
-              />
-              <ProcessStep
-                number="03"
-                title="Learn & Practice"
-                description="Engage with AI-generated questions, flashcards, and quizzes tailored to your pace."
-              />
-              <ProcessStep
-                number="04"
-                title="Adaptive Learning Path"
-                description="Our reinforcement learning AI optimizes what you learn next, filling knowledge gaps and maximizing retention based on your unique study patterns."
-              />
-            </div>
-          </div>
-        </section>
-
         {/* Problem with Video Learning Section */}
         <section id="challenges" className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
           {/* Decorative elements */}
@@ -509,6 +476,39 @@ export default function Home() {
                 title="No Tracking"
                 description="No way to track comprehension in real-time while watching"
                 delay="300"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="container mx-auto px-6 py-20 border-t border-gray-900">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-light mb-4">How It Works</h2>
+              <p className="text-gray-500">Simple, powerful, effective</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12">
+              <ProcessStep
+                number="01"
+                title="Create Account"
+                description="Sign up in seconds and receive 10 free credits to start your learning journey."
+              />
+              <ProcessStep
+                number="02"
+                title="Add Videos"
+                description="Paste any YouTube URL and our AI will transform it into an interactive learning experience."
+              />
+              <ProcessStep
+                number="03"
+                title="Learn & Practice"
+                description="Engage with AI-generated questions, flashcards, and quizzes tailored to your pace."
+              />
+              <ProcessStep
+                number="04"
+                title="Adaptive Learning Path"
+                description="Our reinforcement learning AI optimizes what you learn next, filling knowledge gaps and maximizing retention based on your unique study patterns."
               />
             </div>
           </div>
