@@ -77,6 +77,20 @@ export default function Home() {
     }
   };
 
+  const scrollToChallenges = () => {
+    const element = document.getElementById('challenges');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const scrollToWeekOne = () => {
+    const element = document.getElementById('week-1');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -186,17 +200,23 @@ export default function Home() {
 
           {/* Navigation - Absolutely centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 px-2 py-2 bg-gradient-to-b from-gray-900/50 to-black/50 border border-gray-800 rounded-full backdrop-blur-sm">
-            <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
-              Overview
-            </button>
-            <button className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all">
-              Technology
+            <button
+              onClick={scrollToChallenges}
+              className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
+            >
+              Learner Challenges
             </button>
             <button
               onClick={scrollToFeatures}
               className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
             >
-              Features
+              How We Help
+            </button>
+            <button
+              onClick={scrollToWeekOne}
+              className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
+            >
+              What Happens in Week 1
             </button>
           </div>
         </nav>
@@ -410,7 +430,7 @@ export default function Home() {
         </section>
 
         {/* Problem with Video Learning Section */}
-        <section className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
+        <section id="challenges" className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-20 left-10 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 right-10 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl"></div>
@@ -490,6 +510,126 @@ export default function Home() {
                 description="No way to track comprehension in real-time while watching"
                 delay="300"
               />
+            </div>
+          </div>
+        </section>
+
+        {/* What Happens in Week 1 Section */}
+        <section id="week-1" className="container mx-auto px-6 py-20 border-t border-gray-900 relative">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-block mb-6">
+                <div className="flex items-center gap-3 px-4 py-2 border border-emerald-500/30 rounded-full bg-emerald-950/20">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-emerald-400 font-light uppercase tracking-wider">Your First Week</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-light mb-6 leading-tight">
+                What Happens in <span className="text-white font-normal">Week 1</span>
+              </h2>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">
+                Save hours of unfocused watching. Start practicing your skills from day one.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              {/* Left - Traditional Approach */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+                <div className="relative bg-gradient-to-b from-gray-900 to-black border border-red-500/20 rounded-2xl p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-red-950/30 border border-red-500/30 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-light text-white">Traditional Learning</h3>
+                  </div>
+
+                  <ul className="space-y-4">
+                    <WeekOneItem
+                      icon="⏱️"
+                      text="10+ hours watching videos"
+                      negative
+                    />
+                    <WeekOneItem
+                      icon="😴"
+                      text="Passive consumption, low retention"
+                      negative
+                    />
+                    <WeekOneItem
+                      icon="🔄"
+                      text="Rewatching to find key concepts"
+                      negative
+                    />
+                    <WeekOneItem
+                      icon="📝"
+                      text="Manual note-taking, no testing"
+                      negative
+                    />
+                    <WeekOneItem
+                      icon="❌"
+                      text="No progress tracking"
+                      negative
+                    />
+                  </ul>
+                </div>
+              </div>
+
+              {/* Right - With Preply */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent rounded-2xl"></div>
+                <div className="relative bg-gradient-to-b from-emerald-950 to-black border border-emerald-500/30 rounded-2xl p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-950/50 border border-emerald-500/50 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-light text-white">With Preply</h3>
+                  </div>
+
+                  <ul className="space-y-4">
+                    <WeekOneItem
+                      icon="⚡"
+                      text="5 hours of focused learning"
+                    />
+                    <WeekOneItem
+                      icon="🎯"
+                      text="Active engagement with AI questions"
+                    />
+                    <WeekOneItem
+                      icon="🔍"
+                      text="Instant navigation to any concept"
+                    />
+                    <WeekOneItem
+                      icon="✅"
+                      text="Automated quizzes and flashcards"
+                    />
+                    <WeekOneItem
+                      icon="📊"
+                      text="Real-time comprehension tracking"
+                    />
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+              <div className="text-center p-6 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl">
+                <div className="text-4xl font-light text-emerald-400 mb-2">50%</div>
+                <p className="text-gray-400 text-sm font-light">Less Time Spent</p>
+              </div>
+              <div className="text-center p-6 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl">
+                <div className="text-4xl font-light text-emerald-400 mb-2">3x</div>
+                <p className="text-gray-400 text-sm font-light">Better Retention</p>
+              </div>
+              <div className="text-center p-6 bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-xl">
+                <div className="text-4xl font-light text-emerald-400 mb-2">100%</div>
+                <p className="text-gray-400 text-sm font-light">Progress Tracked</p>
+              </div>
             </div>
           </div>
         </section>
@@ -630,6 +770,23 @@ interface ProblemCardProps {
   title: string;
   description: string;
   delay: string;
+}
+
+interface WeekOneItemProps {
+  icon: string;
+  text: string;
+  negative?: boolean;
+}
+
+function WeekOneItem({ icon, text, negative }: WeekOneItemProps) {
+  return (
+    <li className="flex items-start gap-3">
+      <span className="text-2xl mt-0.5">{icon}</span>
+      <span className={`text-base font-light ${negative ? 'text-gray-400' : 'text-gray-300'}`}>
+        {text}
+      </span>
+    </li>
+  );
 }
 
 function ProblemCard({ icon, iconColor, glowColor, stat, title, description, delay }: ProblemCardProps) {
