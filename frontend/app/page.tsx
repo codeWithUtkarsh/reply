@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Play, LogIn, UserPlus, Lock, CheckCircle2, BarChart3, Zap } from 'lucide-react';
+import { Play, LogIn, UserPlus, Lock, CheckCircle2, BarChart3, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 
 export default function Home() {
@@ -11,6 +11,7 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -26,6 +27,68 @@ export default function Home() {
   const openSignUp = () => {
     setAuthMode('signup');
     setShowAuthModal(true);
+  };
+
+  const features = [
+    {
+      icon: <CheckCircle2 className="w-8 h-8" />,
+      label: 'SMART PLATFORM',
+      title: 'AI Questions',
+      description: 'Get intelligent questions generated from any video content to test your understanding',
+      gradient: 'from-emerald-500/20 to-teal-500/20',
+      iconColor: 'text-emerald-500',
+    },
+    {
+      icon: <BarChart3 className="w-8 h-8" />,
+      label: 'ANALYTICS',
+      title: 'Progress Tracking',
+      description: 'AI-powered reinforcement learning adapts your path in real-time, filling knowledge gaps and maximizing retention based on your unique study behavior',
+      gradient: 'from-blue-500/20 to-cyan-500/20',
+      iconColor: 'text-blue-500',
+    },
+    {
+      icon: <Play className="w-8 h-8" />,
+      label: 'INTERACTIVE',
+      title: 'Video Learning',
+      description: 'Transform any video into an interactive learning experience with AI',
+      gradient: 'from-purple-500/20 to-pink-500/20',
+      iconColor: 'text-purple-500',
+    },
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % features.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + features.length) % features.length);
+  };
+
+  // Auto-play carousel
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const scrollToFeatures = () => {
+    const element = document.getElementById('features');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const scrollToChallenges = () => {
+    const element = document.getElementById('challenges');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const scrollToWeekOne = () => {
+    const element = document.getElementById('week-1');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   if (authLoading) {
@@ -104,38 +167,56 @@ export default function Home() {
       {/* Content */}
       <div className="relative z-10">
         {/* Navigation */}
-        <nav className="container mx-auto px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center">
-              <Play className="w-4 h-4 text-emerald-500" />
+        <nav className="container mx-auto px-6 py-6 relative">
+          <div className="flex items-center justify-between">
+            {/* Logo - Left */}
+            <div className="flex items-center gap-2 relative">
+              {/* Glowing lines from logo */}
+              <div className="absolute left-full top-1/2 ml-4 w-32 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+              <div className="absolute left-full top-1/2 ml-4 w-24 h-px bg-gradient-to-r from-emerald-500 to-transparent blur-sm"></div>
+
+              <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center">
+                <Play className="w-4 h-4 text-emerald-500" />
+              </div>
+              <span className="text-xl font-semibold tracking-tight">PREPLY</span>
             </div>
-            <span className="text-xl font-semibold tracking-tight">PREPLY</span>
+
+            {/* Auth buttons - Right */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={openSignIn}
+                className="px-6 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              >
+                Log In
+              </button>
+              <button
+                onClick={openSignUp}
+                className="px-6 py-2 text-sm font-medium bg-white text-black rounded hover:bg-gray-200 transition-colors"
+              >
+                Get Started
+              </button>
+            </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-4 text-sm">
-            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
-              Overview
-            </button>
-            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
-              Technology
-            </button>
-            <button className="px-5 py-2 border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-all">
-              Features
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
+          {/* Navigation - Absolutely centered */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 px-2 py-2 bg-gradient-to-b from-gray-900/50 to-black/50 border border-gray-800 rounded-full backdrop-blur-sm">
             <button
-              onClick={openSignIn}
-              className="px-6 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              onClick={scrollToChallenges}
+              className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
             >
-              Log In
+              Learner Challenges
             </button>
             <button
-              onClick={openSignUp}
-              className="px-6 py-2 text-sm font-medium bg-white text-black rounded hover:bg-gray-200 transition-colors"
+              onClick={scrollToFeatures}
+              className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
             >
-              Get Started
+              How We Help
+            </button>
+            <button
+              onClick={scrollToWeekOne}
+              className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
+            >
+              What Happens in Week 1
             </button>
           </div>
         </nav>
@@ -178,11 +259,11 @@ export default function Home() {
 
             {/* Subheading */}
             <p className="text-center text-gray-400 text-lg md:text-xl mb-4 max-w-3xl mx-auto leading-relaxed">
-              No Ads, AI-powered adaptive learning and quizzes. Cut down your preparation time by 50% <span className="text-white font-semibold">Never forget what you learn.</span>
+              Reinforcement learning AI personalizes your path, filling knowledge gaps automatically. Cut down your preparation time by 50% <span className="text-white font-semibold">Never forget what you learn.</span>
             </p>
 
             {/* CTA Button */}
-            <div className="flex justify-center mb-20">
+            <div className="flex justify-center">
               <button
                 onClick={openSignUp}
                 className="group relative px-8 py-3 bg-emerald-500 text-black font-medium rounded hover:bg-emerald-400 transition-all duration-300 flex items-center gap-2"
@@ -191,28 +272,210 @@ export default function Home() {
                 <span>Schedule Demo</span>
               </button>
             </div>
+          </div>
+        </section>
 
-            {/* Preorders text */}
-            <p className="text-center text-gray-600 text-sm mb-8">
-              Free Credits Available Now
-            </p>
+        {/* Fancy Carousel Feature Section */}
+        <section id="features" className="container mx-auto px-6 py-20 border-t border-gray-900 relative">
+          <div className="max-w-7xl mx-auto">
+            <div className="relative h-[500px] md:h-[600px] overflow-hidden rounded-3xl">
+              {/* Carousel slides */}
+              {features.map((feature, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                    index === currentSlide
+                      ? 'opacity-100 translate-x-0 scale-100'
+                      : index < currentSlide
+                      ? 'opacity-0 -translate-x-full scale-95'
+                      : 'opacity-0 translate-x-full scale-95'
+                  }`}
+                >
+                  {/* Background gradient */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient}`}></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
 
-            {/* Bottom cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <FeatureBox
-                icon={<CheckCircle2 className="w-5 h-5" />}
-                title="AI Questions"
-                subtitle="Smart Platform"
+                  {/* Animated particles */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    {[...Array(20)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+                        style={{
+                          left: `${Math.random() * 100}%`,
+                          top: `${Math.random() * 100}%`,
+                          animationDelay: `${Math.random() * 3}s`,
+                          animationDuration: `${2 + Math.random() * 3}s`,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative h-full flex items-center">
+                    <div className="container mx-auto px-8 md:px-16">
+                      <div className="max-w-3xl">
+                        {/* Icon */}
+                        <div className={`mb-8 ${feature.iconColor} transform transition-transform duration-700 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/10">
+                            {feature.icon}
+                          </div>
+                        </div>
+
+                        {/* Label */}
+                        <div className={`mb-4 transition-all duration-700 delay-100 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          <span className={`text-sm font-light uppercase tracking-widest ${feature.iconColor}`}>
+                            {feature.label}
+                          </span>
+                        </div>
+
+                        {/* Title */}
+                        <h2 className={`text-5xl md:text-7xl font-light text-white mb-6 transition-all duration-700 delay-200 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          {feature.title}
+                        </h2>
+
+                        {/* Description */}
+                        <p className={`text-xl text-gray-300 font-light mb-8 max-w-2xl transition-all duration-700 delay-300 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          {feature.description}
+                        </p>
+
+                        {/* CTA Button */}
+                        <div className={`transition-all duration-700 delay-400 ${
+                          index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                        }`}>
+                          <button
+                            onClick={openSignUp}
+                            className="px-8 py-4 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
+                          >
+                            Learn More
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Navigation Arrows */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all z-10 group"
+              >
+                <ChevronLeft className="w-6 h-6 group-hover:scale-125 transition-transform" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all z-10 group"
+              >
+                <ChevronRight className="w-6 h-6 group-hover:scale-125 transition-transform" />
+              </button>
+
+              {/* Dot Indicators */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+                {features.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      index === currentSlide
+                        ? 'w-12 bg-white'
+                        : 'w-2 bg-white/40 hover:bg-white/60'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Problem with Video Learning Section */}
+        <section id="challenges" className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-20 left-10 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl"></div>
+
+          <div className="max-w-6xl mx-auto relative z-10">
+            <div className="text-center mb-20">
+              <div className="inline-block mb-6">
+                <div className="flex items-center gap-3 px-4 py-2 border border-red-500/30 rounded-full bg-red-950/20">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-red-400 font-light uppercase tracking-wider">The Challenge</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-light mb-6 leading-tight">
+                The Problem with <br />
+                <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent font-normal">Video Learning</span>
+              </h2>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">
+                Traditional video platforms aren't designed for learning. They're built for entertainment.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 15s1.5-2 4-2 4 2 4 2" transform="scale(1,-1) translate(0,-24)" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" strokeLinecap="round" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" strokeLinecap="round" />
+                  </svg>
+                }
+                iconColor="text-red-500"
+                glowColor="red"
+                stat="67%"
+                title="Poor Retention"
+                description="Students struggle to retain information from video lectures"
+                delay="0"
               />
-              <FeatureBox
-                icon={<BarChart3 className="w-5 h-5" />}
-                title="Progress Tracking"
-                subtitle="Analytics"
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />
+                  </svg>
+                }
+                iconColor="text-orange-500"
+                glowColor="orange"
+                stat="85%"
+                title="Passive Watching"
+                description="Passive video watching leads to poor engagement and low retention"
+                delay="100"
               />
-              <FeatureBox
-                icon={<Play className="w-5 h-5" />}
-                title="Video Learning"
-                subtitle="Interactive"
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                }
+                iconColor="text-yellow-500"
+                glowColor="yellow"
+                stat="2+ hrs"
+                title="Wasted Time"
+                description="Students spend hours rewatching videos to find specific concepts"
+                delay="200"
+              />
+              <ProblemCard
+                icon={
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  </svg>
+                }
+                iconColor="text-gray-400"
+                glowColor="gray"
+                stat="0%"
+                title="No Tracking"
+                description="No way to track comprehension in real-time while watching"
+                delay="300"
               />
             </div>
           </div>
@@ -244,9 +507,149 @@ export default function Home() {
               />
               <ProcessStep
                 number="04"
-                title="Track Progress"
-                description="Monitor your learning journey with detailed analytics and personalized insights."
+                title="Adaptive Learning Path"
+                description="Our reinforcement learning AI optimizes what you learn next, filling knowledge gaps and maximizing retention based on your unique study patterns."
               />
+            </div>
+          </div>
+        </section>
+
+        {/* What Happens in Week 1 Section */}
+        <section id="week-1" className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
+          {/* Background accent */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl"></div>
+
+          <div className="max-w-6xl mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-6xl font-light mb-6 leading-tight">
+                Transform Your First Week from <br />
+                <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-normal">Wasted Time</span> to{' '}
+                <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent font-normal">Mastery</span>
+              </h2>
+              <p className="text-gray-400 text-xl max-w-3xl mx-auto font-light">
+                While others spend <span className="text-red-400 font-normal">10+ hours watching</span>,
+                you'll achieve <span className="text-emerald-400 font-normal">3x better results</span> in half the time
+              </p>
+            </div>
+
+            {/* Before & After Visual */}
+            <div className="grid md:grid-cols-2 gap-8 mb-16">
+              {/* Traditional - The Problem */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-red-500/5 rounded-2xl"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-red-500/20 rounded-2xl p-8">
+                  <div className="flex items-start justify-between mb-8">
+                    <div>
+                      <div className="text-sm text-red-400 font-light uppercase tracking-wider mb-2">Before Preply</div>
+                      <h3 className="text-3xl font-light text-white">The Old Way</h3>
+                    </div>
+                    <div className="text-5xl font-light text-red-400">10h</div>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    <ImpactItem
+                      text="Hours lost rewatching videos"
+                      negative
+                    />
+                    <ImpactItem
+                      text="Passive learning, poor retention"
+                      negative
+                    />
+                    <ImpactItem
+                      text="No way to verify understanding"
+                      negative
+                    />
+                    <ImpactItem
+                      text="Forget 70% within days"
+                      negative
+                    />
+                  </div>
+
+                  <div className="pt-6 border-t border-red-500/10">
+                    <div className="text-sm text-gray-500">Retention Rate</div>
+                    <div className="text-3xl font-light text-red-400">30%</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* With Preply - The Solution */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-emerald-950 to-black border-2 border-emerald-500/40 rounded-2xl p-8">
+                  <div className="flex items-start justify-between mb-8">
+                    <div>
+                      <div className="text-sm text-emerald-400 font-light uppercase tracking-wider mb-2">With Preply</div>
+                      <h3 className="text-3xl font-light text-white">The Smart Way</h3>
+                    </div>
+                    <div className="text-5xl font-light text-emerald-400">5h</div>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    <ImpactItem
+                      text="AI-powered active learning"
+                    />
+                    <ImpactItem
+                      text="Personalized path that fills knowledge gaps"
+                    />
+                    <ImpactItem
+                      text="Adaptive content sequencing via RL"
+                    />
+                    <ImpactItem
+                      text="Instant concept navigation"
+                    />
+                    <ImpactItem
+                      text="90% retention guaranteed"
+                    />
+                  </div>
+
+                  <div className="pt-6 border-t border-emerald-500/20">
+                    <div className="text-sm text-gray-400">Retention Rate</div>
+                    <div className="text-3xl font-light text-emerald-400">90%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Impact Stats */}
+            <div className="bg-gradient-to-b from-gray-900/50 to-black border border-gray-800 rounded-2xl p-8 md:p-12">
+              <div className="text-center mb-10">
+                <h3 className="text-2xl md:text-3xl font-light text-white mb-3">
+                  The Real Impact
+                </h3>
+                <p className="text-gray-400">Measurable results from day one</p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center group">
+                  <div className="mb-4">
+                    <div className="text-6xl font-light text-emerald-400 mb-2 group-hover:scale-110 transition-transform">50%</div>
+                    <div className="text-sm text-emerald-500 uppercase tracking-wider">Time Saved</div>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Reclaim <span className="text-white font-normal">5+ hours weekly</span> for actual practice
+                  </p>
+                </div>
+
+                <div className="text-center group border-x border-gray-800">
+                  <div className="mb-4">
+                    <div className="text-6xl font-light text-emerald-400 mb-2 group-hover:scale-110 transition-transform">3x</div>
+                    <div className="text-sm text-emerald-500 uppercase tracking-wider">Faster Mastery</div>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Learn in <span className="text-white font-normal">1 week</span> what takes others a month
+                  </p>
+                </div>
+
+                <div className="text-center group">
+                  <div className="mb-4">
+                    <div className="text-6xl font-light text-emerald-400 mb-2 group-hover:scale-110 transition-transform">90%</div>
+                    <div className="text-sm text-emerald-500 uppercase tracking-wider">Retention</div>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    <span className="text-white font-normal">Remember what you learn</span>, not just watch it
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -338,29 +741,24 @@ export default function Home() {
         .chip-3d:hover {
           transform: translateZ(70px) scale(1.05);
         }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .problem-card-animate {
+          animation: fadeInUp 0.6s ease-out forwards;
+          opacity: 0;
+        }
       `}</style>
     </main>
-  );
-}
-
-interface FeatureBoxProps {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-}
-
-function FeatureBox({ icon, title, subtitle }: FeatureBoxProps) {
-  return (
-    <div className="group relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
-      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-colors">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="text-emerald-500">{icon}</div>
-          <div className="text-xs text-gray-600 uppercase tracking-wider">{subtitle}</div>
-        </div>
-        <h3 className="text-lg font-medium">{title}</h3>
-      </div>
-    </div>
   );
 }
 
@@ -379,6 +777,103 @@ function ProcessStep({ number, title, description }: ProcessStepProps) {
       <div>
         <h3 className="text-2xl font-light mb-3">{title}</h3>
         <p className="text-gray-500 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+interface ProblemCardProps {
+  icon: React.ReactNode;
+  iconColor: string;
+  glowColor: string;
+  stat: string;
+  title: string;
+  description: string;
+  delay: string;
+}
+
+interface ImpactItemProps {
+  text: string;
+  negative?: boolean;
+}
+
+function ImpactItem({ text, negative }: ImpactItemProps) {
+  return (
+    <div className="flex items-start gap-3">
+      {negative ? (
+        <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      ) : (
+        <svg className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      )}
+      <p className={`${negative ? 'text-gray-400' : 'text-gray-200'} font-light`}>
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function ProblemCard({ icon, iconColor, glowColor, stat, title, description, delay }: ProblemCardProps) {
+  const glowColors: Record<string, string> = {
+    red: 'group-hover:shadow-red-500/20',
+    orange: 'group-hover:shadow-orange-500/20',
+    yellow: 'group-hover:shadow-yellow-500/20',
+    gray: 'group-hover:shadow-gray-500/20',
+  };
+
+  const borderColors: Record<string, string> = {
+    red: 'group-hover:border-red-500/30',
+    orange: 'group-hover:border-orange-500/30',
+    yellow: 'group-hover:border-yellow-500/30',
+    gray: 'group-hover:border-gray-500/30',
+  };
+
+  return (
+    <div
+      className="group relative problem-card-animate"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {/* Animated border gradient */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500"></div>
+
+      {/* Main card */}
+      <div className={`relative bg-gradient-to-br from-gray-900 via-black to-gray-900 border border-gray-800 ${borderColors[glowColor]} rounded-2xl p-8 transition-all duration-500 ${glowColors[glowColor]} shadow-xl group-hover:shadow-2xl group-hover:-translate-y-1`}>
+        {/* Icon container with floating animation */}
+        <div className="relative mb-6">
+          <div className={`absolute inset-0 ${iconColor} opacity-20 blur-xl group-hover:opacity-40 transition-opacity`}></div>
+          <div className={`relative ${iconColor} transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+            {icon}
+          </div>
+        </div>
+
+        {/* Stat with counter effect feel */}
+        <div className="relative mb-4">
+          <div className={`text-5xl font-light text-white mb-1 transform group-hover:scale-105 transition-transform duration-300`}>
+            {stat}
+          </div>
+          <div className={`h-1 w-12 ${iconColor} opacity-50 rounded-full`}></div>
+        </div>
+
+        {/* Title */}
+        <h3 className="text-xl font-light text-white mb-3 group-hover:text-gray-100 transition-colors">
+          {title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-gray-500 text-sm leading-relaxed font-light group-hover:text-gray-400 transition-colors">
+          {description}
+        </p>
+
+        {/* Decorative corner element */}
+        <div className={`absolute bottom-4 right-4 w-8 h-8 ${iconColor} opacity-5 group-hover:opacity-10 transition-opacity`}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+          </svg>
+        </div>
       </div>
     </div>
   );
