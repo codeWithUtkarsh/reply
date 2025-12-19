@@ -42,7 +42,7 @@ export default function Home() {
       icon: <BarChart3 className="w-8 h-8" />,
       label: 'ANALYTICS',
       title: 'Progress Tracking',
-      description: 'Monitor your learning journey with detailed analytics and insights',
+      description: 'AI-powered reinforcement learning adapts your path in real-time, filling knowledge gaps and maximizing retention based on your unique study behavior',
       gradient: 'from-blue-500/20 to-cyan-500/20',
       iconColor: 'text-blue-500',
     },
@@ -259,7 +259,7 @@ export default function Home() {
 
             {/* Subheading */}
             <p className="text-center text-gray-400 text-lg md:text-xl mb-4 max-w-3xl mx-auto leading-relaxed">
-              No Ads, AI-powered adaptive learning and quizzes. Cut down your preparation time by 50% <span className="text-white font-semibold">Never forget what you learn.</span>
+              Reinforcement learning AI personalizes your path, filling knowledge gaps automatically. Cut down your preparation time by 50% <span className="text-white font-semibold">Never forget what you learn.</span>
             </p>
 
             {/* CTA Button */}
@@ -422,8 +422,8 @@ export default function Home() {
               />
               <ProcessStep
                 number="04"
-                title="Track Progress"
-                description="Monitor your learning journey with detailed analytics and personalized insights."
+                title="Adaptive Learning Path"
+                description="Our reinforcement learning AI optimizes what you learn next, filling knowledge gaps and maximizing retention based on your unique study patterns."
               />
             </div>
           </div>
@@ -589,10 +589,13 @@ export default function Home() {
                       text="AI-powered active learning"
                     />
                     <ImpactItem
-                      text="Instant concept navigation"
+                      text="Personalized path that fills knowledge gaps"
                     />
                     <ImpactItem
-                      text="Continuous knowledge testing"
+                      text="Adaptive content sequencing via RL"
+                    />
+                    <ImpactItem
+                      text="Instant concept navigation"
                     />
                     <ImpactItem
                       text="90% retention guaranteed"
