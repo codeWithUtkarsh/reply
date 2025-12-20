@@ -16,9 +16,9 @@ class Database:
                          transcript: Dict, url: str) -> Dict:
         """Store video metadata and transcript"""
         data = {
-            "video_id": video_id,
+            "id": video_id,
             "title": title,
-            "duration": duration,
+            "video_length": duration,
             "transcript": json.dumps(transcript),
             "url": url,
             "created_at": datetime.utcnow().isoformat()
@@ -28,7 +28,7 @@ class Database:
 
     async def get_video(self, video_id: str) -> Optional[Dict]:
         """Retrieve video by ID"""
-        result = self.client.table("videos").select("*").eq("video_id", video_id).execute()
+        result = self.client.table("videos").select("*").eq("id", video_id).execute()
         return result.data[0] if result.data else None
 
     async def store_questions(self, video_id: str, questions: List[Dict]) -> List[Dict]:

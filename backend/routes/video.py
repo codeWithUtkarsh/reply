@@ -91,7 +91,7 @@ async def get_video(video_id: str):
         return {
             "video_id": video_id,
             "title": video['title'],
-            "duration": video['duration'],
+            "duration": video['video_length'],
             "url": video['url'],
             "transcript": video['transcript'],
             "questions": questions
