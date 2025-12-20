@@ -3,6 +3,9 @@ from config import settings
 from typing import List, Optional, Dict
 import json
 from datetime import datetime
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class Database:
@@ -15,35 +18,74 @@ class Database:
     async def store_video(self, video_id: str, title: str, duration: float,
                          transcript: Dict, url: str, project_id: Optional[str] = None) -> Dict:
         """Store video metadata and transcript"""
-        data = {
-            "id": video_id,
-            "title": title,
-            "video_length": duration,
-            "transcript": json.dumps(transcript),
-            "url": url,
-            "created_at": datetime.utcnow().isoformat()
-        }
-        if project_id:
-            data["project_id"] = project_id
+        logger.info(f"DB: Storing video - ID: {video_id}, Project ID: {project_id}, Title: {title}")
 
-        result = self.client.table("videos").insert(data).execute()
-        return result.data[0] if result.data else None
+        try:
+            data = {
+                "id": video_id,
+                "title": title,
+                "video_length": duration,
+                "transcript": json.dumps(transcript),
+                "url": url,
+                "created_at": datetime.utcnow().isoformat()
+            }
+            if project_id:
+                data["project_id"] = project_id
+
+            result = self.client.table("videos").insert(data).execute()
+
+            if result.data:
+                logger.info(f"DB: Successfully stored video - ID: {video_id}")
+                return result.data[0]
+            else:
+                logger.error(f"DB: No data returned when storing video - ID: {video_id}")
+                return None
+
+        except Exception as e:
+            logger.error(f"DB: Error storing video - ID: {video_id}, Error: {type(e).__name__}: {str(e)}", exc_info=True)
+            raise
 
     async def get_video(self, video_id: str) -> Optional[Dict]:
         """Retrieve video by ID"""
-        result = self.client.table("videos").select("*").eq("id", video_id).execute()
-        return result.data[0] if result.data else None
+        logger.info(f"DB: Fetching video - ID: {video_id}")
+
+        try:
+            result = self.client.table("videos").select("*").eq("id", video_id).execute()
+
+            if result.data:
+                logger.info(f"DB: Successfully fetched video - ID: {video_id}")
+                return result.data[0]
+            else:
+                logger.warning(f"DB: Video not found - ID: {video_id}")
+                return None
+
+        except Exception as e:
+            logger.error(f"DB: Error fetching video - ID: {video_id}, Error: {type(e).__name__}: {str(e)}", exc_info=True)
+            raise
 
     async def store_questions(self, video_id: str, questions: List[Dict]) -> List[Dict]:
         """Store generated questions for a video"""
-        data = [{
-            "video_id": video_id,
-            "question_data": json.dumps(question),
-            "created_at": datetime.utcnow().isoformat()
-        } for question in questions]
+        logger.info(f"DB: Storing {len(questions)} questions for video - ID: {video_id}")
 
-        result = self.client.table("questions").insert(data).execute()
-        return result.data if result.data else []
+        try:
+            data = [{
+                "video_id": video_id,
+                "question_data": json.dumps(question),
+                "created_at": datetime.utcnow().isoformat()
+            } for question in questions]
+
+            result = self.client.table("questions").insert(data).execute()
+
+            if result.data:
+                logger.info(f"DB: Successfully stored {len(result.data)} questions for video - ID: {video_id}")
+                return result.data
+            else:
+                logger.warning(f"DB: No data returned when storing questions for video - ID: {video_id}")
+                return []
+
+        except Exception as e:
+            logger.error(f"DB: Error storing questions for video - ID: {video_id}, Error: {type(e).__name__}: {str(e)}", exc_info=True)
+            raise
 
     async def get_questions(self, video_id: str) -> List[Dict]:
         """Retrieve all questions for a video"""
