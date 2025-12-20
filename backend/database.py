@@ -17,50 +17,80 @@ class Database:
 
     async def store_video(self, video_id: str, title: str, duration: float,
                          transcript: Dict, url: str, project_id: Optional[str] = None) -> Dict:
-        """Store video metadata and transcript"""
+        """
+        Store video metadata and transcript (if not already exists)
+        Then link it to the project via junction table
+        """
         logger.info(f"DB: Storing video - ID: {video_id}, Project ID: {project_id}, Title: {title}")
 
         try:
             # Check if video already exists
             existing = await self.get_video(video_id)
+
             if existing:
-                logger.info(f"DB: Video already exists - ID: {video_id}, reusing existing entry")
-
-                # If project_id is provided and different, update it
-                if project_id and existing.get('project_id') != project_id:
-                    logger.info(f"DB: Updating project_id for existing video - ID: {video_id}")
-                    update_result = self.client.table("videos").update({
-                        "project_id": project_id
-                    }).eq("id", video_id).execute()
-
-                    if update_result.data:
-                        return update_result.data[0]
-
-                return existing
-
-            # Video doesn't exist, insert new one
-            data = {
-                "id": video_id,
-                "title": title,
-                "video_length": duration,
-                "transcript": json.dumps(transcript),
-                "url": url,
-                "created_at": datetime.utcnow().isoformat()
-            }
-            if project_id:
-                data["project_id"] = project_id
-
-            result = self.client.table("videos").insert(data).execute()
-
-            if result.data:
-                logger.info(f"DB: Successfully stored new video - ID: {video_id}")
-                return result.data[0]
+                logger.info(f"DB: Video already exists - ID: {video_id}, reusing existing entry (no re-processing)")
+                video_data = existing
             else:
-                logger.error(f"DB: No data returned when storing video - ID: {video_id}")
-                return None
+                # Video doesn't exist, insert new one
+                logger.info(f"DB: Video doesn't exist, processing and storing new video - ID: {video_id}")
+                data = {
+                    "id": video_id,
+                    "title": title,
+                    "video_length": duration,
+                    "transcript": json.dumps(transcript),
+                    "url": url,
+                    "created_at": datetime.utcnow().isoformat()
+                }
+
+                result = self.client.table("videos").insert(data).execute()
+
+                if result.data:
+                    logger.info(f"DB: Successfully stored new video - ID: {video_id}")
+                    video_data = result.data[0]
+                else:
+                    logger.error(f"DB: No data returned when storing video - ID: {video_id}")
+                    return None
+
+            # Link video to project if project_id is provided
+            if project_id:
+                await self.link_video_to_project(video_id, project_id)
+
+            return video_data
 
         except Exception as e:
             logger.error(f"DB: Error storing video - ID: {video_id}, Error: {type(e).__name__}: {str(e)}", exc_info=True)
+            raise
+
+    async def link_video_to_project(self, video_id: str, project_id: str) -> Dict:
+        """Link a video to a project via junction table"""
+        logger.info(f"DB: Linking video {video_id} to project {project_id}")
+
+        try:
+            # Check if link already exists
+            existing_link = self.client.table("project_videos").select("*").eq("project_id", project_id).eq("video_id", video_id).execute()
+
+            if existing_link.data:
+                logger.info(f"DB: Video {video_id} already linked to project {project_id}")
+                return existing_link.data[0]
+
+            # Create new link
+            data = {
+                "project_id": project_id,
+                "video_id": video_id,
+                "created_at": datetime.utcnow().isoformat()
+            }
+
+            result = self.client.table("project_videos").insert(data).execute()
+
+            if result.data:
+                logger.info(f"DB: Successfully linked video {video_id} to project {project_id}")
+                return result.data[0]
+            else:
+                logger.warning(f"DB: No data returned when linking video to project")
+                return None
+
+        except Exception as e:
+            logger.error(f"DB: Error linking video to project - Video: {video_id}, Project: {project_id}, Error: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
 
     async def get_video(self, video_id: str) -> Optional[Dict]:

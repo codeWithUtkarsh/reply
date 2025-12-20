@@ -31,6 +31,45 @@ async def process_video(request: VideoProcessRequest):
         video_id = video_processor.generate_video_id(request.video_url)
         logger.info(f"Video ID: {video_id}, Duration: {video_info['duration']}s")
 
+        # Check if video already exists in database
+        existing_video = await db.get_video(video_id)
+
+        if existing_video:
+            logger.info(f"✅ Video already exists in database - ID: {video_id}, skipping processing and reusing data")
+
+            # Just link to project if not already linked
+            if request.project_id:
+                await db.link_video_to_project(video_id, request.project_id)
+
+            # Get existing questions
+            existing_questions = await db.get_questions(video_id)
+
+            # Parse transcript and create flashcards from existing questions
+            import json
+            transcript_data = json.loads(existing_video['transcript']) if isinstance(existing_video['transcript'], str) else existing_video['transcript']
+
+            flashcards = []
+            for q in existing_questions:
+                question_data = json.loads(q['question_data']) if isinstance(q['question_data'], str) else q['question_data']
+                flashcards.append({
+                    'question': question_data,
+                    'show_at_timestamp': question_data.get('show_at_timestamp', 0)
+                })
+
+            logger.info(f"=== Video already processed, reused existing transcript and {len(flashcards)} flashcards ===")
+
+            return VideoProcessResponse(
+                video_id=video_id,
+                title=existing_video['title'],
+                duration=existing_video['video_length'],
+                transcript=transcript_data,
+                flashcards=flashcards,
+                message="Video already processed, reused existing data"
+            )
+
+        # Video doesn't exist, process it
+        logger.info("🔄 Video not in database, processing new video...")
+
         # Check if video duration exceeds limit
         if video_info['duration'] > settings.max_video_duration:
             logger.warning(f"Video duration ({video_info['duration']}s) exceeds limit ({settings.max_video_duration}s)")
