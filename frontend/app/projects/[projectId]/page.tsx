@@ -6,24 +6,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Project, Video } from '@/lib/supabase';
 import { videoApi } from '@/lib/api';
 import { ArrowLeft, Plus, Play, Loader2, Video as VideoIcon, X } from 'lucide-react';
-import UserMenu from '@/components/UserMenu';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
 export default function ProjectPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.projectId as string;
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
 
   const [project, setProject] = useState<Project | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddVideo, setShowAddVideo] = useState(false);
-
-  useEffect(() => {
-    if (!user && !authLoading) {
-      router.push('/');
-    }
-  }, [user, authLoading, router]);
 
   useEffect(() => {
     if (user && projectId) {
@@ -77,100 +71,90 @@ export default function ProjectPage() {
     setShowAddVideo(false);
   };
 
-  if (authLoading || !user || !project) {
+  if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+      <AuthenticatedLayout>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
         </div>
-      </div>
+      </AuthenticatedLayout>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Dashboard
-              </button>
+    <AuthenticatedLayout>
+      <div className="container mx-auto px-8 py-8">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 transition-colors mb-6"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-light">Back to Dashboard</span>
+        </button>
+
+        {/* Project Header */}
+        <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-8 mb-8">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-light text-white mb-3">
+                {project.project_name}
+              </h1>
+              {project.project_desc && (
+                <p className="text-gray-400 font-light mb-3">
+                  {project.project_desc}
+                </p>
+              )}
+              <p className="text-sm text-gray-500 font-light">
+                {videos.length} video{videos.length !== 1 ? 's' : ''}
+              </p>
             </div>
-            <UserMenu />
+            <button
+              onClick={() => setShowAddVideo(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              Add Video
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Project Header */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  {project.project_name}
-                </h1>
-                {project.project_desc && (
-                  <p className="text-gray-600 dark:text-gray-300">
-                    {project.project_desc}
-                  </p>
-                )}
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {videos.length} video{videos.length !== 1 ? 's' : ''}
-                </p>
+        {/* Videos Section */}
+        <div>
+          <h2 className="text-2xl font-light text-white mb-6">
+            Videos
+          </h2>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+            </div>
+          ) : videos.length === 0 ? (
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                <VideoIcon className="w-8 h-8 text-emerald-500" />
               </div>
+              <h3 className="text-2xl font-light text-white mb-3">
+                No videos yet
+              </h3>
+              <p className="text-gray-400 mb-6 font-light">
+                Add your first video to start learning
+              </p>
               <button
                 onClick={() => setShowAddVideo(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors shadow-lg"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
               >
                 <Plus className="w-5 h-5" />
                 Add Video
               </button>
             </div>
-          </div>
-
-          {/* Videos Grid */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Videos
-            </h2>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
-              </div>
-            ) : videos.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
-                <VideoIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  No videos yet
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Add your first video to start learning
-                </p>
-                <button
-                  onClick={() => setShowAddVideo(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  Add Video
-                </button>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {videos.map((video) => (
-                  <VideoCard key={video.id} video={video} />
-                ))}
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {videos.map((video) => (
+                <VideoCard key={video.id} video={video} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -182,7 +166,7 @@ export default function ProjectPage() {
           onVideoAdded={handleVideoAdded}
         />
       )}
-    </main>
+    </AuthenticatedLayout>
   );
 }
 
@@ -211,34 +195,39 @@ function VideoCard({ video }: VideoCardProps) {
   return (
     <div
       onClick={handleClick}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow border border-gray-200 dark:border-gray-700"
+      className="group relative cursor-pointer"
     >
-      {/* Thumbnail */}
-      <div className="relative h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-        <img
-          src={`https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`}
-          alt={video.title}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
-          }}
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-          <Play className="w-12 h-12 text-white" />
+      <div className="absolute inset-0 bg-emerald-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all">
+        {/* Thumbnail */}
+        <div className="relative h-48 bg-gray-900 flex items-center justify-center">
+          <img
+            src={`https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`}
+            alt={video.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
+            }}
+          />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center">
+              <Play className="w-6 h-6 text-emerald-500" />
+            </div>
+          </div>
+          <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded border border-gray-700">
+            {formatDuration(video.video_length)}
+          </div>
         </div>
-        <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-          {formatDuration(video.video_length)}
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
-          {video.title}
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Added {new Date(video.created_at).toLocaleDateString()}
-        </p>
+        {/* Content */}
+        <div className="p-5">
+          <h3 className="text-lg font-light text-white mb-2 line-clamp-2 group-hover:text-emerald-400 transition-colors">
+            {video.title}
+          </h3>
+          <p className="text-xs text-gray-500 font-light">
+            Added {new Date(video.created_at).toLocaleDateString()}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -296,25 +285,27 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 relative">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-black border border-emerald-500/30 rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-purple-500/5 pointer-events-none"></div>
+
         <button
           onClick={onClose}
           disabled={loading}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+          className="absolute top-4 right-4 text-gray-400 hover:text-emerald-400 transition-colors z-10 disabled:opacity-50"
         >
           <X className="w-6 h-6" />
         </button>
 
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 className="text-3xl font-light text-white mb-8 relative z-10">
           Add Video
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
           <div>
             <label
               htmlFor="videoUrl"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-light text-gray-300 mb-2"
             >
               YouTube Video URL
             </label>
@@ -326,13 +317,13 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
               placeholder="https://www.youtube.com/watch?v=..."
               required
               disabled={loading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50"
+              className="w-full px-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all disabled:opacity-50"
             />
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <div className="p-4 bg-red-950/30 border border-red-500/30 rounded-xl">
+              <p className="text-sm text-red-300 font-light">{error}</p>
             </div>
           )}
 
@@ -341,14 +332,14 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800/50 transition-colors disabled:opacity-50 font-light"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !videoUrl}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
             >
               {loading ? (
                 <>

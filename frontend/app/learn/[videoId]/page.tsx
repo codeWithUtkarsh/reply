@@ -7,6 +7,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
 import LearningReportComponent from '@/components/LearningReport';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
 import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
 
@@ -224,47 +225,51 @@ export default function LearnPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading video...</p>
+      <AuthenticatedLayout>
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+            <p className="text-gray-400">Loading video...</p>
+          </div>
         </div>
-      </div>
+      </AuthenticatedLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => router.push('/')}
-            className="text-primary-600 hover:text-primary-700 font-medium"
-          >
-            Go back
-          </button>
+      <AuthenticatedLayout>
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <p className="text-red-400 mb-4">{error}</p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-emerald-400 hover:text-emerald-300 font-light"
+            >
+              Go back to Dashboard
+            </button>
+          </div>
         </div>
-      </div>
+      </AuthenticatedLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
+    <AuthenticatedLayout>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <button
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            <span className="font-light">Back to Dashboard</span>
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-light text-white mb-2">
             {videoData?.title}
           </h1>
-          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-4 text-sm text-gray-400 font-light">
             <span>
               {answeredFlashcards.size} / {flashcards.length} flashcards completed
             </span>
@@ -538,6 +543,6 @@ export default function LearnPage() {
           onSeekTo={handleSeekTo}
         />
       )}
-    </div>
+    </AuthenticatedLayout>
   );
 }
