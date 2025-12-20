@@ -101,10 +101,11 @@ const api = axios.create({
 });
 
 export const videoApi = {
-  processVideo: async (videoUrl: string, title?: string): Promise<VideoProcessResponse> => {
+  processVideo: async (videoUrl: string, title?: string, projectId?: string): Promise<VideoProcessResponse> => {
     const response = await api.post('/api/video/process', {
       video_url: videoUrl,
       title,
+      project_id: projectId,
     });
     return response.data;
   },

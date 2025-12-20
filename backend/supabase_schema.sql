@@ -190,7 +190,6 @@ CREATE POLICY "Users can delete own projects" ON projects
 -- Videos: Users can access videos in their projects
 CREATE POLICY "Users can view videos in their projects" ON videos
     FOR SELECT USING (
-        project_id IS NULL OR
         EXISTS (
             SELECT 1 FROM projects
             WHERE projects.id = videos.project_id
@@ -200,7 +199,6 @@ CREATE POLICY "Users can view videos in their projects" ON videos
 
 CREATE POLICY "Users can create videos in their projects" ON videos
     FOR INSERT WITH CHECK (
-        project_id IS NULL OR
         EXISTS (
             SELECT 1 FROM projects
             WHERE projects.id = videos.project_id
@@ -210,7 +208,6 @@ CREATE POLICY "Users can create videos in their projects" ON videos
 
 CREATE POLICY "Users can update videos in their projects" ON videos
     FOR UPDATE USING (
-        project_id IS NULL OR
         EXISTS (
             SELECT 1 FROM projects
             WHERE projects.id = videos.project_id

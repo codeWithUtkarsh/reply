@@ -13,7 +13,7 @@ class Database:
         )
 
     async def store_video(self, video_id: str, title: str, duration: float,
-                         transcript: Dict, url: str) -> Dict:
+                         transcript: Dict, url: str, project_id: Optional[str] = None) -> Dict:
         """Store video metadata and transcript"""
         data = {
             "id": video_id,
@@ -23,6 +23,9 @@ class Database:
             "url": url,
             "created_at": datetime.utcnow().isoformat()
         }
+        if project_id:
+            data["project_id"] = project_id
+
         result = self.client.table("videos").insert(data).execute()
         return result.data[0] if result.data else None
 

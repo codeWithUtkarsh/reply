@@ -253,18 +253,8 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
     setLoading(true);
 
     try {
-      // Process video
-      const response = await videoApi.processVideo(videoUrl, projectName);
-
-      // Update video with project_id
-      const { error: updateError } = await supabase
-        .from('videos')
-        .update({ project_id: projectId })
-        .eq('id', response.video_id);
-
-      if (updateError) {
-        console.error('Error linking video to project:', updateError);
-      }
+      // Process video with project_id
+      const response = await videoApi.processVideo(videoUrl, projectName, projectId);
 
       // Log activity
       await supabase.from('activity_log').insert({

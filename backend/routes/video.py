@@ -50,7 +50,8 @@ async def process_video(request: VideoProcessRequest):
             title=title,
             duration=video_info['duration'],
             transcript=transcript.dict(),
-            url=request.video_url
+            url=request.video_url,
+            project_id=request.project_id
         )
 
         # Store questions

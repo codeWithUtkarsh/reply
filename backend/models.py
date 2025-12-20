@@ -33,6 +33,7 @@ class FlashCard(BaseModel):
 class VideoProcessRequest(BaseModel):
     video_url: str
     title: Optional[str] = None
+    project_id: Optional[str] = None
 
 
 class VideoProcessResponse(BaseModel):
