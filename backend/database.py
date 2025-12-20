@@ -21,6 +21,24 @@ class Database:
         logger.info(f"DB: Storing video - ID: {video_id}, Project ID: {project_id}, Title: {title}")
 
         try:
+            # Check if video already exists
+            existing = await self.get_video(video_id)
+            if existing:
+                logger.info(f"DB: Video already exists - ID: {video_id}, reusing existing entry")
+
+                # If project_id is provided and different, update it
+                if project_id and existing.get('project_id') != project_id:
+                    logger.info(f"DB: Updating project_id for existing video - ID: {video_id}")
+                    update_result = self.client.table("videos").update({
+                        "project_id": project_id
+                    }).eq("id", video_id).execute()
+
+                    if update_result.data:
+                        return update_result.data[0]
+
+                return existing
+
+            # Video doesn't exist, insert new one
             data = {
                 "id": video_id,
                 "title": title,
@@ -35,7 +53,7 @@ class Database:
             result = self.client.table("videos").insert(data).execute()
 
             if result.data:
-                logger.info(f"DB: Successfully stored video - ID: {video_id}")
+                logger.info(f"DB: Successfully stored new video - ID: {video_id}")
                 return result.data[0]
             else:
                 logger.error(f"DB: No data returned when storing video - ID: {video_id}")
