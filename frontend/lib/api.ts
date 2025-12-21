@@ -100,38 +100,13 @@ const api = axios.create({
   },
 });
 
-export const topicApi = {
-  createTopic: async (topicName: string, projectId: string, topicDesc?: string) => {
-    const response = await api.post('/api/topics/', {
-      topic_name: topicName,
-      project_id: projectId,
-      topic_desc: topicDesc,
-    });
-    return response.data;
-  },
-
-  getTopicsByProject: async (projectId: string) => {
-    const response = await api.get(`/api/topics/project/${projectId}`);
-    return response.data;
-  },
-
-  getTopic: async (topicId: string) => {
-    const response = await api.get(`/api/topics/${topicId}`);
-    return response.data;
-  },
-
-  getVideosByTopic: async (topicId: string) => {
-    const response = await api.get(`/api/topics/${topicId}/videos`);
-    return response.data;
-  },
-};
 
 export const videoApi = {
-  processVideo: async (videoUrl: string, title?: string, topicId?: string): Promise<VideoProcessResponse> => {
+  processVideo: async (videoUrl: string, title?: string, projectId?: string): Promise<VideoProcessResponse> => {
     const response = await api.post('/api/video/process', {
       video_url: videoUrl,
       title,
-      topic_id: topicId,
+      project_id: projectId,
     });
     return response.data;
   },

@@ -33,7 +33,7 @@ class FlashCard(BaseModel):
 class VideoProcessRequest(BaseModel):
     video_url: str
     title: Optional[str] = None
-    topic_id: Optional[str] = None  # Videos belong to topics, not directly to projects
+    project_id: Optional[str] = None
 
 
 class VideoProcessResponse(BaseModel):
