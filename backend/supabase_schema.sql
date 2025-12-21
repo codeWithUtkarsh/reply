@@ -24,8 +24,18 @@ CREATE TABLE IF NOT EXISTS projects (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Topics table (belongs to a project)
+CREATE TABLE IF NOT EXISTS topics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    topic_name VARCHAR(255) NOT NULL,
+    topic_desc TEXT,
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Videos table (unique code from YouTube URL)
--- Videos are processed once and can belong to multiple projects
+-- Videos are processed once and can belong to multiple topics
 CREATE TABLE IF NOT EXISTS videos (
     id VARCHAR(255) PRIMARY KEY, -- YouTube video ID (e.g., AL2GL2GUfHk)
     title TEXT NOT NULL,
@@ -36,13 +46,13 @@ CREATE TABLE IF NOT EXISTS videos (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Project-Video junction table (many-to-many relationship)
-CREATE TABLE IF NOT EXISTS project_videos (
+-- Topic-Video junction table (many-to-many relationship)
+CREATE TABLE IF NOT EXISTS topic_videos (
     id BIGSERIAL PRIMARY KEY,
-    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    topic_id UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
     video_id VARCHAR(255) NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(project_id, video_id) -- A video can only be added once per project
+    UNIQUE(topic_id, video_id) -- A video can only be added once per topic
 );
 
 -- Questions table
@@ -133,6 +143,7 @@ CREATE TABLE IF NOT EXISTS activity_log (
     id BIGSERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    topic_id UUID REFERENCES topics(id) ON DELETE CASCADE,
     video_id VARCHAR(255) REFERENCES videos(id) ON DELETE CASCADE,
     activity_desc TEXT NOT NULL,
     activity_type VARCHAR(50), -- e.g., 'flashcard_test', 'quiz_completed', 'note_edited'
@@ -143,9 +154,10 @@ CREATE TABLE IF NOT EXISTS activity_log (
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_id ON users(id);
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_topics_project_id ON topics(project_id);
 CREATE INDEX IF NOT EXISTS idx_videos_id ON videos(id);
-CREATE INDEX IF NOT EXISTS idx_project_videos_project_id ON project_videos(project_id);
-CREATE INDEX IF NOT EXISTS idx_project_videos_video_id ON project_videos(video_id);
+CREATE INDEX IF NOT EXISTS idx_topic_videos_topic_id ON topic_videos(topic_id);
+CREATE INDEX IF NOT EXISTS idx_topic_videos_video_id ON topic_videos(video_id);
 CREATE INDEX IF NOT EXISTS idx_questions_video_id ON questions(video_id);
 CREATE INDEX IF NOT EXISTS idx_quizzes_video_id ON quizzes(video_id);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_video ON user_progress(user_id, video_id);
@@ -160,13 +172,15 @@ CREATE INDEX IF NOT EXISTS idx_video_notes_video_id ON video_notes(video_id);
 CREATE INDEX IF NOT EXISTS idx_video_notes_notes_id ON video_notes(notes_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_user_id ON activity_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_project_id ON activity_log(project_id);
+CREATE INDEX IF NOT EXISTS idx_activity_log_topic_id ON activity_log(topic_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_video_id ON activity_log(video_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE topics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE project_videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE topic_videos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quizzes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
@@ -198,14 +212,52 @@ CREATE POLICY "Users can update own projects" ON projects
 CREATE POLICY "Users can delete own projects" ON projects
     FOR DELETE USING (auth.uid() = user_id);
 
--- Videos: Allow viewing videos (no direct ownership)
--- Access control is managed through project_videos junction table
-CREATE POLICY "Users can view videos in their projects" ON videos
+-- Topics: Users can only access topics in their own projects
+CREATE POLICY "Users can view topics in own projects" ON topics
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM project_videos
-            JOIN projects ON projects.id = project_videos.project_id
-            WHERE project_videos.video_id = videos.id
+            SELECT 1 FROM projects
+            WHERE projects.id = topics.project_id
+            AND projects.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can create topics in own projects" ON topics
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM projects
+            WHERE projects.id = topics.project_id
+            AND projects.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can update topics in own projects" ON topics
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM projects
+            WHERE projects.id = topics.project_id
+            AND projects.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can delete topics in own projects" ON topics
+    FOR DELETE USING (
+        EXISTS (
+            SELECT 1 FROM projects
+            WHERE projects.id = topics.project_id
+            AND projects.user_id = auth.uid()
+        )
+    );
+
+-- Videos: Allow viewing videos (no direct ownership)
+-- Access control is managed through topic_videos junction table
+CREATE POLICY "Users can view videos in their topics" ON videos
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM topic_videos
+            JOIN topics ON topics.id = topic_videos.topic_id
+            JOIN projects ON projects.id = topics.project_id
+            WHERE topic_videos.video_id = videos.id
             AND projects.user_id = auth.uid()
         )
     );
@@ -214,30 +266,33 @@ CREATE POLICY "Users can view videos in their projects" ON videos
 CREATE POLICY "Allow video creation" ON videos
     FOR INSERT WITH CHECK (true);
 
--- Project-Videos junction table: Users can link videos to their own projects
-CREATE POLICY "Users can view their project-video links" ON project_videos
+-- Topic-Videos junction table: Users can link videos to topics in their own projects
+CREATE POLICY "Users can view their topic-video links" ON topic_videos
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM projects
-            WHERE projects.id = project_videos.project_id
+            SELECT 1 FROM topics
+            JOIN projects ON projects.id = topics.project_id
+            WHERE topics.id = topic_videos.topic_id
             AND projects.user_id = auth.uid()
         )
     );
 
-CREATE POLICY "Users can link videos to their projects" ON project_videos
+CREATE POLICY "Users can link videos to their topics" ON topic_videos
     FOR INSERT WITH CHECK (
         EXISTS (
-            SELECT 1 FROM projects
-            WHERE projects.id = project_videos.project_id
+            SELECT 1 FROM topics
+            JOIN projects ON projects.id = topics.project_id
+            WHERE topics.id = topic_videos.topic_id
             AND projects.user_id = auth.uid()
         )
     );
 
-CREATE POLICY "Users can remove videos from their projects" ON project_videos
+CREATE POLICY "Users can remove videos from their topics" ON topic_videos
     FOR DELETE USING (
         EXISTS (
-            SELECT 1 FROM projects
-            WHERE projects.id = project_videos.project_id
+            SELECT 1 FROM topics
+            JOIN projects ON projects.id = topics.project_id
+            WHERE topics.id = topic_videos.topic_id
             AND projects.user_id = auth.uid()
         )
     );

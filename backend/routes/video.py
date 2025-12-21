@@ -23,7 +23,7 @@ async def process_video(request: VideoProcessRequest):
     logger.info("=== Processing video request ===")
     logger.info(f"Video URL: {request.video_url}")
     logger.info(f"Title: {request.title}")
-    logger.info(f"Project ID: {request.project_id}")
+    logger.info(f"Topic ID: {request.topic_id}")
 
     try:
         # -----------------------------------------------------
@@ -47,8 +47,8 @@ async def process_video(request: VideoProcessRequest):
         if existing_video:
             logger.info(f"✅ Video already exists - ID: {video_id}")
 
-            if request.project_id:
-                await db.link_video_to_project(video_id, request.project_id)
+            if request.topic_id:
+                await db.link_video_to_topic(video_id, request.topic_id)
 
             existing_questions = await db.get_questions(video_id)
 
@@ -128,7 +128,7 @@ async def process_video(request: VideoProcessRequest):
             duration=duration,
             transcript=transcript.dict(),
             url=request.video_url,
-            project_id=request.project_id,
+            topic_id=request.topic_id,
         )
 
         # -----------------------------------------------------

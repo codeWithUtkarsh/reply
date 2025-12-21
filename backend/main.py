@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routes import video, questions, quiz, reports, notes
+from routes import video, questions, quiz, reports, notes, topics
 from logging_config import setup_logging, get_logger
 import time
 
@@ -43,6 +43,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(video.router, prefix="/api/video", tags=["video"])
+app.include_router(topics.router, prefix="/api/topics", tags=["topics"])
 app.include_router(questions.router, prefix="/api/questions", tags=["questions"])
 app.include_router(quiz.router, prefix="/api/quiz", tags=["quiz"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])

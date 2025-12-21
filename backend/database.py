@@ -27,10 +27,10 @@ class Database:
         duration: float,
         transcript: Dict,
         url: str,
-        project_id: Optional[str] = None
+        topic_id: Optional[str] = None
     ) -> Optional[Dict]:
 
-        logger.info(f"DB: store_video | video_id={video_id}")
+        logger.info(f"DB: store_video | video_id={video_id}, topic_id={topic_id}")
 
         existing = await self.get_video(video_id)
         if existing:
@@ -56,8 +56,8 @@ class Database:
 
             video_data = result.data[0]
 
-        if project_id:
-            await self.link_video_to_project(video_id, project_id)
+        if topic_id:
+            await self.link_video_to_topic(video_id, topic_id)
 
         return video_data
 
@@ -67,28 +67,96 @@ class Database:
         )
         return result.data[0] if result.data else None
 
-    async def link_video_to_project(self, video_id: str, project_id: str) -> Optional[Dict]:
-        existing = await run_in_threadpool(
-            lambda: self.client.table("project_videos")
-            .select("*")
-            .eq("video_id", video_id)
-            .eq("project_id", project_id)
-            .execute()
-        )
+    # -------------------------
+    # Topics
+    # -------------------------
 
-        if existing.data:
-            return existing.data[0]
-
+    async def create_topic(
+        self,
+        topic_name: str,
+        project_id: str,
+        topic_desc: Optional[str] = None
+    ) -> Optional[Dict]:
         data = {
-            "video_id": video_id,
+            "topic_name": topic_name,
+            "topic_desc": topic_desc,
             "project_id": project_id,
             "created_at": datetime.utcnow().isoformat()
         }
 
         result = await run_in_threadpool(
-            lambda: self.client.table("project_videos").insert(data).execute()
+            lambda: self.client.table("topics").insert(data).execute()
         )
         return result.data[0] if result.data else None
+
+    async def get_topics_by_project(self, project_id: str) -> List[Dict]:
+        result = await run_in_threadpool(
+            lambda: self.client.table("topics")
+            .select("*")
+            .eq("project_id", project_id)
+            .order("created_at", desc=False)
+            .execute()
+        )
+        return result.data or []
+
+    async def get_topic(self, topic_id: str) -> Optional[Dict]:
+        result = await run_in_threadpool(
+            lambda: self.client.table("topics")
+            .select("*")
+            .eq("id", topic_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
+
+    async def link_video_to_topic(self, video_id: str, topic_id: str) -> Optional[Dict]:
+        existing = await run_in_threadpool(
+            lambda: self.client.table("topic_videos")
+            .select("*")
+            .eq("video_id", video_id)
+            .eq("topic_id", topic_id)
+            .execute()
+        )
+
+        if existing.data:
+            logger.info(f"DB: Video {video_id} already linked to topic {topic_id}")
+            return existing.data[0]
+
+        data = {
+            "video_id": video_id,
+            "topic_id": topic_id,
+            "created_at": datetime.utcnow().isoformat()
+        }
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("topic_videos").insert(data).execute()
+        )
+        logger.info(f"DB: Linked video {video_id} to topic {topic_id}")
+        return result.data[0] if result.data else None
+
+    async def get_videos_by_topic(self, topic_id: str) -> List[Dict]:
+        """Get all videos for a specific topic"""
+        # Get video IDs from junction table
+        junction_result = await run_in_threadpool(
+            lambda: self.client.table("topic_videos")
+            .select("video_id")
+            .eq("topic_id", topic_id)
+            .execute()
+        )
+
+        if not junction_result.data:
+            return []
+
+        video_ids = [item['video_id'] for item in junction_result.data]
+
+        # Get video details
+        videos_result = await run_in_threadpool(
+            lambda: self.client.table("videos")
+            .select("*")
+            .in_("id", video_ids)
+            .execute()
+        )
+
+        return videos_result.data or []
 
     # -------------------------
     # Questions

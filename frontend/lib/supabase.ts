@@ -38,9 +38,17 @@ export interface Project {
   updated_at: string;
 }
 
+export interface Topic {
+  id: string;
+  topic_name: string;
+  topic_desc?: string;
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Video {
   id: string; // YouTube video ID
-  project_id?: string;
   title: string;
   video_length: number;
   transcript: any;
@@ -53,6 +61,7 @@ export interface ActivityLog {
   id: number;
   user_id: string;
   project_id?: string;
+  topic_id?: string;
   video_id?: string;
   activity_desc: string;
   activity_type?: string;
