@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Project, Video } from '@/lib/supabase';
+import { supabase, Project } from '@/lib/supabase';
 import { videoApi } from '@/lib/api';
-import { ArrowLeft, Plus, Play, Loader2, Video as VideoIcon, X } from 'lucide-react';
+import { ArrowLeft, Plus, Play, Loader2, Video as VideoIcon, X, Search, SortAsc, SortDesc, Filter, Clock } from 'lucide-react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
+
+type SortOption = 'newest' | 'oldest' | 'title' | 'duration';
 
 export default function ProjectPage() {
   const router = useRouter();
@@ -15,9 +17,12 @@ export default function ProjectPage() {
   const { user } = useAuth();
 
   const [project, setProject] = useState<Project | null>(null);
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [filteredVideos, setFilteredVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddVideo, setShowAddVideo] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   useEffect(() => {
     if (user && projectId) {
@@ -25,6 +30,10 @@ export default function ProjectPage() {
       fetchVideos();
     }
   }, [user, projectId]);
+
+  useEffect(() => {
+    filterAndSortVideos();
+  }, [videos, searchQuery, sortBy]);
 
   const fetchProject = async () => {
     try {
@@ -36,7 +45,7 @@ export default function ProjectPage() {
 
       if (error) {
         console.error('Error fetching project:', error);
-        router.push('/dashboard');
+        router.push('/projects');
       } else {
         setProject(data);
       }
@@ -48,16 +57,37 @@ export default function ProjectPage() {
   const fetchVideos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+
+      // Fetch video IDs from junction table
+      const { data: projectVideos, error: junctionError } = await supabase
+        .from('project_videos')
+        .select('video_id')
+        .eq('project_id', projectId);
+
+      if (junctionError) {
+        console.error('Error fetching project videos:', junctionError);
+        setLoading(false);
+        return;
+      }
+
+      if (!projectVideos || projectVideos.length === 0) {
+        setVideos([]);
+        setLoading(false);
+        return;
+      }
+
+      const videoIds = projectVideos.map(pv => pv.video_id);
+
+      // Fetch video details
+      const { data: videosData, error: videosError } = await supabase
         .from('videos')
         .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
+        .in('id', videoIds);
 
-      if (error) {
-        console.error('Error fetching videos:', error);
+      if (videosError) {
+        console.error('Error fetching videos:', videosError);
       } else {
-        setVideos(data || []);
+        setVideos(videosData || []);
       }
     } catch (error) {
       console.error('Error fetching videos:', error);
@@ -66,9 +96,49 @@ export default function ProjectPage() {
     }
   };
 
+  const filterAndSortVideos = () => {
+    let result = [...videos];
+
+    // Filter by search query
+    if (searchQuery) {
+      result = result.filter(video =>
+        video.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'newest':
+        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case 'oldest':
+        result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      case 'title':
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'duration':
+        result.sort((a, b) => b.video_length - a.video_length);
+        break;
+    }
+
+    setFilteredVideos(result);
+  };
+
   const handleVideoAdded = () => {
     fetchVideos();
     setShowAddVideo(false);
+  };
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}m`;
+    }
+    return `${minutes}m`;
   };
 
   if (!project) {
@@ -86,60 +156,81 @@ export default function ProjectPage() {
       <div className="container mx-auto px-8 py-8">
         {/* Back Button */}
         <button
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push('/projects')}
           className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 transition-colors mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span className="font-light">Back to Dashboard</span>
+          <span className="font-light">Back to Projects</span>
         </button>
 
         {/* Project Header */}
-        <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-8 mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-4xl font-light text-white mb-3">
-                {project.project_name}
-              </h1>
-              {project.project_desc && (
-                <p className="text-gray-400 font-light mb-3">
-                  {project.project_desc}
-                </p>
-              )}
-              <p className="text-sm text-gray-500 font-light">
-                {videos.length} video{videos.length !== 1 ? 's' : ''}
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-light text-white mb-2">
+              {project.project_name}
+            </h1>
+            {project.project_desc && (
+              <p className="text-gray-400 font-light">
+                {project.project_desc}
               </p>
-            </div>
-            <button
-              onClick={() => setShowAddVideo(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
-            >
-              <Plus className="w-5 h-5" />
-              Add Video
-            </button>
+            )}
+            <p className="text-sm text-gray-500 font-light mt-2">
+              {videos.length} video{videos.length !== 1 ? 's' : ''}
+            </p>
           </div>
+          <button
+            onClick={() => setShowAddVideo(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
+          >
+            <Plus className="w-5 h-5" />
+            Add Video
+          </button>
         </div>
 
-        {/* Videos Section */}
-        <div>
-          <h2 className="text-2xl font-light text-white mb-6">
-            Videos
-          </h2>
+        {/* Filters and Search */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search videos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:border-emerald-500/50 focus:outline-none transition-all"
+            />
+          </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+          {/* Sort Dropdown */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-white focus:border-emerald-500/50 focus:outline-none transition-all cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="title">Title (A-Z)</option>
+            <option value="duration">Duration</option>
+          </select>
+        </div>
+
+        {/* Videos List */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+          </div>
+        ) : filteredVideos.length === 0 ? (
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+              <VideoIcon className="w-8 h-8 text-emerald-500" />
             </div>
-          ) : videos.length === 0 ? (
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-12 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-                <VideoIcon className="w-8 h-8 text-emerald-500" />
-              </div>
-              <h3 className="text-2xl font-light text-white mb-3">
-                No videos yet
-              </h3>
-              <p className="text-gray-400 mb-6 font-light">
-                Add your first video to start learning
-              </p>
+            <h3 className="text-2xl font-light text-white mb-3">
+              {searchQuery ? 'No videos found' : 'No videos yet'}
+            </h3>
+            <p className="text-gray-400 mb-6 font-light">
+              {searchQuery ? 'Try a different search term' : 'Add your first video to start learning'}
+            </p>
+            {!searchQuery && (
               <button
                 onClick={() => setShowAddVideo(true)}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
@@ -147,15 +238,15 @@ export default function ProjectPage() {
                 <Plus className="w-5 h-5" />
                 Add Video
               </button>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map((video) => (
-                <VideoCard key={video.id} video={video} />
-              ))}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredVideos.map((video) => (
+              <VideoListItem key={video.id} video={video} formatDuration={formatDuration} />
+            ))}
+          </div>
+        )}
       </div>
 
       {showAddVideo && (
@@ -170,39 +261,24 @@ export default function ProjectPage() {
   );
 }
 
-interface VideoCardProps {
-  video: Video;
+interface VideoListItemProps {
+  video: any;
+  formatDuration: (seconds: number) => string;
 }
 
-function VideoCard({ video }: VideoCardProps) {
+function VideoListItem({ video, formatDuration }: VideoListItemProps) {
   const router = useRouter();
-
-  const handleClick = () => {
-    router.push(`/learn/${video.id}`);
-  };
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-
-    if (hours > 0) {
-      return `${hours}h ${remainingMinutes}m`;
-    }
-    return `${minutes}m`;
-  };
 
   return (
     <div
-      onClick={handleClick}
-      className="group relative cursor-pointer"
+      onClick={() => router.push(`/learn/${video.id}`)}
+      className="group bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-xl p-4 hover:border-emerald-500/30 transition-all cursor-pointer"
     >
-      <div className="absolute inset-0 bg-emerald-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all">
+      <div className="flex items-center gap-4">
         {/* Thumbnail */}
-        <div className="relative h-48 bg-gray-900 flex items-center justify-center">
+        <div className="relative w-40 h-24 flex-shrink-0 bg-gray-800 rounded-lg overflow-hidden">
           <img
-            src={`https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`}
+            src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
             alt={video.title}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -210,23 +286,35 @@ function VideoCard({ video }: VideoCardProps) {
             }}
           />
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center">
-              <Play className="w-6 h-6 text-emerald-500" />
+            <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center">
+              <Play className="w-5 h-5 text-emerald-500" />
             </div>
           </div>
-          <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded border border-gray-700">
+          <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
             {formatDuration(video.video_length)}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-5">
-          <h3 className="text-lg font-light text-white mb-2 line-clamp-2 group-hover:text-emerald-400 transition-colors">
+        {/* Video Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-light text-white mb-1 group-hover:text-emerald-400 transition-colors truncate">
             {video.title}
           </h3>
-          <p className="text-xs text-gray-500 font-light">
-            Added {new Date(video.created_at).toLocaleDateString()}
-          </p>
+          <div className="flex items-center gap-4 text-sm text-gray-400">
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{formatDuration(video.video_length)}</span>
+            </div>
+            <span>•</span>
+            <span>Added {new Date(video.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+
+        {/* Play Icon */}
+        <div className="flex-shrink-0">
+          <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center group-hover:bg-emerald-500/20 transition-all">
+            <Play className="w-5 h-5 text-emerald-500" />
+          </div>
         </div>
       </div>
     </div>

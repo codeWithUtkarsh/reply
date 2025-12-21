@@ -84,7 +84,7 @@ export default function Sidebar() {
           <div className="mb-2">
             <div className="px-4 py-2 flex items-center justify-between">
               <button
-                onClick={() => setShowNewProjectModal(true)}
+                onClick={() => router.push('/projects')}
                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-emerald-400 transition-colors"
               >
                 <FolderOpen className="w-4 h-4" />
