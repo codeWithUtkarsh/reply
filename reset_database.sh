@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Reset Database Script
-# This script clears all tables and recreates the database schema from scratch
+# This script generates SQL to clear all tables and recreate the database schema
 
 set -e  # Exit on error
 
@@ -25,31 +25,15 @@ if [ "$confirm" != "yes" ]; then
 fi
 
 echo ""
-echo "Reading Supabase credentials from backend/.env..."
-
-# Load environment variables
-if [ ! -f "backend/.env" ]; then
-    echo "❌ Error: backend/.env file not found!"
-    echo "Please create backend/.env with your Supabase credentials."
-    exit 1
-fi
-
-# Extract Supabase URL and Service Role Key from .env
-export $(grep -v '^#' backend/.env | xargs)
-
-if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
-    echo "❌ Error: SUPABASE_URL or SUPABASE_KEY not found in backend/.env"
-    exit 1
-fi
-
-echo "✅ Loaded Supabase credentials"
+echo "=================================================="
+echo "STEP 1: Drop All Tables"
+echo "=================================================="
 echo ""
-echo "=================================================="
-echo "Step 1: Dropping all tables..."
-echo "=================================================="
+echo "📋 Copy and run the following SQL in your Supabase SQL Editor:"
+echo ""
+echo "-------------------------------------------------------------------"
 
-# Create SQL script to drop all tables
-cat > /tmp/drop_tables.sql <<EOF
+cat <<'EOF'
 -- Drop tables in reverse order of dependencies
 
 -- Drop RLS policies first
@@ -77,7 +61,7 @@ DROP POLICY IF EXISTS "Users can access own reports" ON learning_reports;
 DROP POLICY IF EXISTS "Allow all operations on video_notes" ON video_notes;
 DROP POLICY IF EXISTS "Users can access own activity log" ON activity_log;
 
--- Drop trigger
+-- Drop trigger and function
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 
@@ -95,43 +79,25 @@ DROP TABLE IF EXISTS videos CASCADE;
 DROP TABLE IF EXISTS topics CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
-
--- Note: We don't drop auth.users as it's managed by Supabase Auth
 EOF
 
-echo "Executing drop script..."
-
-# We'll use psql if available, otherwise provide manual instructions
-if command -v psql &> /dev/null; then
-    # Extract database connection details from Supabase URL
-    DB_HOST=$(echo $SUPABASE_URL | sed -n 's/.*https:\/\/\([^\.]*\)\..*/\1/p')
-
-    echo "Note: Direct psql connection requires database password."
-    echo "Alternatively, run the SQL in Supabase SQL Editor:"
-    echo ""
-    cat /tmp/drop_tables.sql
-    echo ""
-else
-    echo ""
-    echo "⚠️  psql not found. Please run the following SQL in your Supabase SQL Editor:"
-    echo ""
-    cat /tmp/drop_tables.sql
-    echo ""
-    read -p "Press Enter after you've run the drop script in Supabase SQL Editor..."
-fi
+echo "-------------------------------------------------------------------"
+echo ""
+read -p "Press Enter after you've run the drop script in Supabase SQL Editor..."
 
 echo ""
 echo "=================================================="
-echo "Step 2: Recreating schema..."
+echo "STEP 2: Create New Schema"
 echo "=================================================="
-
 echo ""
-echo "📋 Please run the following SQL in your Supabase SQL Editor:"
+echo "📋 Now run the schema file in your Supabase SQL Editor:"
 echo ""
-echo "   1. Go to: $SUPABASE_URL"
-echo "   2. Navigate to SQL Editor"
-echo "   3. Copy and paste the contents of: backend/supabase_schema.sql"
-echo "   4. Click 'Run'"
+echo "   File: backend/supabase_schema.sql"
+echo ""
+echo "You can either:"
+echo "  1. Copy the contents of backend/supabase_schema.sql"
+echo "  2. Or run this command to view it:"
+echo "     cat backend/supabase_schema.sql"
 echo ""
 read -p "Press Enter after you've run the schema in Supabase SQL Editor..."
 
@@ -140,12 +106,18 @@ echo "=================================================="
 echo "✅ Database Reset Complete!"
 echo "=================================================="
 echo ""
-echo "Your database has been reset with a fresh schema."
-echo "You can now:"
-echo "  1. Start the backend: cd backend && python main.py"
-echo "  2. Start the frontend: cd frontend && npm run dev"
-echo "  3. Create new projects and topics"
+echo "Your database has been reset with the new three-level hierarchy:"
 echo ""
-echo "Note: All previous data has been deleted."
+echo "  Projects → Topics → Videos"
+echo ""
+echo "Next steps:"
+echo "  1. Start backend:  cd backend && python main.py"
+echo "  2. Start frontend: cd frontend && npm run dev"
+echo "  3. Create projects, then topics, then add videos"
+echo ""
+echo "Example workflow:"
+echo "  - Create Project: 'Machine Learning Course'"
+echo "  - Create Topic: 'Neural Networks' (in that project)"
+echo "  - Add Videos: Process YouTube videos into that topic"
+echo ""
 echo "=================================================="
-EOF
