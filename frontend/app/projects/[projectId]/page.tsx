@@ -3,12 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Project } from '@/lib/supabase';
-import { videoApi } from '@/lib/api';
-import { ArrowLeft, Plus, Play, Loader2, Video as VideoIcon, X, Search, SortAsc, SortDesc, Filter, Clock } from 'lucide-react';
+import { supabase, Project, Topic } from '@/lib/supabase';
+import { topicApi } from '@/lib/api';
+import { ArrowLeft, Plus, Loader2, FolderOpen, X, Video } from 'lucide-react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
-
-type SortOption = 'newest' | 'oldest' | 'title' | 'duration';
 
 export default function ProjectPage() {
   const router = useRouter();
@@ -17,23 +15,16 @@ export default function ProjectPage() {
   const { user } = useAuth();
 
   const [project, setProject] = useState<Project | null>(null);
-  const [videos, setVideos] = useState<any[]>([]);
-  const [filteredVideos, setFilteredVideos] = useState<any[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddVideo, setShowAddVideo] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [showNewTopicModal, setShowNewTopicModal] = useState(false);
 
   useEffect(() => {
     if (user && projectId) {
       fetchProject();
-      fetchVideos();
+      fetchTopics();
     }
   }, [user, projectId]);
-
-  useEffect(() => {
-    filterAndSortVideos();
-  }, [videos, searchQuery, sortBy]);
 
   const fetchProject = async () => {
     try {
@@ -54,91 +45,21 @@ export default function ProjectPage() {
     }
   };
 
-  const fetchVideos = async () => {
+  const fetchTopics = async () => {
     try {
       setLoading(true);
-
-      // Fetch video IDs from junction table
-      const { data: projectVideos, error: junctionError } = await supabase
-        .from('project_videos')
-        .select('video_id')
-        .eq('project_id', projectId);
-
-      if (junctionError) {
-        console.error('Error fetching project videos:', junctionError);
-        setLoading(false);
-        return;
-      }
-
-      if (!projectVideos || projectVideos.length === 0) {
-        setVideos([]);
-        setLoading(false);
-        return;
-      }
-
-      const videoIds = projectVideos.map(pv => pv.video_id);
-
-      // Fetch video details
-      const { data: videosData, error: videosError } = await supabase
-        .from('videos')
-        .select('*')
-        .in('id', videoIds);
-
-      if (videosError) {
-        console.error('Error fetching videos:', videosError);
-      } else {
-        setVideos(videosData || []);
-      }
+      const { topics: topicsData } = await topicApi.getTopicsByProject(projectId);
+      setTopics(topicsData || []);
     } catch (error) {
-      console.error('Error fetching videos:', error);
+      console.error('Error fetching topics:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterAndSortVideos = () => {
-    let result = [...videos];
-
-    // Filter by search query
-    if (searchQuery) {
-      result = result.filter(video =>
-        video.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Sort
-    switch (sortBy) {
-      case 'newest':
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
-      case 'oldest':
-        result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        break;
-      case 'title':
-        result.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'duration':
-        result.sort((a, b) => b.video_length - a.video_length);
-        break;
-    }
-
-    setFilteredVideos(result);
-  };
-
-  const handleVideoAdded = () => {
-    fetchVideos();
-    setShowAddVideo(false);
-  };
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-
-    if (hours > 0) {
-      return `${hours}h ${remainingMinutes}m`;
-    }
-    return `${minutes}m`;
+  const handleTopicCreated = () => {
+    fetchTopics();
+    setShowNewTopicModal(false);
   };
 
   if (!project) {
@@ -175,145 +96,105 @@ export default function ProjectPage() {
               </p>
             )}
             <p className="text-sm text-gray-500 font-light mt-2">
-              {videos.length} video{videos.length !== 1 ? 's' : ''}
+              {topics.length} topic{topics.length !== 1 ? 's' : ''}
             </p>
           </div>
           <button
-            onClick={() => setShowAddVideo(true)}
+            onClick={() => setShowNewTopicModal(true)}
             className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
           >
             <Plus className="w-5 h-5" />
-            Add Video
+            New Topic
           </button>
         </div>
 
-        {/* Filters and Search */}
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search videos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:border-emerald-500/50 focus:outline-none transition-all"
-            />
-          </div>
-
-          {/* Sort Dropdown */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-white focus:border-emerald-500/50 focus:outline-none transition-all cursor-pointer"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="title">Title (A-Z)</option>
-            <option value="duration">Duration</option>
-          </select>
-        </div>
-
-        {/* Videos List */}
+        {/* Topics List */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
           </div>
-        ) : filteredVideos.length === 0 ? (
+        ) : topics.length === 0 ? (
           <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-12 text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-              <VideoIcon className="w-8 h-8 text-emerald-500" />
+              <FolderOpen className="w-8 h-8 text-emerald-500" />
             </div>
             <h3 className="text-2xl font-light text-white mb-3">
-              {searchQuery ? 'No videos found' : 'No videos yet'}
+              No topics yet
             </h3>
             <p className="text-gray-400 mb-6 font-light">
-              {searchQuery ? 'Try a different search term' : 'Add your first video to start learning'}
+              Create your first topic to organize your videos
             </p>
-            {!searchQuery && (
-              <button
-                onClick={() => setShowAddVideo(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
-              >
-                <Plus className="w-5 h-5" />
-                Add Video
-              </button>
-            )}
+            <button
+              onClick={() => setShowNewTopicModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-medium rounded-lg transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              New Topic
+            </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredVideos.map((video) => (
-              <VideoListItem key={video.id} video={video} formatDuration={formatDuration} />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topics.map((topic) => (
+              <TopicCard key={topic.id} topic={topic} />
             ))}
           </div>
         )}
       </div>
 
-      {showAddVideo && (
-        <AddVideoModal
+      {showNewTopicModal && (
+        <NewTopicModal
           projectId={projectId}
           projectName={project.project_name}
-          onClose={() => setShowAddVideo(false)}
-          onVideoAdded={handleVideoAdded}
+          onClose={() => setShowNewTopicModal(false)}
+          onTopicCreated={handleTopicCreated}
         />
       )}
     </AuthenticatedLayout>
   );
 }
 
-interface VideoListItemProps {
-  video: any;
-  formatDuration: (seconds: number) => string;
+interface TopicCardProps {
+  topic: Topic;
 }
 
-function VideoListItem({ video, formatDuration }: VideoListItemProps) {
+function TopicCard({ topic }: TopicCardProps) {
   const router = useRouter();
+  const [videoCount, setVideoCount] = useState<number>(0);
+
+  useEffect(() => {
+    fetchVideoCount();
+  }, [topic.id]);
+
+  const fetchVideoCount = async () => {
+    try {
+      const { videos } = await topicApi.getVideosByTopic(topic.id);
+      setVideoCount(videos?.length || 0);
+    } catch (error) {
+      console.error('Error fetching video count:', error);
+    }
+  };
 
   return (
     <div
-      onClick={() => router.push(`/learn/${video.id}`)}
-      className="group bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-xl p-4 hover:border-emerald-500/30 transition-all cursor-pointer"
+      onClick={() => router.push(`/topics/${topic.id}`)}
+      className="group bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-all cursor-pointer"
     >
-      <div className="flex items-center gap-4">
-        {/* Thumbnail */}
-        <div className="relative w-40 h-24 flex-shrink-0 bg-gray-800 rounded-lg overflow-hidden">
-          <img
-            src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
-            alt={video.title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
-            }}
-          />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center">
-              <Play className="w-5 h-5 text-emerald-500" />
-            </div>
-          </div>
-          <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
-            {formatDuration(video.video_length)}
-          </div>
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-all">
+          <FolderOpen className="w-6 h-6 text-emerald-500" />
         </div>
-
-        {/* Video Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-light text-white mb-1 group-hover:text-emerald-400 transition-colors truncate">
-            {video.title}
+          <h3 className="text-xl font-light text-white mb-1 group-hover:text-emerald-400 transition-colors">
+            {topic.topic_name}
           </h3>
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{formatDuration(video.video_length)}</span>
-            </div>
-            <span>•</span>
-            <span>Added {new Date(video.created_at).toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        {/* Play Icon */}
-        <div className="flex-shrink-0">
-          <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center group-hover:bg-emerald-500/20 transition-all">
-            <Play className="w-5 h-5 text-emerald-500" />
+          {topic.topic_desc && (
+            <p className="text-sm text-gray-400 mb-3 font-light line-clamp-2">
+              {topic.topic_desc}
+            </p>
+          )}
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Video className="w-4 h-4" />
+            <span className="font-light">{videoCount} video{videoCount !== 1 ? 's' : ''}</span>
           </div>
         </div>
       </div>
@@ -321,17 +202,17 @@ function VideoListItem({ video, formatDuration }: VideoListItemProps) {
   );
 }
 
-interface AddVideoModalProps {
+interface NewTopicModalProps {
   projectId: string;
   projectName: string;
   onClose: () => void;
-  onVideoAdded: () => void;
+  onTopicCreated: () => void;
 }
 
-function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVideoModalProps) {
-  const router = useRouter();
+function NewTopicModal({ projectId, projectName, onClose, onTopicCreated }: NewTopicModalProps) {
   const { user } = useAuth();
-  const [videoUrl, setVideoUrl] = useState('');
+  const [topicName, setTopicName] = useState('');
+  const [topicDesc, setTopicDesc] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -341,23 +222,21 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
     setLoading(true);
 
     try {
-      // Process video with project_id
-      const response = await videoApi.processVideo(videoUrl, projectName, projectId);
+      // Create topic
+      await topicApi.createTopic(topicName, projectId, topicDesc || undefined);
 
       // Log activity
       await supabase.from('activity_log').insert({
         user_id: user!.id,
         project_id: projectId,
-        video_id: response.video_id,
-        activity_desc: `Added new video to project "${projectName}"`,
-        activity_type: 'video_added',
-        metadata: { video_url: videoUrl }
+        activity_desc: `Created new topic "${topicName}" in project "${projectName}"`,
+        activity_type: 'topic_created',
+        metadata: { topic_name: topicName }
       });
 
-      // Redirect to learning page
-      router.push(`/learn/${response.video_id}`);
+      onTopicCreated();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to process video');
+      setError(err.response?.data?.detail || 'Failed to create topic');
       setLoading(false);
     }
   };
@@ -376,26 +255,44 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
         </button>
 
         <h2 className="text-3xl font-light text-white mb-8 relative z-10">
-          Add Video
+          New Topic
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
           <div>
             <label
-              htmlFor="videoUrl"
+              htmlFor="topicName"
               className="block text-sm font-light text-gray-300 mb-2"
             >
-              YouTube Video URL
+              Topic Name
             </label>
             <input
-              type="url"
-              id="videoUrl"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=..."
+              type="text"
+              id="topicName"
+              value={topicName}
+              onChange={(e) => setTopicName(e.target.value)}
+              placeholder="e.g., Neural Networks, Web Development"
               required
               disabled={loading}
               className="w-full px-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all disabled:opacity-50"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="topicDesc"
+              className="block text-sm font-light text-gray-300 mb-2"
+            >
+              Description (Optional)
+            </label>
+            <textarea
+              id="topicDesc"
+              value={topicDesc}
+              onChange={(e) => setTopicDesc(e.target.value)}
+              placeholder="Brief description of this topic..."
+              rows={3}
+              disabled={loading}
+              className="w-full px-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all disabled:opacity-50 resize-none"
             />
           </div>
 
@@ -416,18 +313,18 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
             </button>
             <button
               type="submit"
-              disabled={loading || !videoUrl}
+              disabled={loading || !topicName}
               className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
+                  Creating...
                 </>
               ) : (
                 <>
                   <Plus className="w-5 h-5" />
-                  Add & Start Learning
+                  Create Topic
                 </>
               )}
             </button>
