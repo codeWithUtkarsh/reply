@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Project } from '@/lib/supabase';
 import { videoApi } from '@/lib/api';
-import { ArrowLeft, Plus, Play, Loader2, Video as VideoIcon, X, Search, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, Play, Loader2, Video as VideoIcon, X, Search, Clock, Trash2 } from 'lucide-react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
 type SortOption = 'newest' | 'oldest' | 'title' | 'duration';
@@ -251,7 +251,13 @@ export default function ProjectPage() {
         ) : (
           <div className="space-y-3">
             {filteredVideos.map((video) => (
-              <VideoListItem key={video.id} video={video} formatDuration={formatDuration} />
+              <VideoListItem
+                key={video.id}
+                video={video}
+                formatDuration={formatDuration}
+                projectId={projectId}
+                onVideoDeleted={fetchVideos}
+              />
             ))}
           </div>
         )}
@@ -272,60 +278,145 @@ export default function ProjectPage() {
 interface VideoListItemProps {
   video: Video;
   formatDuration: (seconds: number) => string;
+  projectId: string;
+  onVideoDeleted: () => void;
 }
 
-function VideoListItem({ video, formatDuration }: VideoListItemProps) {
+function VideoListItem({ video, formatDuration, projectId, onVideoDeleted }: VideoListItemProps) {
   const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await videoApi.deleteVideo(video.id, projectId);
+      onVideoDeleted();
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      alert('Failed to delete video');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   return (
-    <div
-      onClick={() => router.push(`/learn/${video.id}`)}
-      className="group bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-xl p-4 hover:border-emerald-500/30 transition-all cursor-pointer"
-    >
-      <div className="flex items-center gap-4">
-        {/* Thumbnail */}
-        <div className="relative w-40 h-24 flex-shrink-0 bg-gray-800 rounded-lg overflow-hidden">
-          <img
-            src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
-            alt={video.title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
-            }}
-          />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center">
+    <>
+      <div
+        onClick={() => router.push(`/learn/${video.id}`)}
+        className="group bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-xl p-4 hover:border-emerald-500/30 transition-all cursor-pointer"
+      >
+        <div className="flex items-center gap-4">
+          {/* Thumbnail */}
+          <div className="relative w-40 h-24 flex-shrink-0 bg-gray-800 rounded-lg overflow-hidden">
+            <img
+              src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
+              alt={video.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
+              }}
+            />
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center">
+                <Play className="w-5 h-5 text-emerald-500" />
+              </div>
+            </div>
+            <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
+              {formatDuration(video.video_length)}
+            </div>
+          </div>
+
+          {/* Video Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-light text-white mb-1 group-hover:text-emerald-400 transition-colors truncate">
+              {video.title}
+            </h3>
+            <div className="flex items-center gap-4 text-sm text-gray-400">
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{formatDuration(video.video_length)}</span>
+              </div>
+              <span>•</span>
+              <span>Added {new Date(video.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Delete Icon */}
+            <button
+              onClick={handleDelete}
+              className="w-10 h-10 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center hover:bg-red-500/20 transition-all"
+              title="Delete video"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" />
+            </button>
+
+            {/* Play Icon */}
+            <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center group-hover:bg-emerald-500/20 transition-all">
               <Play className="w-5 h-5 text-emerald-500" />
             </div>
           </div>
-          <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
-            {formatDuration(video.video_length)}
-          </div>
-        </div>
-
-        {/* Video Info */}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-light text-white mb-1 group-hover:text-emerald-400 transition-colors truncate">
-            {video.title}
-          </h3>
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{formatDuration(video.video_length)}</span>
-            </div>
-            <span>•</span>
-            <span>Added {new Date(video.created_at).toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        {/* Play Icon */}
-        <div className="flex-shrink-0">
-          <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center group-hover:bg-emerald-500/20 transition-all">
-            <Play className="w-5 h-5 text-emerald-500" />
-          </div>
         </div>
       </div>
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-black border border-red-500/30 rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-900/5 pointer-events-none"></div>
+
+            <div className="relative z-10">
+              <div className="w-16 h-16 mx-auto mb-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-500" />
+              </div>
+
+              <h2 className="text-2xl font-light text-white mb-3 text-center">
+                Delete Video?
+              </h2>
+
+              <p className="text-gray-400 text-center mb-6 font-light">
+                Are you sure you want to delete "{video.title}"? This action cannot be undone.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800/50 transition-colors disabled:opacity-50 font-light"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleting}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-5 h-5" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
