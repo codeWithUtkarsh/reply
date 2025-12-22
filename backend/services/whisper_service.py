@@ -64,9 +64,11 @@ class WhisperService:
         This is the PRIMARY method - fast, free, and has accurate timestamps
         """
         # Get transcript with timestamps
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+        ytt_api = YouTubeTranscriptApi()
+        fetched_transcript = ytt_api.fetch(video_id)
 
         # Convert to our VideoSegment format and create meaningful chunks
+        transcript_list = fetched_transcript.to_raw_data()
         segments = self._create_segments_from_youtube_transcript(transcript_list, duration)
 
         # Combine all text
