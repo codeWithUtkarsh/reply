@@ -89,14 +89,14 @@ export default function Sidebar() {
             </div>
 
             {/* Project List */}
-            <div className="mt-2">
+            <div className="mt-2 ml-2">
               {projects.map((project) => {
                 const isActive = pathname === `/projects/${project.id}`;
                 return (
                   <button
                     key={project.id}
                     onClick={() => router.push(`/projects/${project.id}`)}
-                    className={`w-full px-4 py-2 flex items-center gap-2 text-sm transition-all ${
+                    className={`w-full pl-6 pr-4 py-2 flex items-center gap-2 text-sm transition-all ${
                       isActive
                         ? 'text-emerald-400 bg-emerald-500/10'
                         : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
