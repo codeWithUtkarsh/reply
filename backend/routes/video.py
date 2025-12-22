@@ -111,12 +111,13 @@ async def process_video(request: VideoProcessRequest):
         # -----------------------------------------------------
         # Flashcard generation
         # -----------------------------------------------------
-        logger.info("Generating flashcards...")
+        logger.info("Generating flashcards with context...")
         flashcards = await question_generator.generate_flashcards(
             transcript.segments,
             interval=settings.flashcard_interval,
+            video_title=title
         )
-        logger.info(f"Generated {len(flashcards)} flashcards")
+        logger.info(f"Generated {len(flashcards)} high-quality flashcards")
 
         # -----------------------------------------------------
         # Persist video
