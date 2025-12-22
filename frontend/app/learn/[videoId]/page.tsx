@@ -260,11 +260,11 @@ export default function LearnPage() {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/projects')}
             className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="font-light">Back to Dashboard</span>
+            <span className="font-light">Back to Projects</span>
           </button>
           <h1 className="text-3xl font-light text-white mb-2">
             {videoData?.title}
