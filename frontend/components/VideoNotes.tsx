@@ -173,11 +173,51 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
   return (
     <div className="w-full">
+      {/* Action Buttons - Fixed Outside Notebook */}
+      <div className="flex justify-end gap-3 mb-6 px-4">
+        {!isEditMode ? (
+          <>
+            <button
+              onClick={() => setIsEditMode(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-medium rounded-lg transition-all shadow-lg shadow-emerald-500/20"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit
+            </button>
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-medium rounded-lg transition-all shadow-lg shadow-purple-500/20"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={handleCancelEdit}
+              className="flex items-center gap-2 px-5 py-2.5 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800/50 transition-colors font-light"
+            >
+              <X className="w-4 h-4" />
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium rounded-lg transition-all shadow-lg shadow-emerald-500/20"
+            >
+              <Save className="w-4 h-4" />
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+          </>
+        )}
+      </div>
+
       {/* Single Continuous Notebook Page */}
       <div className="flex justify-center">
         <div
           ref={notesRef}
-          className="bg-white dark:bg-gray-800 shadow-2xl border border-gray-400 dark:border-gray-600 relative overflow-auto w-full"
+          className="bg-white shadow-2xl border border-gray-300 relative overflow-auto w-full max-w-[210mm]"
           style={{
             minHeight: '297mm',
             backgroundImage: `
@@ -196,55 +236,16 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
         >
         {/* Content with proper padding */}
         <div className="p-8 pl-20">
-          {/* Buttons - Top Right */}
-          <div className="flex justify-end gap-2 mb-6">
-            {!isEditMode ? (
-              <>
-                <button
-                  onClick={() => setIsEditMode(true)}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={handleCancelEdit}
-                  className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
-                >
-                  <X className="w-4 h-4" />
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition-colors shadow-md text-sm"
-                >
-                  <Save className="w-4 h-4" />
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-              </>
-            )}
-          </div>
 
           {/* Notes Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Comic Neue, cursive' }}>
+            <h1 className="text-4xl font-bold text-gray-900" style={{ fontFamily: 'Caveat, cursive', fontSize: '2.5rem' }}>
               {notes.title}
             </h1>
           </div>
 
           {/* All Sections - Continuous Flow */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {editableSections.map((section, sectionIndex) => (
               <div key={sectionIndex}>
                 {/* Section Heading */}
@@ -253,13 +254,13 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
                     type="text"
                     value={section.heading}
                     onChange={(e) => handleSectionChange(sectionIndex, 'heading', e.target.value)}
-                    className="text-2xl font-bold text-gray-900 dark:text-white mb-3 pb-2 border-b-2 border-blue-400 dark:border-blue-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 w-full"
-                    style={{ fontFamily: 'Caveat, cursive' }}
+                    className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-400 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 w-full"
+                    style={{ fontFamily: 'Caveat, cursive', fontSize: '1.75rem' }}
                   />
                 ) : (
                   <h2
-                    className="text-2xl font-bold text-gray-900 dark:text-white mb-3 pb-2 border-b-2 border-blue-400 dark:border-blue-600 inline-block"
-                    style={{ fontFamily: 'Caveat, cursive' }}
+                    className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-500 inline-block"
+                    style={{ fontFamily: 'Caveat, cursive', fontSize: '1.75rem' }}
                   >
                     {section.heading}
                   </h2>
@@ -272,16 +273,16 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
                       value={section.content}
                       onChange={(e) => handleSectionChange(sectionIndex, 'content', e.target.value)}
                       onPaste={(e) => handlePaste(e, sectionIndex)}
-                      className="text-gray-800 dark:text-gray-200 w-full leading-relaxed mb-4 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 py-1 min-h-[100px]"
-                      style={{ fontFamily: 'Indie Flower, cursive', fontSize: '1rem', lineHeight: '28px' }}
-                      rows={6}
+                      className="text-gray-800 w-full leading-relaxed mb-4 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 py-1 min-h-[100px] font-sans"
+                      style={{ fontSize: '1.05rem', lineHeight: '1.8' }}
+                      rows={8}
                       placeholder="Type or paste images here..."
                     />
                   </>
                 ) : (
                   <div
-                    className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed mb-4"
-                    style={{ fontFamily: 'Indie Flower, cursive', fontSize: '1rem', lineHeight: '28px' }}
+                    className="text-gray-800 whitespace-pre-wrap leading-relaxed mb-4 font-sans"
+                    style={{ fontSize: '1.05rem', lineHeight: '1.8' }}
                   >
                     {section.content}
                   </div>
@@ -314,24 +315,23 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
                 {/* Diagrams */}
                 {section.diagrams && section.diagrams.length > 0 && (
-                  <div className="my-4 space-y-4">
+                  <div className="my-6 space-y-6">
                     {section.diagrams.map((diagram, diagIndex) => {
                       const currentDiagramId = `mermaid-${globalDiagramIndex++}`;
                       return (
-                        <div key={diagIndex} className="bg-blue-50 dark:bg-gray-900 p-3 rounded border border-blue-200 dark:border-blue-800">
+                        <div key={diagIndex} className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 shadow-sm">
                           {/* Diagram */}
                           <div
                             ref={(el) => {
                               diagramRefs.current[currentDiagramId] = el;
                             }}
-                            className="flex justify-center items-center overflow-x-auto py-2"
+                            className="flex justify-center items-center overflow-x-auto py-3"
                           />
 
                           {/* Caption */}
                           {diagram.caption && (
                             <p
-                              className="text-sm text-center text-gray-600 dark:text-gray-400 mt-2 italic"
-                              style={{ fontFamily: 'Indie Flower, cursive' }}
+                              className="text-sm text-center text-gray-700 mt-3 italic font-medium"
                             >
                               {diagram.caption}
                             </p>
@@ -346,9 +346,9 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 text-center border-t-2 border-gray-300 dark:border-gray-600 pt-4 pb-4">
+          <div className="mt-12 text-center border-t-2 border-gray-400 pt-6 pb-4">
             <p
-              className="text-lg text-gray-500 dark:text-gray-400"
+              className="text-xl text-gray-500"
               style={{ fontFamily: 'Caveat, cursive' }}
             >
               ~ End of Notes ~

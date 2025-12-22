@@ -32,8 +32,8 @@ class NotesGenerator:
             ]
         }
         """
-        # Truncate transcript if too long (keep first 8000 chars for context)
-        text_sample = transcript_text[:8000] if len(transcript_text) > 8000 else transcript_text
+        # Truncate transcript if too long (keep first 10000 chars for better context)
+        text_sample = transcript_text[:10000] if len(transcript_text) > 10000 else transcript_text
 
         prompt = f"""You are an expert note-taker creating comprehensive, visually engaging notes for students.
 
@@ -42,67 +42,126 @@ Video Title: {video_title}
 Transcript:
 {text_sample}
 
-Create detailed notes following these requirements:
+Create detailed notes following these STRICT requirements:
 
 1. STRUCTURE:
-   - Create 4-6 main sections with clear headings
-   - Each section should have concise, bullet-point style content
-   - Use casual, student-friendly language (like handwritten notes)
+   - Create exactly 4-6 main sections with clear headings
+   - Each section MUST have concise, well-formatted content
+   - Use casual, student-friendly language
 
-2. DIAGRAMS:
-   - Include Mermaid diagrams where helpful (flowcharts, mind maps, sequences, graphs)
-   - Use diagrams to visualize:
-     * Processes and workflows
+2. CONTENT FORMATTING (CRITICAL):
+   - Use proper line breaks between points
+   - Each bullet point or new idea MUST be on a new line
+   - Format like this:
+     "• First point about the topic
+
+     • Second point with explanation
+
+     • Third point with details"
+
+   - NOT like this: "First pointSecond pointThird point"
+   - Add blank lines between paragraphs for readability
+   - Use bullet points (•) or numbered lists (1., 2., 3.)
+
+3. DIAGRAMS (MANDATORY):
+   - You MUST include AT LEAST 2-3 Mermaid diagrams
+   - Include diagrams for:
+     * Main concepts and workflows
      * Hierarchies and relationships
-     * Comparisons and contrasts
-     * Step-by-step procedures
-   - Include 2-4 diagrams total
+     * Step-by-step processes
+     * Comparisons or decision trees
+   - Each diagram must be properly formatted Mermaid syntax
+   - Keep diagrams simple but informative
 
-3. MERMAID SYNTAX:
-   - Use proper Mermaid syntax for diagrams
-   - Supported types: flowchart, sequenceDiagram, classDiagram, stateDiagram, mindmap
-   - Keep diagrams simple and clear
+4. MERMAID SYNTAX EXAMPLES:
 
-4. STYLE:
-   - Write in a casual, note-taking style
-   - Use abbreviations where appropriate (w/, b/c, etc.)
-   - Include key terms, definitions, and examples
-   - Add helpful tips or "Pro tips" sections
+   Flowchart:
+   ```
+   graph TD
+       A[Start] --> B[Step 1]
+       B --> C[Step 2]
+       C --> D[End]
+   ```
 
-Return your response as a JSON object with this structure:
+   Mind Map:
+   ```
+   mindmap
+     root((Main Topic))
+       Concept 1
+         Detail A
+         Detail B
+       Concept 2
+         Detail C
+         Detail D
+   ```
+
+   Sequence:
+   ```
+   sequenceDiagram
+       participant A as Person A
+       participant B as Person B
+       A->>B: Message
+       B->>A: Response
+   ```
+
+5. STYLE:
+   - Write in a clear, note-taking style
+   - Include key terms and definitions
+   - Add examples where helpful
+   - Use "Pro tip:" for important insights
+
+EXAMPLE OUTPUT STRUCTURE:
 {{
-  "title": "Main topic/title for these notes",
+  "title": "Clear Topic Title",
   "sections": [
     {{
-      "heading": "Section heading",
-      "content": "Bullet points and notes content...",
+      "heading": "Understanding the Basics",
+      "content": "• First key concept explained clearly\\n\\n• Second important point with details\\n\\n• Third point with examples\\n\\nPro tip: Remember this helpful insight!",
       "diagrams": [
         {{
           "type": "mermaid",
-          "code": "graph TD\\n  A[Start] --> B[Process]",
-          "caption": "Brief description of diagram"
+          "code": "graph TD\\n    A[Concept A] --> B[Concept B]\\n    B --> C[Result C]",
+          "caption": "Visual overview of the main process"
+        }}
+      ]
+    }},
+    {{
+      "heading": "Key Methods",
+      "content": "1. First method:\\n   - Step A\\n   - Step B\\n\\n2. Second method:\\n   - Step C\\n   - Step D",
+      "diagrams": [
+        {{
+          "type": "mermaid",
+          "code": "mindmap\\n  root((Methods))\\n    Method 1\\n      Advantage A\\n      Advantage B\\n    Method 2\\n      Advantage C\\n      Advantage D",
+          "caption": "Comparison of different methods"
         }}
       ]
     }}
   ]
 }}
 
-Make the notes comprehensive but concise. Focus on key concepts and actionable insights."""
+CRITICAL REQUIREMENTS:
+- Each section MUST have at least 1 diagram
+- Content MUST use proper line breaks (\\n\\n between points)
+- Minimum 2-3 diagrams total across all sections
+- Diagrams must use valid Mermaid syntax
+- Make notes comprehensive but concise
+
+Return your response as a valid JSON object with the exact structure shown above."""
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",  # Upgraded from gpt-4o-mini for better quality
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert note-taker who creates engaging, visual notes with diagrams. You understand Mermaid diagram syntax and use it effectively to visualize concepts."
+                        "content": "You are an expert educational content creator who creates exceptionally clear, well-formatted notes with visual diagrams. You ALWAYS include proper formatting with line breaks and ALWAYS generate the requested diagrams using correct Mermaid syntax. You follow instructions precisely."
                     },
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-                temperature=0.7,
+                temperature=0.5,  # Lowered from 0.7 for more consistent structure
                 response_format={"type": "json_object"}
             )
 
