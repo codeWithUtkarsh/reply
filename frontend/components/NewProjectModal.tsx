@@ -108,34 +108,36 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-black border border-emerald-500/30 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-purple-500/5 pointer-events-none rounded-2xl"></div>
+
         <button
           onClick={handleClose}
           disabled={loading}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+          className="absolute top-4 right-4 text-gray-400 hover:text-emerald-400 transition-colors disabled:opacity-50 z-10"
         >
           <X className="w-6 h-6" />
         </button>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center">
-            <FolderPlus className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+        <div className="flex items-center gap-3 mb-6 relative z-10">
+          <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+            <FolderPlus className="w-6 h-6 text-emerald-500" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-light text-white">
             Create New Project
           </h2>
         </div>
 
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
+        <p className="text-gray-400 font-light mb-6 relative z-10">
           Create a project and add your first video to start learning
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
           <div>
             <label
               htmlFor="projectName"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-light text-gray-300 mb-2"
             >
               Project Name *
             </label>
@@ -147,14 +149,14 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
               placeholder="e.g., Web Development, Machine Learning, etc."
               required
               disabled={loading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50"
+              className="w-full px-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all disabled:opacity-50"
             />
           </div>
 
           <div>
             <label
               htmlFor="projectDesc"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-light text-gray-300 mb-2"
             >
               Project Description (Optional)
             </label>
@@ -165,19 +167,19 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
               placeholder="Brief description of what you're learning in this project..."
               rows={3}
               disabled={loading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50 resize-none"
+              className="w-full px-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all disabled:opacity-50 resize-none"
             />
           </div>
 
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="border-t border-gray-800 pt-6">
+            <h3 className="text-lg font-light text-white mb-4">
               Add Your First Video
             </h3>
 
             <div>
               <label
                 htmlFor="videoUrl"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-light text-gray-300 mb-2"
               >
                 YouTube Video URL *
               </label>
@@ -189,33 +191,33 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
                 placeholder="https://www.youtube.com/watch?v=..."
                 required
                 disabled={loading}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50"
+                className="w-full px-4 py-3 bg-black border border-emerald-500/30 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white placeholder-gray-500 font-light transition-all disabled:opacity-50"
               />
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-sm text-gray-500 font-light">
                 Supported formats: youtube.com/watch?v=..., youtu.be/..., or just the video ID
               </p>
             </div>
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <div className="p-4 bg-red-950/30 border border-red-500/30 rounded-xl">
+              <p className="text-sm text-red-300 font-light">{error}</p>
             </div>
           )}
 
-          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-800">
             <button
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800/50 transition-colors disabled:opacity-50 font-light"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !projectName || !videoUrl}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
             >
               {loading ? (
                 <>
