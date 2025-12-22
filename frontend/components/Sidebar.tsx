@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Project } from '@/lib/supabase';
-import { Plus, FolderOpen, BarChart3, FileText, Settings, User } from 'lucide-react';
+import { Plus, FolderOpen, BarChart3, FileText, Settings, User, Trash2, Loader2 } from 'lucide-react';
 import NewProjectModal from '@/components/NewProjectModal';
+import { projectsApi } from '@/lib/api';
 
 export default function Sidebar() {
   const router = useRouter();
@@ -13,10 +14,37 @@ export default function Sidebar() {
   const { user, userProfile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchProjects();
+
+      // Subscribe to realtime changes on projects table
+      const channel = supabase
+        .channel('sidebar-projects-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'projects',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Sidebar: Project changed:', payload);
+            // Refetch projects when any change occurs
+            fetchProjects();
+          }
+        )
+        .subscribe();
+
+      // Cleanup subscription on unmount
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -41,6 +69,36 @@ export default function Sidebar() {
   const handleProjectCreated = () => {
     fetchProjects();
     setShowNewProjectModal(false);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, project: Project) => {
+    e.stopPropagation();
+    setProjectToDelete(project);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!projectToDelete) return;
+
+    setDeletingProjectId(projectToDelete.id);
+    try {
+      await projectsApi.deleteProject(projectToDelete.id);
+
+      // If we're currently viewing this project, navigate to projects page
+      if (pathname === `/projects/${projectToDelete.id}`) {
+        router.push('/projects');
+      }
+
+      // Refresh projects list
+      fetchProjects();
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert('Failed to delete project');
+    } finally {
+      setDeletingProjectId(null);
+      setShowDeleteConfirm(false);
+      setProjectToDelete(null);
+    }
   };
 
   return (
@@ -93,18 +151,29 @@ export default function Sidebar() {
               {projects.map((project) => {
                 const isActive = pathname === `/projects/${project.id}`;
                 return (
-                  <button
+                  <div
                     key={project.id}
-                    onClick={() => router.push(`/projects/${project.id}`)}
-                    className={`w-full pl-6 pr-4 py-2 flex items-center gap-2 text-sm transition-all ${
+                    className={`group relative flex items-center gap-2 text-sm transition-all ${
                       isActive
                         ? 'text-emerald-400 bg-emerald-500/10'
                         : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                     }`}
                   >
-                    <FolderOpen className="w-4 h-4" />
-                    <span className="font-light truncate">{project.project_name}</span>
-                  </button>
+                    <button
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                      className="flex-1 pl-6 pr-2 py-2 flex items-center gap-2 text-left"
+                    >
+                      <FolderOpen className="w-4 h-4 flex-shrink-0" />
+                      <span className="font-light truncate">{project.project_name}</span>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteClick(e, project)}
+                      className="flex-shrink-0 p-2 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 rounded transition-all"
+                      title="Delete project"
+                    >
+                      <Trash2 className="w-3 h-3 text-red-400" />
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -136,6 +205,59 @@ export default function Sidebar() {
         onClose={() => setShowNewProjectModal(false)}
         onProjectCreated={handleProjectCreated}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && projectToDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-black border border-red-500/30 rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-900/5 pointer-events-none"></div>
+
+            <div className="relative z-10">
+              <div className="w-16 h-16 mx-auto mb-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-500" />
+              </div>
+
+              <h2 className="text-2xl font-light text-white mb-3 text-center">
+                Delete Project?
+              </h2>
+
+              <p className="text-gray-400 text-center mb-6 font-light">
+                Are you sure you want to delete "{projectToDelete.project_name}"? This will also delete all videos in this project. This action cannot be undone.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setProjectToDelete(null);
+                  }}
+                  disabled={deletingProjectId !== null}
+                  className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800/50 transition-colors disabled:opacity-50 font-light"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deletingProjectId !== null}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                >
+                  {deletingProjectId ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-5 h-5" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

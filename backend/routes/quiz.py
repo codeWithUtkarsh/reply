@@ -31,10 +31,11 @@ async def generate_quiz(request: QuizRequest):
             VideoSegment(**seg) for seg in segments
         ]
 
-        # Generate quiz questions
+        # Generate quiz questions with video context
         questions = await question_generator.generate_final_quiz(
             video_segments,
-            num_questions=settings.final_quiz_questions
+            num_questions=settings.final_quiz_questions,
+            video_title=video.get('title')
         )
 
         # Store quiz

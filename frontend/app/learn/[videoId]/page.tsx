@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/contexts/AuthContext';
 import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
@@ -24,20 +25,11 @@ const VideoNotesComponent = dynamic(() => import('@/components/VideoNotes'), {
 export default function LearnPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const videoId = params.videoId as string;
 
-  // Generate a simple user ID (in production, use actual auth)
-  const [userId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      let id = localStorage.getItem('preply_user_id');
-      if (!id) {
-        id = `user_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('preply_user_id', id);
-      }
-      return id;
-    }
-    return 'anonymous';
-  });
+  // Use authenticated user ID (UUID from Supabase)
+  const userId = user?.id || '';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

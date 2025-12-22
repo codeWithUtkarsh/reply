@@ -117,6 +117,179 @@ class Database:
 
         return videos_result.data or []
 
+    async def delete_video(self, video_id: str, project_id: Optional[str] = None) -> Dict:
+        """
+        Delete a video from a project or completely.
+        If project_id is provided, only remove the link.
+        If no project_id, delete the video and all associated data.
+        """
+        logger.info(f"DB: delete_video | video_id={video_id}, project_id={project_id}")
+
+        if project_id:
+            # Only remove link from specific project
+            result = await run_in_threadpool(
+                lambda: self.client.table("project_videos")
+                .delete()
+                .eq("video_id", video_id)
+                .eq("project_id", project_id)
+                .execute()
+            )
+            logger.info(f"DB: Unlinked video {video_id} from project {project_id}")
+
+            # Check if video is still linked to other projects
+            remaining_links = await run_in_threadpool(
+                lambda: self.client.table("project_videos")
+                .select("*")
+                .eq("video_id", video_id)
+                .execute()
+            )
+
+            # If no other projects use this video, delete everything
+            if not remaining_links.data:
+                logger.info(f"DB: No other projects use video {video_id}, deleting completely")
+                return await self._delete_video_completely(video_id)
+
+            return {"message": "Video removed from project", "deleted_completely": False}
+        else:
+            # Delete video completely
+            return await self._delete_video_completely(video_id)
+
+    async def _delete_video_completely(self, video_id: str) -> Dict:
+        """Delete video and all associated data (questions, attempts, reports, notes, etc.)"""
+        logger.info(f"DB: Deleting video {video_id} completely")
+
+        # Delete in order: dependencies first, then the video
+        # 1. Delete user attempts
+        await run_in_threadpool(
+            lambda: self.client.table("user_attempts")
+            .delete()
+            .eq("video_id", video_id)
+            .execute()
+        )
+
+        # 2. Delete learning reports
+        await run_in_threadpool(
+            lambda: self.client.table("learning_reports")
+            .delete()
+            .eq("video_id", video_id)
+            .execute()
+        )
+
+        # 3. Delete user progress
+        await run_in_threadpool(
+            lambda: self.client.table("user_progress")
+            .delete()
+            .eq("video_id", video_id)
+            .execute()
+        )
+
+        # 4. Delete notes
+        await run_in_threadpool(
+            lambda: self.client.table("video_notes")
+            .delete()
+            .eq("video_id", video_id)
+            .execute()
+        )
+
+        # 5. Delete quizzes
+        await run_in_threadpool(
+            lambda: self.client.table("quizzes")
+            .delete()
+            .eq("video_id", video_id)
+            .execute()
+        )
+
+        # 6. Delete questions
+        await run_in_threadpool(
+            lambda: self.client.table("questions")
+            .delete()
+            .eq("video_id", video_id)
+            .execute()
+        )
+
+        # 7. Delete project links
+        await run_in_threadpool(
+            lambda: self.client.table("project_videos")
+            .delete()
+            .eq("video_id", video_id)
+            .execute()
+        )
+
+        # 8. Finally, delete the video itself
+        await run_in_threadpool(
+            lambda: self.client.table("videos")
+            .delete()
+            .eq("id", video_id)
+            .execute()
+        )
+
+        logger.info(f"DB: Video {video_id} and all associated data deleted")
+        return {"message": "Video deleted completely", "deleted_completely": True}
+
+    async def delete_project(self, project_id: str) -> Dict:
+        """
+        Delete a project and all associated videos.
+        Videos are only deleted if they're not linked to other projects.
+        """
+        logger.info(f"DB: delete_project | project_id={project_id}")
+
+        # Get all videos linked to this project
+        video_links = await run_in_threadpool(
+            lambda: self.client.table("project_videos")
+            .select("video_id")
+            .eq("project_id", project_id)
+            .execute()
+        )
+
+        video_ids = [link['video_id'] for link in video_links.data] if video_links.data else []
+
+        # For each video, check if it's used by other projects
+        for video_id in video_ids:
+            # Get all project links for this video
+            all_links = await run_in_threadpool(
+                lambda: self.client.table("project_videos")
+                .select("*")
+                .eq("video_id", video_id)
+                .execute()
+            )
+
+            # If this video is only linked to the current project, delete it completely
+            if all_links.data and len(all_links.data) == 1:
+                logger.info(f"DB: Video {video_id} only used by project {project_id}, deleting completely")
+                await self._delete_video_completely(video_id)
+            else:
+                # Just remove the link
+                logger.info(f"DB: Video {video_id} used by other projects, only removing link")
+                await run_in_threadpool(
+                    lambda: self.client.table("project_videos")
+                    .delete()
+                    .eq("video_id", video_id)
+                    .eq("project_id", project_id)
+                    .execute()
+                )
+
+        # Delete activity logs for this project
+        await run_in_threadpool(
+            lambda: self.client.table("activity_log")
+            .delete()
+            .eq("project_id", project_id)
+            .execute()
+        )
+
+        # Finally, delete the project itself
+        await run_in_threadpool(
+            lambda: self.client.table("projects")
+            .delete()
+            .eq("id", project_id)
+            .execute()
+        )
+
+        logger.info(f"DB: Project {project_id} and associated data deleted")
+        return {
+            "message": "Project deleted successfully",
+            "videos_deleted": video_ids
+        }
+
     # -------------------------
     # Questions
     # -------------------------

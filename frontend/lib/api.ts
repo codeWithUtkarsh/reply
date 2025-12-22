@@ -120,6 +120,12 @@ export const videoApi = {
     const response = await api.get(`/api/video/${videoId}/direct-url`);
     return response.data;
   },
+
+  deleteVideo: async (videoId: string, projectId?: string) => {
+    const params = projectId ? { project_id: projectId } : {};
+    const response = await api.delete(`/api/video/${videoId}`, { params });
+    return response.data;
+  },
 };
 
 export const questionsApi = {
@@ -255,6 +261,13 @@ export const notesApi = {
 
   updateNotes: async (notesId: string, data: { title: string; sections: NoteSection[] }): Promise<{ message: string; notes: VideoNotes }> => {
     const response = await api.put(`/api/notes/${notesId}`, data);
+    return response.data;
+  },
+};
+
+export const projectsApi = {
+  deleteProject: async (projectId: string) => {
+    const response = await api.delete(`/api/projects/${projectId}`);
     return response.data;
   },
 };

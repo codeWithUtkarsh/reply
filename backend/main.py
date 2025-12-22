@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routes import video, questions, quiz, reports, notes
+from routes import video, questions, quiz, reports, notes, projects
 from logging_config import setup_logging, get_logger
 import time
 
@@ -47,6 +47,7 @@ app.include_router(questions.router, prefix="/api/questions", tags=["questions"]
 app.include_router(quiz.router, prefix="/api/quiz", tags=["quiz"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(notes.router, prefix="/api/notes", tags=["notes"])
+app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 
 
 @app.on_event("startup")

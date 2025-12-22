@@ -111,12 +111,13 @@ async def process_video(request: VideoProcessRequest):
         # -----------------------------------------------------
         # Flashcard generation
         # -----------------------------------------------------
-        logger.info("Generating flashcards...")
+        logger.info("Generating flashcards with context...")
         flashcards = await question_generator.generate_flashcards(
             transcript.segments,
             interval=settings.flashcard_interval,
+            video_title=title
         )
-        logger.info(f"Generated {len(flashcards)} flashcards")
+        logger.info(f"Generated {len(flashcards)} high-quality flashcards")
 
         # -----------------------------------------------------
         # Persist video
@@ -228,3 +229,34 @@ async def get_video_direct_url(video_id: str):
             exc_info=True,
         )
         raise HTTPException(status_code=500, detail="Error generating direct URL")
+
+
+@router.delete("/{video_id}")
+async def delete_video(video_id: str, project_id: str = None):
+    """
+    Delete a video from a project or completely.
+    If project_id is provided, only removes the link.
+    If no project_id, deletes the video and all associated data.
+    """
+    logger.info(f"=== Deleting video: {video_id}, project_id: {project_id} ===")
+
+    try:
+        # Check if video exists
+        video = await db.get_video(video_id)
+        if not video:
+            raise HTTPException(status_code=404, detail="Video not found")
+
+        # Delete the video
+        result = await db.delete_video(video_id, project_id)
+
+        logger.info(f"=== Video deleted successfully: {video_id} ===")
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error in delete_video ({video_id}): {type(e).__name__}: {str(e)}",
+            exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="Error deleting video")

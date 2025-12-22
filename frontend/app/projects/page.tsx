@@ -18,6 +18,30 @@ export default function ProjectsPage() {
   useEffect(() => {
     if (user) {
       fetchProjects();
+
+      // Subscribe to realtime changes on projects table
+      const channel = supabase
+        .channel('projects-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'projects',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Project changed:', payload);
+            // Refetch projects when any change occurs
+            fetchProjects();
+          }
+        )
+        .subscribe();
+
+      // Cleanup subscription on unmount
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
