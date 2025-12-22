@@ -27,7 +27,7 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
           startOnLoad: false,
           theme: 'neutral',
           securityLevel: 'loose',
-          fontFamily: 'Comic Neue, cursive',
+          fontFamily: 'Arial, sans-serif',
         });
 
         setMermaidLoaded(true);
@@ -41,13 +41,23 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
               const element = diagramRefs.current[id];
               if (element && diagram.code) {
                 try {
+                  console.log(`Rendering diagram ${diagramIndex}:`, diagram.code);
                   // Mermaid 11.x render returns a Promise with { svg }
                   const { svg } = await mermaid.render(id, diagram.code);
                   element.innerHTML = svg;
+                  console.log(`✅ Diagram ${diagramIndex} rendered successfully`);
                 } catch (error) {
-                  console.error('Failed to render diagram:', error);
-                  element.innerHTML = `<div class="text-red-500 text-sm p-4 bg-red-50 rounded border border-red-200">Failed to render diagram</div>`;
+                  console.error(`❌ Failed to render diagram ${diagramIndex}:`, error);
+                  console.error('Diagram code was:', diagram.code);
+                  element.innerHTML = `
+                    <div class="text-red-600 text-sm p-4 bg-red-50 rounded border border-red-200">
+                      <p class="font-semibold mb-2">Failed to render diagram</p>
+                      <p class="text-xs text-gray-600">Check console for details</p>
+                    </div>
+                  `;
                 }
+              } else {
+                console.warn(`⚠️ Missing element or code for diagram ${diagramIndex}`);
               }
               diagramIndex++;
             }

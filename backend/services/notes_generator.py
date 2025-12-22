@@ -73,18 +73,23 @@ Create detailed notes following these STRICT requirements:
    - Each diagram must be properly formatted Mermaid syntax
    - Keep diagrams simple but informative
 
-4. MERMAID SYNTAX EXAMPLES:
+4. MERMAID SYNTAX EXAMPLES (USE EXACTLY THIS FORMAT):
 
-   Flowchart:
-   ```
+   Flowchart (MOST RELIABLE):
    graph TD
        A[Start] --> B[Step 1]
        B --> C[Step 2]
        C --> D[End]
-   ```
 
-   Mind Map:
-   ```
+   Simple Flowchart with Decision:
+   graph LR
+       A[Input] --> B{Check}
+       B -->|Yes| C[Process]
+       B -->|No| D[Skip]
+       C --> E[Output]
+       D --> E
+
+   Mind Map (for hierarchies):
    mindmap
      root((Main Topic))
        Concept 1
@@ -93,16 +98,8 @@ Create detailed notes following these STRICT requirements:
        Concept 2
          Detail C
          Detail D
-   ```
 
-   Sequence:
-   ```
-   sequenceDiagram
-       participant A as Person A
-       participant B as Person B
-       A->>B: Message
-       B->>A: Response
-   ```
+   CRITICAL: Use simple node names (A, B, C) and clear labels in [brackets]
 
 5. STYLE:
    - Write in a clear, note-taking style
@@ -120,8 +117,8 @@ EXAMPLE OUTPUT STRUCTURE:
       "diagrams": [
         {{
           "type": "mermaid",
-          "code": "graph TD\\n    A[Concept A] --> B[Concept B]\\n    B --> C[Result C]",
-          "caption": "Visual overview of the main process"
+          "code": "graph TD\\n    A[Start] --> B[Process]\\n    B --> C[End]",
+          "caption": "Simple process flow"
         }}
       ]
     }},
@@ -131,13 +128,21 @@ EXAMPLE OUTPUT STRUCTURE:
       "diagrams": [
         {{
           "type": "mermaid",
-          "code": "mindmap\\n  root((Methods))\\n    Method 1\\n      Advantage A\\n      Advantage B\\n    Method 2\\n      Advantage C\\n      Advantage D",
-          "caption": "Comparison of different methods"
+          "code": "graph LR\\n    A[Method 1] --> B[Result A]\\n    C[Method 2] --> D[Result B]",
+          "caption": "Comparison of methods"
         }}
       ]
     }}
   ]
 }}
+
+IMPORTANT DIAGRAM RULES:
+- Use simple graph TD (top-down) or graph LR (left-right)
+- Keep node names short: A, B, C, D (not long names)
+- Use [Square brackets] for labels
+- Use --> for arrows
+- Always include \\n for newlines in code
+- Test that your syntax is valid Mermaid format
 
 CRITICAL REQUIREMENTS:
 - Each section MUST have at least 1 diagram
