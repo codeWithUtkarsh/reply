@@ -15,11 +15,17 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editableSections, setEditableSections] = useState<NoteSection[]>(notes.sections);
   const [isSaving, setIsSaving] = useState(false);
+  const [diagramsRendered, setDiagramsRendered] = useState(false);
 
   useEffect(() => {
+    // Reset diagram refs when notes change
+    diagramRefs.current = {};
+    setDiagramsRendered(false);
+
     // Dynamically import mermaid to avoid SSR issues
     const loadMermaid = async () => {
       try {
+        console.log('🔄 Loading Mermaid library...');
         const mermaid = (await import('mermaid')).default;
 
         // Initialize Mermaid
@@ -31,17 +37,35 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
         });
 
         setMermaidLoaded(true);
+        console.log('✅ Mermaid loaded successfully');
+
+        // Small delay to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // Render all diagrams
         const renderDiagrams = async () => {
+          console.log('📊 Starting diagram rendering...');
           let diagramIndex = 0;
+          let totalDiagrams = 0;
+
+          // Count total diagrams
+          notes.sections.forEach(section => {
+            totalDiagrams += (section.diagrams || []).length;
+          });
+
+          console.log(`Found ${totalDiagrams} diagrams to render`);
+
           for (const section of notes.sections) {
             for (const diagram of section.diagrams || []) {
               const id = `mermaid-${diagramIndex}`;
               const element = diagramRefs.current[id];
+
+              console.log(`\n--- Diagram ${diagramIndex} ---`);
+              console.log('Element exists:', !!element);
+              console.log('Diagram code:', diagram.code);
+
               if (element && diagram.code) {
                 try {
-                  console.log(`Rendering diagram ${diagramIndex}:`, diagram.code);
                   // Mermaid 11.x render returns a Promise with { svg }
                   const { svg } = await mermaid.render(id, diagram.code);
                   element.innerHTML = svg;
@@ -58,20 +82,25 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
                 }
               } else {
                 console.warn(`⚠️ Missing element or code for diagram ${diagramIndex}`);
+                console.warn('Element:', element);
+                console.warn('Code:', diagram.code);
               }
               diagramIndex++;
             }
           }
+
+          console.log(`\n🎉 Diagram rendering complete! Rendered ${diagramIndex}/${totalDiagrams}`);
+          setDiagramsRendered(true);
         };
 
         renderDiagrams();
       } catch (error) {
-        console.error('Failed to load mermaid:', error);
+        console.error('❌ Failed to load mermaid:', error);
       }
     };
 
     loadMermaid();
-  }, [notes]);
+  }, [notes.notes_id]); // Use notes_id as dependency to ensure re-render
 
   const handleDownload = async () => {
     try {
