@@ -149,26 +149,40 @@ interface ProjectNavProps {
 
 function ProjectNav({ project, isExpanded, onToggle }: ProjectNavProps) {
   const router = useRouter();
-  const [topics, setTopics] = useState<any[]>([]);
+  const [videos, setVideos] = useState<any[]>([]);
 
   useEffect(() => {
     if (isExpanded) {
-      fetchTopics();
+      fetchVideos();
     }
   }, [isExpanded]);
 
-  const fetchTopics = async () => {
+  const fetchVideos = async () => {
     try {
+      // Fetch video IDs from junction table
+      const { data: projectVideos, error: junctionError } = await supabase
+        .from('project_videos')
+        .select('video_id')
+        .eq('project_id', project.id);
+
+      if (junctionError || !projectVideos || projectVideos.length === 0) {
+        setVideos([]);
+        return;
+      }
+
+      const videoIds = projectVideos.map(pv => pv.video_id);
+
+      // Fetch video details
       const { data, error } = await supabase
         .from('videos')
         .select('*')
-        .eq('project_id', project.id);
+        .in('id', videoIds);
 
       if (!error && data) {
-        setTopics(data);
+        setVideos(data);
       }
     } catch (error) {
-      console.error('Error fetching topics:', error);
+      console.error('Error fetching videos:', error);
     }
   };
 
@@ -186,16 +200,16 @@ function ProjectNav({ project, isExpanded, onToggle }: ProjectNavProps) {
         <span className="font-light truncate">{project.project_name}</span>
       </button>
 
-      {isExpanded && topics.length > 0 && (
+      {isExpanded && videos.length > 0 && (
         <div className="ml-6">
-          {topics.map((topic) => (
+          {videos.map((video) => (
             <button
-              key={topic.id}
-              onClick={() => router.push(`/projects/${project.id}`)}
+              key={video.id}
+              onClick={() => router.push(`/learn/${video.id}`)}
               className="w-full px-4 py-2 flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-400 transition-all"
             >
               <Play className="w-3 h-3" />
-              <span className="font-light truncate">{topic.title}</span>
+              <span className="font-light truncate">{video.title}</span>
             </button>
           ))}
         </div>
