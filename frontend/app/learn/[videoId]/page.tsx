@@ -266,25 +266,58 @@ export default function LearnPage() {
             <ArrowLeft className="w-4 h-4" />
             <span className="font-light">Back to Projects</span>
           </button>
-          <h1 className="text-3xl font-light text-white mb-2">
-            {videoData?.title}
-          </h1>
-          <div className="flex items-center gap-4 text-sm text-gray-400 font-light">
-            <span>
-              {answeredFlashcards.size} / {flashcards.length} flashcards completed
-            </span>
+
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-light text-white mb-3">
+                {videoData?.title}
+              </h1>
+              <div className="flex items-center gap-6 text-sm text-gray-400 font-light">
+                <span className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  {answeredFlashcards.size} / {flashcards.length} flashcards completed
+                </span>
+              </div>
+            </div>
+
+            {/* Flashcard Learning Toggle */}
+            <div className="flex items-center gap-3 bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl px-4 py-3">
+              <div>
+                <p className="text-sm font-light text-white">Flashcard Learning</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {flashcardLearningEnabled ? 'Auto-pause enabled' : 'Disabled'}
+                </p>
+              </div>
+              <button
+                onClick={handleToggleFlashcardLearning}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-black ${
+                  flashcardLearningEnabled ? 'bg-emerald-500' : 'bg-gray-700'
+                }`}
+                role="switch"
+                aria-checked={flashcardLearningEnabled}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Video Player - Theater View */}
+          {/* Video Player Section */}
           <div className="lg:col-span-3">
-            <VideoPlayer
-              videoUrl={videoData?.url}
-              onTimeUpdate={setCurrentTime}
-              seekTo={seekTimestamp}
-              shouldPause={showFlashcard}
-            />
+            {/* Video Player with Dark Theme */}
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
+              <VideoPlayer
+                videoUrl={videoData?.url}
+                onTimeUpdate={setCurrentTime}
+                seekTo={seekTimestamp}
+                shouldPause={showFlashcard}
+              />
+            </div>
 
             {/* Quiz Section */}
             {showQuiz && quizData && !learningReport ? (
@@ -314,18 +347,19 @@ export default function LearnPage() {
               !showQuiz &&
               answeredFlashcards.size === flashcards.length &&
               flashcards.length > 0 && (
-                <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 text-center">
-                  <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <div className="mt-8 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-10 h-10 text-emerald-500" />
+                  </div>
+                  <h2 className="text-2xl font-light text-white mb-3">
                     Great job!
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    You've completed all flashcards. Ready to test your knowledge with a final
-                    quiz?
+                  <p className="text-gray-400 font-light mb-6 max-w-md mx-auto">
+                    You've completed all flashcards. Ready to test your knowledge with a final quiz?
                   </p>
                   <button
                     onClick={handleStartQuiz}
-                    className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors inline-flex items-center gap-2"
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-8 rounded-xl transition-all inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20"
                   >
                     <BookOpen className="w-5 h-5" />
                     Start Final Quiz
@@ -335,54 +369,28 @@ export default function LearnPage() {
             )}
           </div>
 
-          {/* Tree Timeline Sidebar */}
+          {/* Timeline Sidebar */}
           <div className="lg:col-span-1 space-y-4">
-            {/* Flashcard Learning Toggle - Separate Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  Flashcard Learning
-                </span>
-                <button
-                  onClick={handleToggleFlashcardLearning}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                    flashcardLearningEnabled
-                      ? 'bg-green-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                  role="switch"
-                  aria-checked={flashcardLearningEnabled}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
-                {flashcardLearningEnabled
-                  ? 'Flashcards will appear during video'
-                  : 'Watch without interruptions'}
-              </p>
-            </div>
-
             {/* Timeline Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sticky top-8">
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-5 sticky top-8 shadow-xl">
               {/* Timeline Heading */}
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
-                Timeline
-              </h2>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-800"></div>
+                <h2 className="text-sm font-light text-gray-400 uppercase tracking-wider">
+                  Timeline
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-800"></div>
+              </div>
 
               {/* Tree Timeline */}
-              <div className="max-h-[calc(100vh-300px)] overflow-y-auto px-2">
+              <div className="max-h-[calc(100vh-300px)] overflow-y-auto px-2 scrollbar-thin scrollbar-track-gray-900 scrollbar-thumb-gray-700">
                 <div className="relative">
                   {/* Gray background line (full length) */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gray-300 dark:bg-gray-600 z-0"></div>
+                  <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gray-800 z-0"></div>
 
-                  {/* Green progress line (dynamic based on progress) */}
+                  {/* Emerald progress line (dynamic based on progress) */}
                   <div
-                    className="absolute left-1/2 transform -translate-x-1/2 top-0 w-0.5 bg-green-500 z-0 transition-all duration-300"
+                    className="absolute left-1/2 transform -translate-x-1/2 top-0 w-0.5 bg-emerald-500 z-0 transition-all duration-300 shadow-lg shadow-emerald-500/50"
                     style={{
                       height: `${flashcards.length > 0 ? (answeredFlashcards.size / flashcards.length) * 100 : 0}%`
                     }}
@@ -409,20 +417,20 @@ export default function LearnPage() {
                           {/* Left side content */}
                           {isLeft && (
                             <div className="w-[calc(50%-20px)] pr-3 text-right">
-                              <div className={`text-[10px] font-semibold mb-1 ${
+                              <div className={`text-[10px] font-light mb-1 ${
                                 isAnswered
-                                  ? 'text-green-600 dark:text-green-400'
+                                  ? 'text-emerald-400'
                                   : isCurrent
-                                  ? 'text-yellow-600 dark:text-yellow-400'
-                                  : 'text-gray-500 dark:text-gray-400'
+                                  ? 'text-yellow-400'
+                                  : 'text-gray-600'
                               }`}>
                                 {Math.floor(fc.show_at_timestamp / 60)}:
                                 {Math.floor(fc.show_at_timestamp % 60).toString().padStart(2, '0')}
                               </div>
-                              <p className={`text-[9px] leading-tight ${
+                              <p className={`text-[9px] leading-tight font-light ${
                                 isAnswered
-                                  ? 'text-gray-700 dark:text-gray-300'
-                                  : 'text-gray-500 dark:text-gray-400'
+                                  ? 'text-gray-400'
+                                  : 'text-gray-600'
                               }`}>
                                 {takeaway}
                               </p>
@@ -431,14 +439,14 @@ export default function LearnPage() {
 
                           {/* Center circle */}
                           <div className="relative z-10 flex-shrink-0">
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs transition-all ${
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-light text-xs transition-all ${
                               isAnswered
-                                ? 'bg-green-500 border-green-500 text-white shadow-md'
+                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/50'
                                 : isCurrent
-                                ? 'bg-yellow-400 border-yellow-400 text-gray-900 animate-pulse shadow-lg'
+                                ? 'bg-yellow-400 border-yellow-400 text-gray-900 animate-pulse shadow-lg shadow-yellow-400/50'
                                 : isPast
-                                ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-md'
-                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 text-gray-600 dark:text-gray-300 shadow-sm'
+                                ? 'bg-yellow-400/50 border-yellow-400/50 text-gray-900 shadow-md'
+                                : 'bg-gray-800 border-gray-700 text-gray-400 shadow-sm'
                             }`}>
                               {isAnswered ? (
                                 <CheckCircle className="w-5 h-5" />
@@ -451,20 +459,20 @@ export default function LearnPage() {
                           {/* Right side content */}
                           {!isLeft && (
                             <div className="w-[calc(50%-20px)] pl-3 text-left">
-                              <div className={`text-[10px] font-semibold mb-1 ${
+                              <div className={`text-[10px] font-light mb-1 ${
                                 isAnswered
-                                  ? 'text-green-600 dark:text-green-400'
+                                  ? 'text-emerald-400'
                                   : isCurrent
-                                  ? 'text-yellow-600 dark:text-yellow-400'
-                                  : 'text-gray-500 dark:text-gray-400'
+                                  ? 'text-yellow-400'
+                                  : 'text-gray-600'
                               }`}>
                                 {Math.floor(fc.show_at_timestamp / 60)}:
                                 {Math.floor(fc.show_at_timestamp % 60).toString().padStart(2, '0')}
                               </div>
-                              <p className={`text-[9px] leading-tight ${
+                              <p className={`text-[9px] leading-tight font-light ${
                                 isAnswered
-                                  ? 'text-gray-700 dark:text-gray-300'
-                                  : 'text-gray-500 dark:text-gray-400'
+                                  ? 'text-gray-400'
+                                  : 'text-gray-600'
                               }`}>
                                 {takeaway}
                               </p>
@@ -481,22 +489,22 @@ export default function LearnPage() {
               {answeredFlashcards.size === flashcards.length && flashcards.length > 0 && (
                 <button
                   onClick={handleStartQuiz}
-                  className="w-full mt-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-500/20"
                 >
                   <BookOpen className="w-4 h-4" />
-                  Quiz
+                  Take Quiz
                 </button>
               )}
             </div>
 
-            {/* Notes Card - Separate Card Below Timeline */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3">
+            {/* Generate Notes Card */}
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-4 shadow-xl">
               {/* Generate Notes Button */}
               {!videoNotes && (
                 <button
                   onClick={handleGenerateNotes}
                   disabled={generatingNotes}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-500 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
                 >
                   {generatingNotes ? (
                     <>
@@ -516,7 +524,7 @@ export default function LearnPage() {
               {videoNotes && (
                 <button
                   onClick={() => setShowNotes(!showNotes)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
                 >
                   <FileText className="w-4 h-4" />
                   {showNotes ? 'Hide Notes' : 'View Notes'}
