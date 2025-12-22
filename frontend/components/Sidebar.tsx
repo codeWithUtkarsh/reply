@@ -1,18 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Project } from '@/lib/supabase';
-import { Plus, FolderOpen, BarChart3, FileText, Settings, ChevronDown, ChevronRight, Play, User } from 'lucide-react';
+import { Plus, FolderOpen, BarChart3, FileText, Settings, User } from 'lucide-react';
 import NewProjectModal from '@/components/NewProjectModal';
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, userProfile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -41,16 +41,6 @@ export default function Sidebar() {
   const handleProjectCreated = () => {
     fetchProjects();
     setShowNewProjectModal(false);
-  };
-
-  const toggleProject = (projectId: string) => {
-    const newExpanded = new Set(expandedProjects);
-    if (newExpanded.has(projectId)) {
-      newExpanded.delete(projectId);
-    } else {
-      newExpanded.add(projectId);
-    }
-    setExpandedProjects(newExpanded);
   };
 
   return (
@@ -100,14 +90,23 @@ export default function Sidebar() {
 
             {/* Project List */}
             <div className="mt-2">
-              {projects.map((project) => (
-                <ProjectNav
-                  key={project.id}
-                  project={project}
-                  isExpanded={expandedProjects.has(project.id)}
-                  onToggle={() => toggleProject(project.id)}
-                />
-              ))}
+              {projects.map((project) => {
+                const isActive = pathname === `/projects/${project.id}`;
+                return (
+                  <button
+                    key={project.id}
+                    onClick={() => router.push(`/projects/${project.id}`)}
+                    className={`w-full px-4 py-2 flex items-center gap-2 text-sm transition-all ${
+                      isActive
+                        ? 'text-emerald-400 bg-emerald-500/10'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                    }`}
+                  >
+                    <FolderOpen className="w-4 h-4" />
+                    <span className="font-light truncate">{project.project_name}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -138,82 +137,5 @@ export default function Sidebar() {
         onProjectCreated={handleProjectCreated}
       />
     </>
-  );
-}
-
-interface ProjectNavProps {
-  project: Project;
-  isExpanded: boolean;
-  onToggle: () => void;
-}
-
-function ProjectNav({ project, isExpanded, onToggle }: ProjectNavProps) {
-  const router = useRouter();
-  const [videos, setVideos] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      fetchVideos();
-    }
-  }, [isExpanded]);
-
-  const fetchVideos = async () => {
-    try {
-      // Fetch video IDs from junction table
-      const { data: projectVideos, error: junctionError } = await supabase
-        .from('project_videos')
-        .select('video_id')
-        .eq('project_id', project.id);
-
-      if (junctionError || !projectVideos || projectVideos.length === 0) {
-        setVideos([]);
-        return;
-      }
-
-      const videoIds = projectVideos.map(pv => pv.video_id);
-
-      // Fetch video details
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*')
-        .in('id', videoIds);
-
-      if (!error && data) {
-        setVideos(data);
-      }
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-    }
-  };
-
-  return (
-    <div>
-      <button
-        onClick={onToggle}
-        className="w-full px-4 py-2 flex items-center gap-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all"
-      >
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4" />
-        ) : (
-          <ChevronRight className="w-4 h-4" />
-        )}
-        <span className="font-light truncate">{project.project_name}</span>
-      </button>
-
-      {isExpanded && videos.length > 0 && (
-        <div className="ml-6">
-          {videos.map((video) => (
-            <button
-              key={video.id}
-              onClick={() => router.push(`/learn/${video.id}`)}
-              className="w-full px-4 py-2 flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-400 transition-all"
-            >
-              <Play className="w-3 h-3" />
-              <span className="font-light truncate">{video.title}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
