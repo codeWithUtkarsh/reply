@@ -25,15 +25,24 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 -- Videos table (unique code from YouTube URL)
+-- Videos are processed once and can belong to multiple projects
 CREATE TABLE IF NOT EXISTS videos (
     id VARCHAR(255) PRIMARY KEY, -- YouTube video ID (e.g., AL2GL2GUfHk)
-    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     video_length FLOAT NOT NULL, -- duration in seconds
     transcript JSONB NOT NULL,
     url TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Project-Video junction table (many-to-many relationship)
+CREATE TABLE IF NOT EXISTS project_videos (
+    id BIGSERIAL PRIMARY KEY,
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    video_id VARCHAR(255) NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(project_id, video_id) -- A video can only be added once per project
 );
 
 -- Questions table
@@ -135,7 +144,8 @@ CREATE TABLE IF NOT EXISTS activity_log (
 CREATE INDEX IF NOT EXISTS idx_users_id ON users(id);
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
 CREATE INDEX IF NOT EXISTS idx_videos_id ON videos(id);
-CREATE INDEX IF NOT EXISTS idx_videos_project_id ON videos(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_videos_project_id ON project_videos(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_videos_video_id ON project_videos(video_id);
 CREATE INDEX IF NOT EXISTS idx_questions_video_id ON questions(video_id);
 CREATE INDEX IF NOT EXISTS idx_quizzes_video_id ON quizzes(video_id);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_video ON user_progress(user_id, video_id);
@@ -156,6 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_activity_log_video_id ON activity_log(video_id);
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_videos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quizzes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
@@ -187,21 +198,46 @@ CREATE POLICY "Users can update own projects" ON projects
 CREATE POLICY "Users can delete own projects" ON projects
     FOR DELETE USING (auth.uid() = user_id);
 
--- Videos: Users can access videos in their projects
+-- Videos: Allow viewing videos (no direct ownership)
+-- Access control is managed through project_videos junction table
 CREATE POLICY "Users can view videos in their projects" ON videos
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM projects
-            WHERE projects.id = videos.project_id
+            SELECT 1 FROM project_videos
+            JOIN projects ON projects.id = project_videos.project_id
+            WHERE project_videos.video_id = videos.id
             AND projects.user_id = auth.uid()
         )
     );
 
-CREATE POLICY "Users can create videos in their projects" ON videos
+-- Allow backend service to insert videos (will use service_role key)
+CREATE POLICY "Allow video creation" ON videos
+    FOR INSERT WITH CHECK (true);
+
+-- Project-Videos junction table: Users can link videos to their own projects
+CREATE POLICY "Users can view their project-video links" ON project_videos
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM projects
+            WHERE projects.id = project_videos.project_id
+            AND projects.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can link videos to their projects" ON project_videos
     FOR INSERT WITH CHECK (
         EXISTS (
             SELECT 1 FROM projects
-            WHERE projects.id = videos.project_id
+            WHERE projects.id = project_videos.project_id
+            AND projects.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can remove videos from their projects" ON project_videos
+    FOR DELETE USING (
+        EXISTS (
+            SELECT 1 FROM projects
+            WHERE projects.id = project_videos.project_id
             AND projects.user_id = auth.uid()
         )
     );

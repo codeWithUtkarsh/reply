@@ -61,7 +61,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
+        // If user profile doesn't exist (PGRST116), create it
+        if (error.code === 'PGRST116') {
+          console.log('User profile not found, creating...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('users')
+            .insert([
+              {
+                id: userId,
+                role: 'user',
+                credit_available: 10,
+              },
+            ])
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating user profile:', createError);
+          } else {
+            setUserProfile(newProfile);
+          }
+        } else {
+          console.error('Error fetching user profile:', error);
+        }
       } else {
         setUserProfile(data);
       }

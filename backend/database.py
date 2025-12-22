@@ -3,69 +3,179 @@ from config import settings
 from typing import List, Optional, Dict
 import json
 from datetime import datetime
+from logging_config import get_logger
+from fastapi.concurrency import run_in_threadpool
+
+logger = get_logger(__name__)
 
 
 class Database:
     def __init__(self):
         self.client: Client = create_client(
             settings.supabase_url,
-            settings.supabase_key
+            settings.supabase_service_role_key
         )
 
-    async def store_video(self, video_id: str, title: str, duration: float,
-                         transcript: Dict, url: str) -> Dict:
-        """Store video metadata and transcript"""
-        data = {
-            "video_id": video_id,
-            "title": title,
-            "duration": duration,
-            "transcript": json.dumps(transcript),
-            "url": url,
-            "created_at": datetime.utcnow().isoformat()
-        }
-        result = self.client.table("videos").insert(data).execute()
-        return result.data[0] if result.data else None
+    # -------------------------
+    # Videos
+    # -------------------------
+
+    async def store_video(
+        self,
+        video_id: str,
+        title: str,
+        duration: float,
+        transcript: Dict,
+        url: str,
+        project_id: Optional[str] = None
+    ) -> Optional[Dict]:
+
+        logger.info(f"DB: store_video | video_id={video_id}, project_id={project_id}")
+
+        existing = await self.get_video(video_id)
+        if existing:
+            logger.info("DB: Video already exists, skipping insert")
+            video_data = existing
+        else:
+            data = {
+                "id": video_id,
+                "title": title,
+                "video_length": duration,
+                "transcript": json.dumps(transcript),
+                "url": url,
+                "created_at": datetime.utcnow().isoformat()
+            }
+
+            result = await run_in_threadpool(
+                lambda: self.client.table("videos").insert(data).execute()
+            )
+
+            if not result.data:
+                logger.error("DB: Video insert returned no data")
+                return None
+
+            video_data = result.data[0]
+
+        if project_id:
+            await self.link_video_to_project(video_id, project_id)
+
+        return video_data
 
     async def get_video(self, video_id: str) -> Optional[Dict]:
-        """Retrieve video by ID"""
-        result = self.client.table("videos").select("*").eq("video_id", video_id).execute()
+        result = await run_in_threadpool(
+            lambda: self.client.table("videos").select("*").eq("id", video_id).execute()
+        )
         return result.data[0] if result.data else None
 
-    async def store_questions(self, video_id: str, questions: List[Dict]) -> List[Dict]:
-        """Store generated questions for a video"""
-        data = [{
-            "video_id": video_id,
-            "question_data": json.dumps(question),
-            "created_at": datetime.utcnow().isoformat()
-        } for question in questions]
+    async def link_video_to_project(self, video_id: str, project_id: str) -> Optional[Dict]:
+        existing = await run_in_threadpool(
+            lambda: self.client.table("project_videos")
+            .select("*")
+            .eq("video_id", video_id)
+            .eq("project_id", project_id)
+            .execute()
+        )
 
-        result = self.client.table("questions").insert(data).execute()
-        return result.data if result.data else []
+        if existing.data:
+            logger.info(f"DB: Video {video_id} already linked to project {project_id}")
+            return existing.data[0]
+
+        data = {
+            "video_id": video_id,
+            "project_id": project_id,
+            "created_at": datetime.utcnow().isoformat()
+        }
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("project_videos").insert(data).execute()
+        )
+        logger.info(f"DB: Linked video {video_id} to project {project_id}")
+        return result.data[0] if result.data else None
+
+    async def get_videos_by_project(self, project_id: str) -> List[Dict]:
+        """Get all videos for a specific project"""
+        # Get video IDs from junction table
+        junction_result = await run_in_threadpool(
+            lambda: self.client.table("project_videos")
+            .select("video_id")
+            .eq("project_id", project_id)
+            .execute()
+        )
+
+        if not junction_result.data:
+            return []
+
+        video_ids = [item['video_id'] for item in junction_result.data]
+
+        # Get video details
+        videos_result = await run_in_threadpool(
+            lambda: self.client.table("videos")
+            .select("*")
+            .in_("id", video_ids)
+            .execute()
+        )
+
+        return videos_result.data or []
+
+    # -------------------------
+    # Questions
+    # -------------------------
+
+    async def store_questions(self, video_id: str, questions: List[Dict]) -> List[Dict]:
+        payload = [
+            {
+                "video_id": video_id,
+                "question_data": json.dumps(q),
+                "created_at": datetime.utcnow().isoformat()
+            }
+            for q in questions
+        ]
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("questions").insert(payload).execute()
+        )
+        return result.data or []
 
     async def get_questions(self, video_id: str) -> List[Dict]:
-        """Retrieve all questions for a video"""
-        result = self.client.table("questions").select("*").eq("video_id", video_id).execute()
-        return result.data if result.data else []
+        result = await run_in_threadpool(
+            lambda: self.client.table("questions")
+            .select("*")
+            .eq("video_id", video_id)
+            .execute()
+        )
+        return result.data or []
 
-    async def store_quiz(self, quiz_id: str, video_id: str, questions: List[Dict]) -> Dict:
-        """Store a quiz"""
+    # -------------------------
+    # Quiz
+    # -------------------------
+
+    async def store_quiz(self, quiz_id: str, video_id: str, questions: List[Dict]) -> Optional[Dict]:
         data = {
             "quiz_id": quiz_id,
             "video_id": video_id,
             "questions": json.dumps(questions),
             "created_at": datetime.utcnow().isoformat()
         }
-        result = self.client.table("quizzes").insert(data).execute()
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("quizzes").insert(data).execute()
+        )
         return result.data[0] if result.data else None
 
     async def get_quiz(self, quiz_id: str) -> Optional[Dict]:
-        """Retrieve a quiz by ID"""
-        result = self.client.table("quizzes").select("*").eq("quiz_id", quiz_id).execute()
+        result = await run_in_threadpool(
+            lambda: self.client.table("quizzes")
+            .select("*")
+            .eq("quiz_id", quiz_id)
+            .execute()
+        )
         return result.data[0] if result.data else None
 
-    async def store_user_progress(self, user_id: str, video_id: str,
-                                  progress_data: Dict) -> Dict:
-        """Store user progress on a video"""
+    # -------------------------
+    # User Progress
+    # -------------------------
+
+    async def store_user_progress(self, user_id: str, video_id: str, progress_data: Dict) -> Optional[Dict]:
         data = {
             "user_id": user_id,
             "video_id": video_id,
@@ -74,26 +184,46 @@ class Database:
             "updated_at": datetime.utcnow().isoformat()
         }
 
-        # Upsert to update if exists
-        result = self.client.table("user_progress").upsert(data).execute()
+        result = await run_in_threadpool(
+            lambda: self.client.table("user_progress").upsert(data).execute()
+        )
         return result.data[0] if result.data else None
 
     async def get_user_progress(self, user_id: str, video_id: str) -> Optional[Dict]:
-        """Retrieve user progress for a video"""
-        result = (self.client.table("user_progress")
-                 .select("*")
-                 .eq("user_id", user_id)
-                 .eq("video_id", video_id)
-                 .execute())
+        result = await run_in_threadpool(
+            lambda: self.client.table("user_progress")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("video_id", video_id)
+            .execute()
+        )
         return result.data[0] if result.data else None
 
-    async def store_attempt(self, user_id: str, video_id: str, question_id: str,
-                          question_type: str, selected_answer: int, correct_answer: int,
-                          is_correct: bool, timestamp: float = 0) -> Dict:
-        """Store a user's answer attempt"""
-        # Get attempt number for this question
-        existing_attempts = self.client.table("user_attempts").select("*").eq("user_id", user_id).eq("question_id", question_id).execute()
-        attempt_number = len(existing_attempts.data) + 1 if existing_attempts.data else 1
+    # -------------------------
+    # Attempts
+    # -------------------------
+
+    async def store_attempt(
+        self,
+        user_id: str,
+        video_id: str,
+        question_id: str,
+        question_type: str,
+        selected_answer: int,
+        correct_answer: int,
+        is_correct: bool,
+        timestamp: float = 0
+    ) -> Optional[Dict]:
+
+        existing = await run_in_threadpool(
+            lambda: self.client.table("user_attempts")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("question_id", question_id)
+            .execute()
+        )
+
+        attempt_number = len(existing.data) + 1 if existing.data else 1
 
         data = {
             "user_id": user_id,
@@ -107,94 +237,88 @@ class Database:
             "timestamp": timestamp,
             "created_at": datetime.utcnow().isoformat()
         }
-        result = self.client.table("user_attempts").insert(data).execute()
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("user_attempts").insert(data).execute()
+        )
         return result.data[0] if result.data else None
 
     async def get_user_attempts(self, user_id: str, video_id: str) -> List[Dict]:
-        """Get all attempts for a user on a specific video"""
-        result = (self.client.table("user_attempts")
-                 .select("*")
-                 .eq("user_id", user_id)
-                 .eq("video_id", video_id)
-                 .execute())
-        return result.data if result.data else []
+        result = await run_in_threadpool(
+            lambda: self.client.table("user_attempts")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("video_id", video_id)
+            .execute()
+        )
+        return result.data or []
 
-    async def store_report(self, report_data: Dict) -> Dict:
-        """Store a learning report"""
-        data = {
-            "report_id": report_data['report_id'],
-            "user_id": report_data['user_id'],
-            "video_id": report_data['video_id'],
-            "quiz_id": report_data.get('quiz_id'),
-            "word_frequency": json.dumps(report_data['word_frequency']),
-            "performance_stats": json.dumps(report_data['performance_stats']),
-            "attempt_breakdown": json.dumps(report_data['attempt_breakdown']),
-            "key_takeaways": report_data['key_takeaways'],
-            "video_type": report_data.get('video_type', 'General'),
-            "domain": report_data.get('domain', 'Mixed'),
-            "main_topics": report_data.get('main_topics', []),
-            "created_at": datetime.utcnow().isoformat()
-        }
-        result = self.client.table("learning_reports").insert(data).execute()
+    # -------------------------
+    # Reports
+    # -------------------------
+
+    async def store_report(self, report_data: Dict) -> Optional[Dict]:
+        result = await run_in_threadpool(
+            lambda: self.client.table("learning_reports").insert(report_data).execute()
+        )
         return result.data[0] if result.data else None
 
     async def get_report(self, report_id: str) -> Optional[Dict]:
-        """Retrieve a learning report by ID"""
-        result = self.client.table("learning_reports").select("*").eq("report_id", report_id).execute()
+        result = await run_in_threadpool(
+            lambda: self.client.table("learning_reports")
+            .select("*")
+            .eq("report_id", report_id)
+            .execute()
+        )
         return result.data[0] if result.data else None
 
-    async def get_user_reports(self, user_id: str, video_id: str = None) -> List[Dict]:
-        """Get all reports for a user, optionally filtered by video"""
-        query = self.client.table("learning_reports").select("*").eq("user_id", user_id)
-        if video_id:
-            query = query.eq("video_id", video_id)
-        result = query.execute()
-        return result.data if result.data else []
+    async def get_user_reports(self, user_id: str, video_id: Optional[str] = None) -> List[Dict]:
+        def query():
+            q = self.client.table("learning_reports").select("*").eq("user_id", user_id)
+            if video_id:
+                q = q.eq("video_id", video_id)
+            return q.execute()
 
-    async def store_notes(self, notes_data: Dict) -> Dict:
-        """Store video notes"""
-        data = {
-            "notes_id": notes_data['notes_id'],
-            "video_id": notes_data['video_id'],
-            "title": notes_data['title'],
-            "sections": json.dumps(notes_data['sections']),
-            "created_at": datetime.utcnow().isoformat()
-        }
-        result = self.client.table("video_notes").insert(data).execute()
+        result = await run_in_threadpool(query)
+        return result.data or []
+
+    # -------------------------
+    # Notes
+    # -------------------------
+
+    async def store_notes(self, notes_data: Dict) -> Optional[Dict]:
+        result = await run_in_threadpool(
+            lambda: self.client.table("video_notes").insert(notes_data).execute()
+        )
         return result.data[0] if result.data else None
 
     async def get_notes_by_video(self, video_id: str) -> Optional[Dict]:
-        """Retrieve notes for a video"""
-        result = self.client.table("video_notes").select("*").eq("video_id", video_id).execute()
-        if result.data:
-            # Parse sections JSON
-            note = result.data[0]
-            note['sections'] = json.loads(note['sections']) if isinstance(note['sections'], str) else note['sections']
-            return note
-        return None
+        result = await run_in_threadpool(
+            lambda: self.client.table("video_notes")
+            .select("*")
+            .eq("video_id", video_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
 
     async def get_notes_by_id(self, notes_id: str) -> Optional[Dict]:
-        """Retrieve notes by notes_id"""
-        result = self.client.table("video_notes").select("*").eq("notes_id", notes_id).execute()
-        if result.data:
-            note = result.data[0]
-            note['sections'] = json.loads(note['sections']) if isinstance(note['sections'], str) else note['sections']
-            return note
-        return None
+        result = await run_in_threadpool(
+            lambda: self.client.table("video_notes")
+            .select("*")
+            .eq("notes_id", notes_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
 
-    async def update_notes(self, notes_id: str, title: str, sections: List[Dict]) -> Dict:
-        """Update existing notes"""
-        data = {
-            "title": title,
-            "sections": json.dumps(sections),
-        }
-        result = self.client.table("video_notes").update(data).eq("notes_id", notes_id).execute()
-        if result.data:
-            note = result.data[0]
-            note['sections'] = json.loads(note['sections']) if isinstance(note['sections'], str) else note['sections']
-            return note
-        return None
+    async def update_notes(self, notes_id: str, title: str, sections: List[Dict]) -> Optional[Dict]:
+        data = {"title": title, "sections": json.dumps(sections)}
+        result = await run_in_threadpool(
+            lambda: self.client.table("video_notes")
+            .update(data)
+            .eq("notes_id", notes_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
 
 
-# Create database instance
 db = Database()

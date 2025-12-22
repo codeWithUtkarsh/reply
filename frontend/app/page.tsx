@@ -15,7 +15,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      router.push('/dashboard');
+      router.push('/projects');
     }
   }, [user, authLoading, router]);
 

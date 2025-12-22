@@ -68,19 +68,9 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
         return;
       }
 
-      // Process video
+      // Process video and link to project
       try {
-        const response = await videoApi.processVideo(videoUrl, projectName);
-
-        // Update video with project_id
-        const { error: updateError } = await supabase
-          .from('videos')
-          .update({ project_id: project.id })
-          .eq('id', response.video_id);
-
-        if (updateError) {
-          console.error('Error linking video to project:', updateError);
-        }
+        const response = await videoApi.processVideo(videoUrl, projectName, project.id);
 
         // Log activity
         await supabase.from('activity_log').insert({

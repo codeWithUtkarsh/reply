@@ -40,7 +40,6 @@ export interface Project {
 
 export interface Video {
   id: string; // YouTube video ID
-  project_id?: string;
   title: string;
   video_length: number;
   transcript: any;
