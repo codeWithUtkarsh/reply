@@ -142,6 +142,11 @@ IMPORTANT DIAGRAM RULES:
 - Use [Square brackets] for labels
 - Use --> for arrows
 - Always include \\n for newlines in code
+- DO NOT use special characters like Greek letters (μ, σ, π) in node labels
+- Write "mu" instead of "μ", "sigma" instead of "σ", "pi" instead of "π"
+- Avoid parentheses and special symbols in node text when possible
+- Use only plain ASCII text in node labels
+- Keep labels simple: "Mean" not "Mean (μ)", "StdDev" not "Standard Deviation (σ)"
 - Test that your syntax is valid Mermaid format
 
 CRITICAL REQUIREMENTS:
