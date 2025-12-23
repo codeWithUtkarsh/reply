@@ -28,12 +28,66 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
         console.log('🔄 Loading Mermaid library...');
         const mermaid = (await import('mermaid')).default;
 
-        // Initialize Mermaid
+        // Initialize Mermaid with custom theme for better visibility and colors
         mermaid.initialize({
           startOnLoad: false,
-          theme: 'neutral',
+          theme: 'base',
           securityLevel: 'loose',
           fontFamily: 'Arial, sans-serif',
+          themeVariables: {
+            // Primary colors - vibrant and visible
+            primaryColor: '#3B82F6',        // Blue
+            primaryTextColor: '#FFFFFF',
+            primaryBorderColor: '#1E40AF',
+
+            // Secondary colors
+            secondaryColor: '#10B981',       // Emerald
+            secondaryTextColor: '#FFFFFF',
+            secondaryBorderColor: '#047857',
+
+            // Tertiary colors
+            tertiaryColor: '#8B5CF6',        // Purple
+            tertiaryTextColor: '#FFFFFF',
+            tertiaryBorderColor: '#6D28D9',
+
+            // Additional colors for variety
+            noteBkgColor: '#FCD34D',         // Yellow
+            noteTextColor: '#000000',
+            noteBorderColor: '#F59E0B',
+
+            // Text and lines
+            lineColor: '#374151',            // Dark gray for lines
+            textColor: '#111827',            // Very dark gray for text
+            mainBkg: '#DBEAFE',             // Light blue background
+
+            // Node colors
+            nodeBorder: '#1E40AF',
+            clusterBkg: '#E0E7FF',          // Light indigo
+            clusterBorder: '#4F46E5',
+
+            // Flowchart specific
+            edgeLabelBackground: '#FFFFFF',
+
+            // Class diagram
+            classText: '#111827',
+
+            // State diagram
+            labelColor: '#111827',
+
+            // Pie chart
+            pie1: '#3B82F6',  // Blue
+            pie2: '#10B981',  // Emerald
+            pie3: '#8B5CF6',  // Purple
+            pie4: '#F59E0B',  // Amber
+            pie5: '#EF4444',  // Red
+            pie6: '#EC4899',  // Pink
+            pie7: '#14B8A6',  // Teal
+            pie8: '#F97316',  // Orange
+            pie9: '#6366F1',  // Indigo
+            pie10: '#84CC16', // Lime
+            pie11: '#06B6D4', // Cyan
+            pie12: '#A855F7', // Violet
+          },
         });
 
         setMermaidLoaded(true);
