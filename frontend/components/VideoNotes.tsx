@@ -28,28 +28,13 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
         console.log('🔄 Loading Mermaid library...');
         const mermaid = (await import('mermaid')).default;
 
-        // Initialize Mermaid with colorful theme for better visibility
+        // Initialize Mermaid - using forest theme for best built-in colors
         mermaid.initialize({
           startOnLoad: false,
-          theme: 'default',
+          theme: 'forest',
           securityLevel: 'loose',
           fontFamily: 'Arial, sans-serif',
-          themeVariables: {
-            primaryColor: '#60A5FA',       // Light blue
-            primaryTextColor: '#1F2937',   // Dark gray text
-            primaryBorderColor: '#3B82F6', // Blue border
-            lineColor: '#374151',          // Dark lines
-            secondaryColor: '#34D399',     // Light green
-            tertiaryColor: '#A78BFA',      // Light purple
-            background: '#F3F4F6',         // Light gray background
-            mainBkg: '#DBEAFE',           // Light blue background
-            secondaryBkg: '#D1FAE5',      // Light green background
-            tertiaryBkg: '#E9D5FF',       // Light purple background
-            textColor: '#111827',         // Very dark text
-            border1: '#3B82F6',           // Blue
-            border2: '#10B981',           // Green
-            fontSize: '16px',
-          },
+          logLevel: 'debug', // Add logging to help diagnose issues
         });
 
         setMermaidLoaded(true);
