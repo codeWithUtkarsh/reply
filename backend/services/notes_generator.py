@@ -83,7 +83,7 @@ Create detailed notes following these STRICT requirements:
 
    Simple Flowchart with Decision:
    graph LR
-       A[Input] --> B{Check}
+       A[Input] --> B{{Check}}
        B -->|Yes| C[Process]
        B -->|No| D[Skip]
        C --> E[Output]
