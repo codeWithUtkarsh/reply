@@ -67,17 +67,28 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
               if (element && diagram.code) {
                 try {
+                  // Clean the diagram code - remove extra whitespace and ensure proper formatting
+                  let cleanCode = diagram.code.trim();
+
+                  console.log(`\n📝 Attempting to render diagram ${diagramIndex}:`);
+                  console.log('Original code:', cleanCode);
+
                   // Mermaid 11.x render returns a Promise with { svg }
-                  const { svg } = await mermaid.render(id, diagram.code);
+                  const { svg } = await mermaid.render(id, cleanCode);
                   element.innerHTML = svg;
                   console.log(`✅ Diagram ${diagramIndex} rendered successfully`);
                 } catch (error) {
                   console.error(`❌ Failed to render diagram ${diagramIndex}:`, error);
                   console.error('Diagram code was:', diagram.code);
+                  console.error('Error details:', error instanceof Error ? error.message : String(error));
+
+                  // Show detailed error to user
                   element.innerHTML = `
                     <div class="text-red-600 text-sm p-4 bg-red-50 rounded border border-red-200">
-                      <p class="font-semibold mb-2">Failed to render diagram</p>
-                      <p class="text-xs text-gray-600">Check console for details</p>
+                      <p class="font-semibold mb-2">⚠️ Diagram Syntax Error</p>
+                      <p class="text-xs text-gray-700 mb-2">The diagram code has syntax issues:</p>
+                      <pre class="text-xs bg-gray-100 p-2 rounded overflow-x-auto">${diagram.code}</pre>
+                      <p class="text-xs text-gray-600 mt-2">Error: ${error instanceof Error ? error.message : 'Unknown error'}</p>
                     </div>
                   `;
                 }
