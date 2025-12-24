@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, Edit2, Save, X } from 'lucide-react';
 import { VideoNotes, NoteSection, notesApi } from '@/lib/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 
 /* ======================================================
    Mermaid Diagram Component (CORRECT v10+ way)
@@ -92,6 +95,18 @@ export default function VideoNotes({ notes }: VideoNotesProps) {
     }
   };
 
+  const sectionsWithReview = [
+  {
+    heading: "",
+    content: notes.review_questions
+      .map((q, idx) => `**Q${idx + 1}:** ${q}`)
+      .join('\n\r'), // single line break for tighter spacing
+    visualizations: [],
+    key_concepts: [],
+  },
+  ...editableSections,
+];
+
   return (
     <div
       className={`w-full ${
@@ -146,15 +161,23 @@ export default function VideoNotes({ notes }: VideoNotesProps) {
           {notes.title}
         </h1>
 
-        {editableSections.map((section, sectionIdx) => (
+        {sectionsWithReview.map((section, sectionIdx) => (
           <div key={sectionIdx} className="mb-12">
             <h2 className="text-xl font-semibold mb-3">
               {section.heading}
             </h2>
 
-            <div className="whitespace-pre-wrap mb-4">
-              {section.content}
-            </div>
+            {sectionIdx === 0 && !section.heading ? (
+              <div className="mx-auto border border-gray-400 dark:border-gray-600 rounded-lg p-4 max-w-xl text-center bg-gray-50 dark:bg-gray-800 italic mt-2">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {section.content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {section.content}
+              </ReactMarkdown>
+            )}
 
             {section.visualizations?.map((viz, vizIdx) =>
               viz.type === 'mermaid' ? (
