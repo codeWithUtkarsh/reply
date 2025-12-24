@@ -1,6 +1,6 @@
-# Preply Video Learning - Step-by-Step Setup Guide
+# PrepLM Video Learning - Step-by-Step Setup Guide
 
-This guide will walk you through setting up the Preply Video Learning Platform from scratch.
+This guide will walk you through setting up the PrepLM Video Learning Platform from scratch.
 
 ## Prerequisites Checklist
 
@@ -31,7 +31,7 @@ Before starting, ensure you have:
 2. Sign up for a free account
 3. Click "New Project"
 4. Fill in project details:
-   - Name: `preply-video-learning`
+   - Name: `preplm-video-learning`
    - Database Password: (create a strong password)
    - Region: (choose closest to you)
 5. Wait for project to be created (2-3 minutes)
@@ -214,7 +214,7 @@ You should see:
 ## Step 8: Test the Application
 
 1. Open browser to `http://localhost:3000`
-2. You should see the Preply Video Learning home page
+2. You should see the PrepLM Video Learning home page
 
 ### Test with a Video
 

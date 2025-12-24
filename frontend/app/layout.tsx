@@ -6,7 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Preply - Video Learning Platform',
+  title: 'PrepLM - Video Learning Platform',
   description: 'Learn from videos with AI-powered questions and quizzes',
 }
 

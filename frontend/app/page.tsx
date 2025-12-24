@@ -178,7 +178,7 @@ export default function Home() {
               <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center">
                 <Play className="w-4 h-4 text-emerald-500" />
               </div>
-              <span className="text-xl font-semibold tracking-tight">PREPLY</span>
+              <span className="text-xl font-semibold tracking-tight">PREPLM</span>
             </div>
 
             {/* Auth buttons - Right */}
@@ -239,7 +239,7 @@ export default function Home() {
                       <div className="w-16 h-16 mx-auto mb-3 bg-emerald-500/10 rounded-xl flex items-center justify-center">
                         <Play className="w-8 h-8 text-emerald-500" />
                       </div>
-                      <div className="text-sm text-emerald-500 font-mono tracking-wider">PREPLY</div>
+                      <div className="text-sm text-emerald-500 font-mono tracking-wider">PREPLM</div>
                     </div>
                   </div>
                 </div>
@@ -540,7 +540,7 @@ export default function Home() {
                 <div className="relative bg-gradient-to-br from-gray-900 to-black border border-red-500/20 rounded-2xl p-8">
                   <div className="flex items-start justify-between mb-8">
                     <div>
-                      <div className="text-sm text-red-400 font-light uppercase tracking-wider mb-2">Before Preply</div>
+                      <div className="text-sm text-red-400 font-light uppercase tracking-wider mb-2">Before PrepLM</div>
                       <h3 className="text-3xl font-light text-white">The Old Way</h3>
                     </div>
                     <div className="text-5xl font-light text-red-400">10h</div>
@@ -572,13 +572,13 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* With Preply - The Solution */}
+              {/* With PrepLM - The Solution */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl"></div>
                 <div className="relative bg-gradient-to-br from-emerald-950 to-black border-2 border-emerald-500/40 rounded-2xl p-8">
                   <div className="flex items-start justify-between mb-8">
                     <div>
-                      <div className="text-sm text-emerald-400 font-light uppercase tracking-wider mb-2">With Preply</div>
+                      <div className="text-sm text-emerald-400 font-light uppercase tracking-wider mb-2">With PrepLM</div>
                       <h3 className="text-3xl font-light text-white">The Smart Way</h3>
                     </div>
                     <div className="text-5xl font-light text-emerald-400">5h</div>
@@ -675,7 +675,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 border-t border-gray-900">
           <div className="flex justify-between items-center text-sm text-gray-600">
-            <p>&copy; 2024 Preply. All rights reserved.</p>
+            <p>&copy; 2025 PrepLM. All rights reserved.</p>
             <div className="flex gap-6">
               <button className="hover:text-gray-400 transition-colors">Privacy</button>
               <button className="hover:text-gray-400 transition-colors">Terms</button>

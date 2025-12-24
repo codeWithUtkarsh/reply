@@ -35,126 +35,136 @@ class NotesGenerator:
         # Truncate transcript if too long (keep first 10000 chars for better context)
         text_sample = transcript_text[:10000] if len(transcript_text) > 10000 else transcript_text
 
-        prompt = f"""You are an expert note-taker creating comprehensive, visually engaging notes for students.
+        # Use triple quotes without f-string for the main template
+        prompt_template = """You are an expert educational content designer creating comprehensive study materials from video content.
 
-Video Title: {video_title}
+        INPUT:
+        - Video Title: {video_title}
+        - Transcript: {text_sample}
 
-Transcript:
-{text_sample}
+        OBJECTIVE: Transform this content into structured, visually-rich study notes with effective diagrams and visualizations.
 
-Create detailed notes following these STRICT requirements:
+        OUTPUT REQUIREMENTS:
 
-1. STRUCTURE:
-   - Create exactly 4-6 main sections with clear headings
-   - Each section MUST have concise, well-formatted content
-   - Use casual, student-friendly language
+        ## 1. CONTENT STRUCTURE
+        Create 3-5 main sections based on the natural flow of the video content:
+        - Each section should cover a distinct topic or concept
+        - Sections should follow a logical progression
+        - Balance detail with clarity (aim for 150-300 words per section)
 
-2. CONTENT FORMATTING (CRITICAL):
-   - Use proper line breaks between points
-   - Each bullet point or new idea MUST be on a new line
-   - Format like this:
-     "• First point about the topic
+        ## 2. VISUALIZATION STRATEGY
+        Include 2-4 diagrams total, choosing the most appropriate type for each concept:
 
-     • Second point with explanation
+        ### Diagram Types (select based on content):
+        - **Flow Diagrams**: For processes, sequences, or workflows
+        - **Hierarchy Charts**: For organizational structures or classifications
+        - **Concept Maps**: For showing relationships between ideas
+        - **Timeline Diagrams**: For chronological information
+        - **Comparison Charts**: For contrasting different approaches or options
+        - **Cycle Diagrams**: For recurring processes or feedback loops
 
-     • Third point with details"
+        ### Mermaid Syntax Guidelines:
+```mermaid
+        # For simple flows (preferred for most cases):
+        graph TD
+            A[Initial State] --> B[Process Step]
+            B --> C{{Decision Point}}
+            C -->|Yes| D[Outcome 1]
+            C -->|No| E[Outcome 2]
 
-   - NOT like this: "First pointSecond pointThird point"
-   - Add blank lines between paragraphs for readability
-   - Use bullet points (•) or numbered lists (1., 2., 3.)
+        # For hierarchies:
+        graph TD
+            A[Main Concept] --> B[Subconcept 1]
+            A --> C[Subconcept 2]
+            B --> D[Detail 1]
+            B --> E[Detail 2]
 
-3. DIAGRAMS (MANDATORY):
-   - You MUST include AT LEAST 2-3 Mermaid diagrams
-   - Include diagrams for:
-     * Main concepts and workflows
-     * Hierarchies and relationships
-     * Step-by-step processes
-     * Comparisons or decision trees
-   - Each diagram must be properly formatted Mermaid syntax
-   - Keep diagrams simple but informative
+        # For timelines:
+        graph LR
+            A[Event 1] --> B[Event 2]
+            B --> C[Event 3]
+            C --> D[Event 4]
+```
 
-4. MERMAID SYNTAX (CRITICAL - FOLLOW EXACTLY):
+        ### Diagram Best Practices:
+        - Use descriptive but concise labels (max 20 characters)
+        - Limit to 8 nodes for clarity
+        - Include decision points where relevant using {{curly braces}}
+        - Add edge labels for clarity using |label| syntax
+        - Choose graph direction (TD, LR, BT, RL) based on content flow
 
-   ONLY use this ultra-simple format:
-   graph TD
-       A[Start]
-       B[Step 1]
-       C[Step 2]
-       D[End]
-       A --> B
-       B --> C
-       C --> D
+        ## 3. CONTENT FORMATTING
+        Structure each section with:
+        - **Clear heading** that captures the main idea
+        - **Introduction sentence** providing context
+        - **Key points** using bullets or numbered lists
+        - **Examples or applications** where relevant
+        - **Transitions** between sections for flow
 
-   RULES:
-   - ALWAYS use "graph TD" (top-down)
-   - Node names: Single letters ONLY (A, B, C, D, E, F)
-   - Labels: Short words in [brackets], NO special characters
-   - Arrows: ALWAYS on separate lines after all nodes defined
-   - NO decision diamonds, NO special shapes
-   - Maximum 6 nodes per diagram
-   - Keep it EXTREMELY simple
+        Use formatting elements:
+        - `**Bold**` for key terms and definitions
+        - Bullet points (•) for related items
+        - Numbered lists (1., 2., 3.) for sequential steps
+        - Block quotes for important insights or quotes
+        - Code blocks for technical content if applicable
 
-5. STYLE:
-   - Write in a clear, note-taking style
-   - Include key terms and definitions
-   - Add examples where helpful
-   - Use "Pro tip:" for important insights
+        ## 4. PEDAGOGICAL ELEMENTS
+        Include where appropriate:
+        - **Definitions**: Clear explanations of new terms
+        - **Examples**: Concrete applications of abstract concepts
+        - **Mnemonics**: Memory aids for complex information
+        - **Connections**: Links to prior knowledge or related topics
+        - **Summary points**: Key takeaways at section ends
 
-EXAMPLE OUTPUT STRUCTURE:
-{{
-  "title": "Clear Topic Title",
-  "sections": [
-    {{
-      "heading": "Understanding the Basics",
-      "content": "• First key concept explained clearly\\n\\n• Second important point with details\\n\\n• Third point with examples\\n\\nPro tip: Remember this helpful insight!",
-      "diagrams": [
+        ## 5. OUTPUT FORMAT
+        Return as JSON with this structure:
         {{
-          "type": "mermaid",
-          "code": "graph TD\\n    A[Start]\\n    B[Process]\\n    C[End]\\n    A --> B\\n    B --> C",
-          "caption": "Simple process flow"
+          "title": "string - engaging title reflecting core content",
+          "summary": "string - 2-3 sentence overview of main points",
+          "sections": [
+            {{
+              "heading": "string - section title",
+              "content": "string - formatted text with proper markdown",
+              "key_concepts": ["array", "of", "main", "terms"],
+              "visualizations": [
+                {{
+                  "type": "mermaid|table|list",
+                  "title": "string - diagram title",
+                  "code": "string - mermaid syntax or structured data",
+                  "purpose": "string - what this visualization illustrates"
+                }}
+              ]
+            }}
+          ],
+          "review_questions": [
+            "string - question to test understanding"
+          ]
         }}
-      ]
-    }},
-    {{
-      "heading": "Key Methods",
-      "content": "1. First method:\\n   - Step A\\n   - Step B\\n\\n2. Second method:\\n   - Step C\\n   - Step D",
-      "diagrams": [
-        {{
-          "type": "mermaid",
-          "code": "graph TD\\n    A[Method1]\\n    B[Method2]\\n    C[Result]\\n    A --> C\\n    B --> C",
-          "caption": "Comparison of methods"
-        }}
-      ]
-    }}
-  ]
-}}
 
-CRITICAL DIAGRAM RULES (MUST FOLLOW):
-1. ALWAYS use "graph TD" (never LR, never flowchart)
-2. Node names: ONLY A, B, C, D, E, F (single letters)
-3. Define ALL nodes first, THEN arrows
-4. Node labels: Short simple words ONLY, NO parentheses, NO symbols
-5. Example format:
-   graph TD
-       A[Start]
-       B[Process]
-       C[End]
-       A --> B
-       B --> C
-6. NO special characters (no μ, σ, π, parentheses, quotes)
-7. Keep labels under 15 characters
-8. Maximum 6 nodes per diagram
-9. NO decision diamonds, NO special shapes, ONLY basic rectangles
-10. Test your diagram follows this EXACT pattern
+        ## QUALITY CRITERIA
+        Your output should:
+        1. **Accurately represent** the source material without distortion
+        2. **Enhance understanding** through visual organization
+        3. **Support different learning styles** (visual, textual, structural)
+        4. **Enable quick review** through clear hierarchies and summaries
+        5. **Promote retention** through meaningful connections and patterns
 
-CRITICAL REQUIREMENTS:
-- Each section should have 0-1 diagram (diagrams are optional)
-- Only create diagram if it truly helps visualize the concept
-- Content MUST use proper line breaks (\\n\\n between points)
-- Diagrams must use the EXACT simple format shown above
-- Make notes comprehensive but concise
+        ## DIAGRAM VALIDATION
+        Before including any diagram, verify it:
+        - Adds genuine value (not just decorative)
+        - Simplifies complex relationships
+        - Uses appropriate diagram type for the content
+        - Has clear, readable labels
+        - Follows proper Mermaid syntax
 
-Return your response as a valid JSON object with the exact structure shown above."""
+        Focus on creating study materials that would genuinely help a student understand and remember the content. Prioritize clarity and pedagogical value over complexity.
+        """
+
+        # Now format the prompt with the actual values
+        prompt = prompt_template.format(
+            video_title=video_title,
+            text_sample=text_sample
+        )
 
         try:
             response = self.client.chat.completions.create(
@@ -182,6 +192,9 @@ Return your response as a valid JSON object with the exact structure shown above
             for section in notes_data.get('sections', []):
                 if 'diagrams' not in section:
                     section['diagrams'] = []
+                # Also ensure backward compatibility with 'diagrams' vs 'visualizations'
+                if 'visualizations' in section and 'diagrams' not in section:
+                    section['diagrams'] = section['visualizations']
 
             return notes_data
 

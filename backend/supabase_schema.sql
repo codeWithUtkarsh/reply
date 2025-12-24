@@ -1,4 +1,4 @@
--- Supabase Database Schema for Preply Video Learning App
+-- Supabase Database Schema for PrepLM Video Learning App
 
 -- Users table (integrates with Supabase Auth)
 CREATE TABLE IF NOT EXISTS users (

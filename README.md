@@ -1,4 +1,4 @@
-# Preply Video Learning Platform
+# PrepLM Video Learning Platform
 
 An intelligent video-based learning application that uses AI to generate questions and test comprehension in real-time. As users watch educational videos, they receive flashcards at key moments and can take a comprehensive final quiz. When answers are incorrect, the system directs users to specific video timestamps for review.
 
