@@ -8,6 +8,71 @@ interface VideoNotesProps {
   notes: VideoNotes;
 }
 
+// Helper function to sanitize Mermaid diagram code
+const sanitizeMermaidCode = (code: string): string => {
+  let cleaned = code.trim();
+
+  // Remove any special characters that might cause issues
+  // Keep only: alphanumeric, spaces, newlines, [], (), {}, ->, |, :, ;, commas, dots
+  cleaned = cleaned.replace(/[^\w\s\[\]\(\)\{\}\-\>\|\:\;\,\.\n]/g, '');
+
+  // Ensure proper spacing around arrows
+  cleaned = cleaned.replace(/-->/g, ' --> ');
+  cleaned = cleaned.replace(/\s+/g, ' '); // Normalize spaces
+  cleaned = cleaned.replace(/ \n/g, '\n'); // Clean up line endings
+
+  return cleaned;
+};
+
+// Simple custom diagram renderer as fallback
+const renderSimpleDiagram = (code: string, caption: string): string => {
+  const lines = code.split('\n').filter(line => line.trim());
+  const type = lines[0]?.toLowerCase() || '';
+
+  if (type.includes('graph') || type.includes('flowchart')) {
+    // Parse simple flowchart
+    const nodes: { [key: string]: string } = {};
+    const edges: { from: string; to: string; label?: string }[] = [];
+
+    lines.slice(1).forEach(line => {
+      const arrowMatch = line.match(/(\w+)\[([^\]]+)\]\s*-->\s*(\w+)\[([^\]]+)\]/);
+      if (arrowMatch) {
+        const [, from, fromLabel, to, toLabel] = arrowMatch;
+        nodes[from] = fromLabel;
+        nodes[to] = toLabel;
+        edges.push({ from, to });
+      }
+    });
+
+    // Generate simple HTML diagram
+    let html = '<div class="simple-diagram" style="display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 20px;">';
+
+    Object.entries(nodes).forEach(([id, label]) => {
+      html += `
+        <div class="node" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          ${label}
+        </div>
+      `;
+
+      const outgoingEdges = edges.filter(e => e.from === id);
+      if (outgoingEdges.length > 0) {
+        html += '<div style="font-size: 24px; color: #667eea;">↓</div>';
+      }
+    });
+
+    html += '</div>';
+    if (caption) {
+      html += `<p class="text-sm text-center text-gray-700 mt-3 italic font-medium">${caption}</p>`;
+    }
+    return html;
+  }
+
+  // Default: just show the caption
+  return `<div class="simple-note" style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea;">
+    <p class="font-medium text-gray-700">${caption || 'Diagram'}</p>
+  </div>`;
+};
+
 export default function VideoNotesComponent({ notes }: VideoNotesProps) {
   const diagramRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
@@ -67,35 +132,40 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
               if (element && diagram.code) {
                 try {
-                  // Clean the diagram code - remove extra whitespace and ensure proper formatting
-                  let cleanCode = diagram.code.trim();
+                  // Sanitize the diagram code
+                  let cleanCode = sanitizeMermaidCode(diagram.code);
 
                   console.log(`\n📝 Attempting to render diagram ${diagramIndex}:`);
-                  console.log('Original code:', cleanCode);
+                  console.log('Original code:', diagram.code);
+                  console.log('Sanitized code:', cleanCode);
 
-                  // Mermaid 11.x render returns a Promise with { svg }
-                  const { svg } = await mermaid.render(id, cleanCode);
-                  element.innerHTML = svg;
-                  console.log(`✅ Diagram ${diagramIndex} rendered successfully`);
+                  // Try Mermaid first
+                  try {
+                    const { svg } = await mermaid.render(id, cleanCode);
+                    element.innerHTML = svg;
+                    console.log(`✅ Diagram ${diagramIndex} rendered with Mermaid successfully`);
+                  } catch (mermaidError) {
+                    console.warn(`⚠️ Mermaid failed for diagram ${diagramIndex}, using custom renderer`);
+                    console.warn('Mermaid error:', mermaidError);
+
+                    // Fallback to custom simple renderer
+                    const fallbackHTML = renderSimpleDiagram(diagram.code, diagram.caption);
+                    element.innerHTML = fallbackHTML;
+                    console.log(`✅ Diagram ${diagramIndex} rendered with custom fallback`);
+                  }
                 } catch (error) {
-                  console.error(`❌ Failed to render diagram ${diagramIndex}:`, error);
-                  console.error('Diagram code was:', diagram.code);
-                  console.error('Error details:', error instanceof Error ? error.message : String(error));
+                  console.error(`❌ Both renderers failed for diagram ${diagramIndex}:`, error);
 
-                  // Show detailed error to user
+                  // Last resort: show a styled message
                   element.innerHTML = `
-                    <div class="text-red-600 text-sm p-4 bg-red-50 rounded border border-red-200">
-                      <p class="font-semibold mb-2">⚠️ Diagram Syntax Error</p>
-                      <p class="text-xs text-gray-700 mb-2">The diagram code has syntax issues:</p>
-                      <pre class="text-xs bg-gray-100 p-2 rounded overflow-x-auto">${diagram.code}</pre>
-                      <p class="text-xs text-gray-600 mt-2">Error: ${error instanceof Error ? error.message : 'Unknown error'}</p>
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                      <p class="font-semibold mb-2">📊 ${diagram.caption || 'Visual Concept'}</p>
+                      <p class="text-sm opacity-90">Diagram visualization</p>
                     </div>
                   `;
                 }
               } else {
                 console.warn(`⚠️ Missing element or code for diagram ${diagramIndex}`);
-                console.warn('Element:', element);
-                console.warn('Code:', diagram.code);
               }
               diagramIndex++;
             }

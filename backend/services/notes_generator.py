@@ -73,33 +73,26 @@ Create detailed notes following these STRICT requirements:
    - Each diagram must be properly formatted Mermaid syntax
    - Keep diagrams simple but informative
 
-4. MERMAID SYNTAX EXAMPLES (USE EXACTLY THIS FORMAT):
+4. MERMAID SYNTAX (CRITICAL - FOLLOW EXACTLY):
 
-   Flowchart (MOST RELIABLE):
+   ONLY use this ultra-simple format:
    graph TD
-       A[Start] --> B[Step 1]
-       B --> C[Step 2]
-       C --> D[End]
+       A[Start]
+       B[Step 1]
+       C[Step 2]
+       D[End]
+       A --> B
+       B --> C
+       C --> D
 
-   Simple Flowchart with Decision:
-   graph LR
-       A[Input] --> B{{Check}}
-       B -->|Yes| C[Process]
-       B -->|No| D[Skip]
-       C --> E[Output]
-       D --> E
-
-   Mind Map (for hierarchies):
-   mindmap
-     root((Main Topic))
-       Concept 1
-         Detail A
-         Detail B
-       Concept 2
-         Detail C
-         Detail D
-
-   CRITICAL: Use simple node names (A, B, C) and clear labels in [brackets]
+   RULES:
+   - ALWAYS use "graph TD" (top-down)
+   - Node names: Single letters ONLY (A, B, C, D, E, F)
+   - Labels: Short words in [brackets], NO special characters
+   - Arrows: ALWAYS on separate lines after all nodes defined
+   - NO decision diamonds, NO special shapes
+   - Maximum 6 nodes per diagram
+   - Keep it EXTREMELY simple
 
 5. STYLE:
    - Write in a clear, note-taking style
@@ -117,7 +110,7 @@ EXAMPLE OUTPUT STRUCTURE:
       "diagrams": [
         {{
           "type": "mermaid",
-          "code": "graph TD\\n    A[Start] --> B[Process]\\n    B --> C[End]",
+          "code": "graph TD\\n    A[Start]\\n    B[Process]\\n    C[End]\\n    A --> B\\n    B --> C",
           "caption": "Simple process flow"
         }}
       ]
@@ -128,7 +121,7 @@ EXAMPLE OUTPUT STRUCTURE:
       "diagrams": [
         {{
           "type": "mermaid",
-          "code": "graph LR\\n    A[Method 1] --> B[Result A]\\n    C[Method 2] --> D[Result B]",
+          "code": "graph TD\\n    A[Method1]\\n    B[Method2]\\n    C[Result]\\n    A --> C\\n    B --> C",
           "caption": "Comparison of methods"
         }}
       ]
@@ -136,24 +129,29 @@ EXAMPLE OUTPUT STRUCTURE:
   ]
 }}
 
-IMPORTANT DIAGRAM RULES:
-- Use simple graph TD (top-down) or graph LR (left-right)
-- Keep node names short: A, B, C, D (not long names)
-- Use [Square brackets] for labels
-- Use --> for arrows
-- Always include \\n for newlines in code
-- DO NOT use special characters like Greek letters (μ, σ, π) in node labels
-- Write "mu" instead of "μ", "sigma" instead of "σ", "pi" instead of "π"
-- Avoid parentheses and special symbols in node text when possible
-- Use only plain ASCII text in node labels
-- Keep labels simple: "Mean" not "Mean (μ)", "StdDev" not "Standard Deviation (σ)"
-- Test that your syntax is valid Mermaid format
+CRITICAL DIAGRAM RULES (MUST FOLLOW):
+1. ALWAYS use "graph TD" (never LR, never flowchart)
+2. Node names: ONLY A, B, C, D, E, F (single letters)
+3. Define ALL nodes first, THEN arrows
+4. Node labels: Short simple words ONLY, NO parentheses, NO symbols
+5. Example format:
+   graph TD
+       A[Start]
+       B[Process]
+       C[End]
+       A --> B
+       B --> C
+6. NO special characters (no μ, σ, π, parentheses, quotes)
+7. Keep labels under 15 characters
+8. Maximum 6 nodes per diagram
+9. NO decision diamonds, NO special shapes, ONLY basic rectangles
+10. Test your diagram follows this EXACT pattern
 
 CRITICAL REQUIREMENTS:
-- Each section MUST have at least 1 diagram
+- Each section should have 0-1 diagram (diagrams are optional)
+- Only create diagram if it truly helps visualize the concept
 - Content MUST use proper line breaks (\\n\\n between points)
-- Minimum 2-3 diagrams total across all sections
-- Diagrams must use valid Mermaid syntax
+- Diagrams must use the EXACT simple format shown above
 - Make notes comprehensive but concise
 
 Return your response as a valid JSON object with the exact structure shown above."""
