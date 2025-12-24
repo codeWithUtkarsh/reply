@@ -68,9 +68,9 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
         return;
       }
 
-      // Process video and link to project (sync - temporary until migration is applied)
+      // Process video and link to project (async)
       try {
-        const response = await videoApi.processVideo(videoUrl, projectName, project.id);
+        const response = await videoApi.processVideoAsync(videoUrl, projectName, project.id);
 
         // Log activity
         await supabase.from('activity_log').insert({
