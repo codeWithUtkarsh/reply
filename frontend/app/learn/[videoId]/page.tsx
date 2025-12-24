@@ -435,7 +435,9 @@ export default function LearnPage() {
 
                   {/* Timeline items */}
                   <div className="space-y-6">
-                    {flashcards.map((fc, index) => {
+                    {[...flashcards]
+                      .sort((a, b) => a.show_at_timestamp - b.show_at_timestamp)
+                      .map((fc, index) => {
                       const isAnswered = answeredFlashcards.has(fc.question.id);
                       const isPast = currentTime > fc.show_at_timestamp;
                       const isCurrent = Math.abs(currentTime - fc.show_at_timestamp) < 2;
