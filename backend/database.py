@@ -472,7 +472,13 @@ class Database:
             .eq("video_id", video_id)
             .execute()
         )
-        return result.data[0] if result.data else None
+        if result.data:
+            notes = result.data[0]
+            # Parse sections if it's a JSON string
+            if isinstance(notes.get('sections'), str):
+                notes['sections'] = json.loads(notes['sections'])
+            return notes
+        return None
 
     async def get_notes_by_id(self, notes_id: str) -> Optional[Dict]:
         result = await run_in_threadpool(
@@ -481,7 +487,13 @@ class Database:
             .eq("notes_id", notes_id)
             .execute()
         )
-        return result.data[0] if result.data else None
+        if result.data:
+            notes = result.data[0]
+            # Parse sections if it's a JSON string
+            if isinstance(notes.get('sections'), str):
+                notes['sections'] = json.loads(notes['sections'])
+            return notes
+        return None
 
     async def update_notes(self, notes_id: str, title: str, sections: List[Dict]) -> Optional[Dict]:
         data = {"title": title, "sections": json.dumps(sections)}
@@ -491,7 +503,13 @@ class Database:
             .eq("notes_id", notes_id)
             .execute()
         )
-        return result.data[0] if result.data else None
+        if result.data:
+            notes = result.data[0]
+            # Parse sections if it's a JSON string
+            if isinstance(notes.get('sections'), str):
+                notes['sections'] = json.loads(notes['sections'])
+            return notes
+        return None
 
 
 db = Database()
