@@ -9,4 +9,4 @@ httpx==0.28.1
 python-multipart==0.0.6
 yt-dlp==2023.11.16
 requests==2.31.0
-youtube-transcript-api==0.6.1
+youtube-transcript-api==1.2.3

@@ -10,7 +10,7 @@ setup_logging()
 logger = get_logger(__name__)
 
 app = FastAPI(
-    title="Preply Video Learning API",
+    title="PrepLM Video Learning API",
     description="API for video-based learning with AI-generated questions",
     version="1.0.0"
 )
@@ -53,7 +53,7 @@ app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 @app.on_event("startup")
 async def startup_event():
     logger.info("=" * 80)
-    logger.info("🚀 Preply Video Learning API Starting...")
+    logger.info("🚀 Preplm Video Learning API Starting...")
     logger.info(f"Version: 1.0.0")
     logger.info(f"Port: {settings.backend_port}")
     logger.info(f"CORS Origins: {settings.cors_origins}")
@@ -63,7 +63,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("=" * 80)
-    logger.info("🛑 Preply Video Learning API Shutting Down...")
+    logger.info("🛑 Preplm Video Learning API Shutting Down...")
     logger.info("=" * 80)
 
 
@@ -71,7 +71,7 @@ async def shutdown_event():
 async def root():
     logger.info("Root endpoint called")
     return {
-        "message": "Preply Video Learning API",
+        "message": "PrepLM Video Learning API",
         "status": "active",
         "version": "1.0.0"
     }

@@ -170,7 +170,7 @@ python main.py
 
 You should see:
 ```
-🚀 Preply Video Learning API Starting...
+🚀 PrepLM Video Learning API Starting...
 Version: 1.0.0
 ```
 
