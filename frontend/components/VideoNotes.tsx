@@ -194,15 +194,16 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
         return;
       }
 
-      // Render immediately - no delay needed
+      // Query DOM directly instead of using refs
       for (const section of notes.sections) {
         for (const diagram of section.diagrams || []) {
           const id = `diagram-${diagramIndex}`;
-          const element = diagramRefs.current[id];
+          // Get element directly from DOM using getElementById
+          const element = document.getElementById(id);
 
           console.log(`\n--- Diagram ${diagramIndex} ---`);
           console.log('ID:', id);
-          console.log('Element exists:', !!element);
+          console.log('Element found in DOM:', !!element);
           console.log('Diagram code:', diagram.code);
           console.log('Diagram caption:', diagram.caption);
 
@@ -225,8 +226,13 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
             }
           } else {
             console.warn(`⚠️ Cannot render diagram ${diagramIndex}:`);
-            console.warn('  - Element exists?', !!element);
+            console.warn('  - Element found in DOM?', !!element);
             console.warn('  - Code exists?', !!diagram.code);
+            if (!element) {
+              console.warn('  - Trying to find element with querySelectorAll...');
+              const allDivs = document.querySelectorAll('[id^="diagram-"]');
+              console.warn(`  - Found ${allDivs.length} diagram elements in DOM`);
+            }
           }
           diagramIndex++;
         }
@@ -503,6 +509,7 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
                         <div key={diagIndex} className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 shadow-sm">
                           {/* Diagram */}
                           <div
+                            id={currentDiagramId}
                             ref={(el) => {
                               diagramRefs.current[currentDiagramId] = el;
                             }}
