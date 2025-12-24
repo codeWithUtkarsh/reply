@@ -71,9 +71,9 @@ export default function LearnPage() {
           const status = await videoApi.getVideoStatus(videoId);
           setProcessingStatus(status.processing_status);
 
-          // Reload video data if completed
+          // Load flashcards when completed (without reloading page)
           if (status.processing_status === 'completed') {
-            await loadVideo();
+            await loadFlashcardsOnly();
           }
         } catch (err) {
           console.error('Failed to fetch processing status:', err);
@@ -123,6 +123,19 @@ export default function LearnPage() {
       setError(err.response?.data?.detail || 'Failed to load video');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load flashcards only without reloading the page (for background updates)
+  const loadFlashcardsOnly = async () => {
+    try {
+      setFlashcardsLoading(true);
+      const questionsData = await questionsApi.getFlashcards(videoId);
+      setFlashcards(questionsData.flashcards || []);
+      setFlashcardsLoading(false);
+    } catch (err: any) {
+      console.error('Failed to load flashcards:', err);
+      setFlashcardsLoading(false);
     }
   };
 
