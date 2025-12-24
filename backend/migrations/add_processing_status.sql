@@ -9,6 +9,13 @@ ADD COLUMN IF NOT EXISTS processing_status VARCHAR(50) DEFAULT 'completed';
 ALTER TABLE videos
 ADD COLUMN IF NOT EXISTS error_message TEXT;
 
+-- Add batch tracking columns
+ALTER TABLE videos
+ADD COLUMN IF NOT EXISTS batch_current INTEGER DEFAULT 0;
+
+ALTER TABLE videos
+ADD COLUMN IF NOT EXISTS batch_total INTEGER DEFAULT 0;
+
 -- Make transcript nullable (for videos being processed)
 ALTER TABLE videos
 ALTER COLUMN transcript DROP NOT NULL;
