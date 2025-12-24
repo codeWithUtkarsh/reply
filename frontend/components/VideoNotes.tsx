@@ -110,7 +110,8 @@ function TipTapSection({
   // Convert markdown to HTML on mount if needed
   useEffect(() => {
     if (isMarkdown(content)) {
-      marked.parse(content).then(html => setHtmlContent(html as string))
+      const html = marked.parse(content) as string
+      setHtmlContent(html)
     } else {
       setHtmlContent(content)
     }
