@@ -30,8 +30,10 @@ CREATE TABLE IF NOT EXISTS videos (
     id VARCHAR(255) PRIMARY KEY, -- YouTube video ID (e.g., AL2GL2GUfHk)
     title TEXT NOT NULL,
     video_length FLOAT NOT NULL, -- duration in seconds
-    transcript JSONB NOT NULL,
+    transcript JSONB, -- NULL during processing
     url TEXT NOT NULL,
+    processing_status VARCHAR(50) DEFAULT 'processing', -- processing, transcribing, generating_flashcards, completed, failed
+    error_message TEXT, -- Error details if processing failed
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

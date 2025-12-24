@@ -92,6 +92,96 @@ class Database:
         logger.info(f"DB: Linked video {video_id} to project {project_id}")
         return result.data[0] if result.data else None
 
+    async def store_video_initial(
+        self,
+        video_id: str,
+        title: str,
+        duration: float,
+        url: str,
+        project_id: Optional[str] = None,
+        processing_status: str = "processing"
+    ) -> Optional[Dict]:
+        """Store video with basic info for async processing"""
+        logger.info(f"DB: store_video_initial | video_id={video_id}, status={processing_status}")
+
+        existing = await self.get_video(video_id)
+        if existing:
+            logger.info("DB: Video already exists, skipping insert")
+            video_data = existing
+        else:
+            data = {
+                "id": video_id,
+                "title": title,
+                "video_length": duration,
+                "transcript": None,  # Will be filled during processing
+                "url": url,
+                "processing_status": processing_status,
+                "created_at": datetime.utcnow().isoformat()
+            }
+
+            result = await run_in_threadpool(
+                lambda: self.client.table("videos").insert(data).execute()
+            )
+
+            if not result.data:
+                logger.error("DB: Video insert returned no data")
+                return None
+
+            video_data = result.data[0]
+
+        if project_id:
+            await self.link_video_to_project(video_id, project_id)
+
+        return video_data
+
+    async def update_video_status(
+        self,
+        video_id: str,
+        status: str,
+        error_message: Optional[str] = None
+    ) -> Optional[Dict]:
+        """Update video processing status"""
+        logger.info(f"DB: update_video_status | video_id={video_id}, status={status}")
+
+        data = {
+            "processing_status": status,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+        if error_message:
+            data["error_message"] = error_message
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("videos")
+            .update(data)
+            .eq("id", video_id)
+            .execute()
+        )
+
+        return result.data[0] if result.data else None
+
+    async def update_video_transcript(
+        self,
+        video_id: str,
+        transcript: Dict
+    ) -> Optional[Dict]:
+        """Update video transcript after processing"""
+        logger.info(f"DB: update_video_transcript | video_id={video_id}")
+
+        data = {
+            "transcript": json.dumps(transcript),
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("videos")
+            .update(data)
+            .eq("id", video_id)
+            .execute()
+        )
+
+        return result.data[0] if result.data else None
+
     async def get_videos_by_project(self, project_id: str) -> List[Dict]:
         """Get all videos for a specific project"""
         # Get video IDs from junction table
