@@ -56,10 +56,33 @@ export default function LearnPage() {
   const [videoNotes, setVideoNotes] = useState<VideoNotes | null>(null);
   const [generatingNotes, setGeneratingNotes] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<string>('completed');
+  const [flashcardsLoading, setFlashcardsLoading] = useState(false);
 
   useEffect(() => {
     loadVideo();
   }, [videoId]);
+
+  // Poll for processing status if not completed
+  useEffect(() => {
+    if (processingStatus && processingStatus !== 'completed' && processingStatus !== 'failed') {
+      const interval = setInterval(async () => {
+        try {
+          const status = await videoApi.getVideoStatus(videoId);
+          setProcessingStatus(status.processing_status);
+
+          // Reload video data if completed
+          if (status.processing_status === 'completed') {
+            await loadVideo();
+          }
+        } catch (err) {
+          console.error('Failed to fetch processing status:', err);
+        }
+      }, 3000); // Poll every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [processingStatus, videoId]);
 
   useEffect(() => {
     // Check if any flashcard should be shown at current time
@@ -84,9 +107,18 @@ export default function LearnPage() {
       const data = await videoApi.getVideo(videoId);
       setVideoData(data);
 
+      // Set processing status
+      setProcessingStatus(data.processing_status || 'completed');
+
       // Parse flashcards from questions
-      const questionsData = await questionsApi.getFlashcards(videoId);
-      setFlashcards(questionsData.flashcards || []);
+      if (data.processing_status === 'completed' || data.processing_status === 'generating_flashcards') {
+        setFlashcardsLoading(data.processing_status === 'generating_flashcards');
+        const questionsData = await questionsApi.getFlashcards(videoId);
+        setFlashcards(questionsData.flashcards || []);
+        setFlashcardsLoading(false);
+      } else {
+        setFlashcardsLoading(true);
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load video');
     } finally {
@@ -495,13 +527,21 @@ export default function LearnPage() {
               {!videoNotes && (
                 <button
                   onClick={handleGenerateNotes}
-                  disabled={generatingNotes}
+                  disabled={generatingNotes || processingStatus !== 'completed'}
                   className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-500 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
+                  title={processingStatus !== 'completed' ? 'Waiting for transcription to complete...' : ''}
                 >
                   {generatingNotes ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Generating Notes...
+                    </>
+                  ) : processingStatus !== 'completed' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {processingStatus === 'transcribing' && 'Transcribing video...'}
+                      {processingStatus === 'generating_flashcards' && 'Generating flashcards...'}
+                      {processingStatus === 'processing' && 'Processing video...'}
                     </>
                   ) : (
                     <>

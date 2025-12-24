@@ -111,6 +111,20 @@ export const videoApi = {
     return response.data;
   },
 
+  processVideoAsync: async (videoUrl: string, title?: string, projectId?: string) => {
+    const response = await api.post('/api/video/process-async', {
+      video_url: videoUrl,
+      title,
+      project_id: projectId,
+    });
+    return response.data;
+  },
+
+  getVideoStatus: async (videoId: string) => {
+    const response = await api.get(`/api/video/${videoId}/status`);
+    return response.data;
+  },
+
   getVideo: async (videoId: string) => {
     const response = await api.get(`/api/video/${videoId}`);
     return response.data;
