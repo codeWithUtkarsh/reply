@@ -170,6 +170,9 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
     diagramRefs.current = {};
     setDiagramsRendered(false);
 
+    console.log('🎯 VideoNotes useEffect triggered');
+    console.log('📋 Notes sections:', notes.sections.length);
+
     // Render diagrams directly with custom renderer (skip Mermaid)
     const renderDiagrams = () => {
       console.log('📊 Starting custom diagram rendering...');
@@ -178,48 +181,67 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
       // Count total diagrams
       notes.sections.forEach(section => {
-        totalDiagrams += (section.diagrams || []).length;
+        const count = (section.diagrams || []).length;
+        console.log(`Section "${section.heading}": ${count} diagrams`);
+        totalDiagrams += count;
       });
 
-      console.log(`Found ${totalDiagrams} diagrams to render with custom renderer`);
+      console.log(`✨ Found ${totalDiagrams} diagrams total to render with custom renderer`);
 
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        for (const section of notes.sections) {
-          for (const diagram of section.diagrams || []) {
-            const id = `diagram-${diagramIndex}`;
-            const element = diagramRefs.current[id];
-
-            console.log(`\n--- Rendering Diagram ${diagramIndex} ---`);
-            console.log('Diagram code:', diagram.code);
-
-            if (element && diagram.code) {
-              try {
-                // Use custom renderer directly - ALWAYS works
-                const html = renderCustomDiagram(diagram.code, diagram.caption);
-                element.innerHTML = html;
-                console.log(`✅ Diagram ${diagramIndex} rendered successfully`);
-              } catch (error) {
-                console.error(`❌ Error rendering diagram ${diagramIndex}:`, error);
-                // Last resort fallback
-                element.innerHTML = `
-                  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-                    <p style="font-weight: 600; margin-bottom: 8px;">📊 ${diagram.caption || 'Visual Concept'}</p>
-                    <p style="font-size: 14px; opacity: 0.9;">Diagram visualization</p>
-                  </div>
-                `;
-              }
-            }
-            diagramIndex++;
-          }
-        }
-
-        console.log(`\n🎉 Custom diagram rendering complete! Rendered ${diagramIndex}/${totalDiagrams}`);
+      if (totalDiagrams === 0) {
+        console.log('⚠️ No diagrams to render');
         setDiagramsRendered(true);
-      }, 100);
+        return;
+      }
+
+      // Render immediately - no delay needed
+      for (const section of notes.sections) {
+        for (const diagram of section.diagrams || []) {
+          const id = `diagram-${diagramIndex}`;
+          const element = diagramRefs.current[id];
+
+          console.log(`\n--- Diagram ${diagramIndex} ---`);
+          console.log('ID:', id);
+          console.log('Element exists:', !!element);
+          console.log('Diagram code:', diagram.code);
+          console.log('Diagram caption:', diagram.caption);
+
+          if (element && diagram.code) {
+            try {
+              // Use custom renderer directly - ALWAYS works
+              const html = renderCustomDiagram(diagram.code, diagram.caption);
+              console.log('Generated HTML length:', html.length);
+              element.innerHTML = html;
+              console.log(`✅ Diagram ${diagramIndex} rendered successfully!`);
+            } catch (error) {
+              console.error(`❌ Error rendering diagram ${diagramIndex}:`, error);
+              // Last resort fallback
+              element.innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                  <p style="font-weight: 600; margin-bottom: 8px;">📊 ${diagram.caption || 'Visual Concept'}</p>
+                  <p style="font-size: 14px; opacity: 0.9;">Diagram visualization</p>
+                </div>
+              `;
+            }
+          } else {
+            console.warn(`⚠️ Cannot render diagram ${diagramIndex}:`);
+            console.warn('  - Element exists?', !!element);
+            console.warn('  - Code exists?', !!diagram.code);
+          }
+          diagramIndex++;
+        }
+      }
+
+      console.log(`\n🎉 Custom diagram rendering complete! Rendered ${diagramIndex}/${totalDiagrams}`);
+      setDiagramsRendered(true);
     };
 
-    renderDiagrams();
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        renderDiagrams();
+      });
+    });
   }, [notes.notes_id]);
 
   const handleDownload = async () => {
