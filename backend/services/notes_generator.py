@@ -52,7 +52,7 @@ class NotesGenerator:
         - Sections should follow a logical progression
         - Balance detail with clarity (aim for 150-300 words per section)
 
-        ## 2. VISUALIZATION STRATEGY
+        ## 2. VISUALIZATION STRATEGY (CRITICAL):
         Include 2-4 diagrams total, choosing the most appropriate type for each concept:
 
         ### Diagram Types (select based on content):
@@ -115,7 +115,103 @@ class NotesGenerator:
         - **Mnemonics**: Memory aids for complex information
         - **Connections**: Links to prior knowledge or related topics
         - **Summary points**: Key takeaways at section ends
+        
+        ### REQUIRED DIAGRAM VARIETY - USE DIFFERENT TYPES:
 
+        1. **Flowchart (graph TD/LR)** - For processes or sequences
+```mermaid
+        graph LR
+            A[Start] --> B{{Decision}}
+            B -->|Yes| C[Action 1]
+            B -->|No| D[Action 2]
+            C --> E[End]
+            D --> E
+```
+
+        2. **Pie Chart** - For proportions or distributions
+```mermaid
+        pie title Distribution
+            "Category A" : 45
+            "Category B" : 30
+            "Category C" : 25
+```
+
+        3. **State Diagram** - For states and transitions
+```mermaid
+        stateDiagram-v2
+            [*] --> State1
+            State1 --> State2 : Event1
+            State2 --> State3 : Event2
+            State3 --> [*]
+```
+
+        4. **Sequence Diagram** - For interactions over time
+```mermaid
+        sequenceDiagram
+            Actor1->>Actor2: Message1
+            Actor2-->>Actor1: Response1
+            Actor1->>Actor3: Message2
+            Actor3-->>Actor1: Response2
+```
+
+        5. **Class/ER Diagram** - For relationships and hierarchies
+```mermaid
+        classDiagram
+            ClassA --|> ClassB : inherits
+            ClassA : +attribute1
+            ClassA : +method1()
+            ClassB : +attribute2
+```
+
+        6. **Gantt Chart** - For timelines
+```mermaid
+        gantt
+            title Timeline
+            dateFormat YYYY-MM-DD
+            section Phase1
+            Task1 :a1, 2024-01-01, 30d
+            Task2 :after a1, 20d
+```
+
+        7. **Mind Map** - For concept relationships
+```mermaid
+        mindmap
+            root((Main Topic))
+                Branch1
+                    Subbranch1
+                    Subbranch2
+                Branch2
+                    Subbranch3
+```
+
+        8. **Git Graph** - For branching processes
+```mermaid
+        gitGraph
+            commit
+            branch feature
+            checkout feature
+            commit
+            checkout main
+            merge feature
+            commit
+```
+
+
+        ## DIAGRAM SELECTION RULES:
+        
+        - **NEVER** use the same diagram type more than once
+        - Choose diagram types that BEST represent the content:
+          * Use **pie charts** for percentages, distributions, or parts of a whole
+          * Use **state diagrams** for systems with different states or modes
+          * Use **sequence diagrams** for step-by-step interactions
+          * Use **flowcharts** for decision processes or workflows
+          * Use **mind maps** for concept hierarchies
+          * Use **Gantt charts** for timelines or project phases
+          * Use **class diagrams** for relationships between entities
+        
+        - Make diagrams SPECIFIC to the content, not generic
+        - Include real data/labels from the transcript, not placeholder text
+        
         ## 5. OUTPUT FORMAT
         Return as JSON with this structure:
         {{
