@@ -1,202 +1,211 @@
-'use client';
+'use client'
 
-import { useEffect, useRef, useState } from 'react';
-import { Download, Edit2, Save, X } from 'lucide-react';
-import { VideoNotes, NoteSection, notesApi } from '@/lib/api';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-
+import { useEffect, useRef, useState } from 'react'
+import { Download, Edit2, Save, X } from 'lucide-react'
+import { VideoNotes, NoteSection, notesApi } from '@/lib/api'
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Underline from '@tiptap/extension-underline'
+import TextAlign from '@tiptap/extension-text-align'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 /* ======================================================
-   Mermaid Diagram Component (CORRECT v10+ way)
+   Mermaid Diagram
 ====================================================== */
-
-function MermaidDiagram({
-  code,
-  theme,
-}: {
-  code: string;
-  theme: 'light' | 'dark';
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
+function MermaidDiagram({ code, theme }: { code: string; theme: 'light' | 'dark' }) {
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
 
     const render = async () => {
-      const mermaid = (await import('mermaid')).default;
+      const mermaid = (await import('mermaid')).default
 
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'loose',
         theme: theme === 'dark' ? 'dark' : 'default',
-      });
+      })
 
-      if (!containerRef.current || cancelled) return;
+      if (!ref.current || cancelled) return
 
-      // Clear previous render
-      containerRef.current.innerHTML = '';
+      ref.current.innerHTML = ''
+      const pre = document.createElement('pre')
+      pre.className = 'mermaid'
+      pre.textContent = code
+      ref.current.appendChild(pre)
 
-      // Mermaid expects <pre class="mermaid">...</pre>
-      const pre = document.createElement('pre');
-      pre.className = 'mermaid';
-      pre.textContent = code;
+      await mermaid.run({ nodes: [pre] })
+    }
 
-      containerRef.current.appendChild(pre);
-
-      // Let Mermaid scan & render
-      await mermaid.run({
-        nodes: [pre],
-      });
-    };
-
-    render();
-
+    render()
     return () => {
-      cancelled = true;
-    };
-  }, [code, theme]);
+      cancelled = true
+    }
+  }, [code, theme])
+
+  return <div ref={ref} className="my-6 flex justify-center overflow-x-auto" />
+}
+
+/* ======================================================
+   Notion-Style Toolbar
+====================================================== */
+function MenuBar({ editor }: { editor: any }) {
+  const state = useEditorState({
+    editor,
+    selector: ctx => ({
+      bold: ctx.editor.isActive('bold'),
+      italic: ctx.editor.isActive('italic'),
+      bullet: ctx.editor.isActive('bulletList'),
+      ordered: ctx.editor.isActive('orderedList'),
+    }),
+  })
+
+  const btn =
+    'px-2 py-1 text-sm rounded text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition'
 
   return (
-    <div
-      ref={containerRef}
-      className="flex justify-center overflow-x-auto"
-    />
-  );
+    <div className="flex gap-1 mb-2 opacity-80 hover:opacity-100">
+      <button onClick={() => editor.chain().focus().toggleBold().run()} className={`${btn} ${state.bold && 'bg-gray-300 dark:bg-gray-700'}`}>
+        B
+      </button>
+      <button onClick={() => editor.chain().focus().toggleItalic().run()} className={`${btn} ${state.italic && 'bg-gray-300 dark:bg-gray-700'}`}>
+        I
+      </button>
+      <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={`${btn} ${state.bullet && 'bg-gray-300 dark:bg-gray-700'}`}>
+        •
+      </button>
+      <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={`${btn} ${state.ordered && 'bg-gray-300 dark:bg-gray-700'}`}>
+        1.
+      </button>
+    </div>
+  )
+}
+
+/* ======================================================
+   TipTap Section
+====================================================== */
+function TipTapSection({
+  content,
+  isEditMode,
+  onChange,
+}: {
+  content: string
+  isEditMode: boolean
+  onChange: (html: string) => void
+}) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    ],
+    content,
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: {
+      attributes: {
+        class:
+          'prose prose-lg dark:prose-invert max-w-none ' +
+          'prose-headings:font-semibold prose-p:leading-relaxed ' +
+          'prose-p:my-2 prose-li:my-1',
+
+      },
+    },
+    immediatelyRender: false,
+  })
+
+  if (typeof window === 'undefined' || !editor) return null
+
+  if (!isEditMode) {
+    return (
+      <div
+        className="prose prose-lg dark:prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    )
+  }
+
+  return (
+    <div className="group-hover:bg-gray-50 dark:group-hover:bg-gray-800 rounded px-2 transition">
+      <MenuBar editor={editor} />
+      <EditorContent editor={editor} className="px-1 py-2 min-h-[120px]" />
+    </div>
+  )
 }
 
 /* ======================================================
    Main Component
 ====================================================== */
+export default function VideoNotes({ notes }: { notes: VideoNotes }) {
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [sections, setSections] = useState<NoteSection[]>(Array.isArray(notes.sections) ? notes.sections : [])
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [saving, setSaving] = useState(false)
 
-interface VideoNotesProps {
-  notes: VideoNotes;
-}
-
-export default function VideoNotes({ notes }: VideoNotesProps) {
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editableSections, setEditableSections] = useState<NoteSection[]>(notes.sections);
-  const [isSaving, setIsSaving] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  /* ======================================================
-     Save
-  ====================================================== */
-  const handleSave = async () => {
-    try {
-      setIsSaving(true);
-      await notesApi.updateNotes(notes.notes_id, {
-        title: notes.title,
-        sections: editableSections,
-      });
-      setIsEditMode(false);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const sectionsWithReview = [
-  {
-    heading: "",
-    content: notes.review_questions
-      .map((q, idx) => `**Q${idx + 1}:** ${q}`)
-      .join('\n\r'), // single line break for tighter spacing
-    visualizations: [],
-    key_concepts: [],
-  },
-  ...editableSections,
-];
+  const save = async () => {
+    setSaving(true)
+    await notesApi.updateNotes(notes.notes_id, { title: notes.title, sections })
+    setIsEditMode(false)
+    setSaving(false)
+  }
 
   return (
-    <div
-      className={`w-full ${
-        theme === 'dark'
-          ? 'bg-gray-900 text-white'
-          : 'bg-white text-black'
-      }`}
-    >
+    <div className={theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'}>
       {/* Controls */}
-      <div className="flex justify-end gap-3 mb-6 p-4">
-        <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="px-3 py-1 rounded border"
-        >
-          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+      <div className="flex justify-end gap-3 p-4">
+        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="text-sm opacity-70 hover:opacity-100">
+          {theme === 'dark' ? 'Light' : 'Dark'}
         </button>
 
         {!isEditMode ? (
-          <>
-            <button
-              onClick={() => setIsEditMode(true)}
-              className="flex gap-2 items-center"
-            >
-              <Edit2 size={16} /> Edit
-            </button>
-            <button className="flex gap-2 items-center">
-              <Download size={16} /> Download
-            </button>
-          </>
+          <button onClick={() => setIsEditMode(true)} className="flex gap-1 items-center text-sm">
+            <Edit2 size={14} /> Edit
+          </button>
         ) : (
           <>
-            <button
-              onClick={() => setIsEditMode(false)}
-              className="flex gap-2 items-center"
-            >
-              <X size={16} /> Cancel
+            <button onClick={() => setIsEditMode(false)} className="flex gap-1 items-center text-sm">
+              <X size={14} /> Cancel
             </button>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex gap-2 items-center"
-            >
-              <Save size={16} /> Save
+            <button onClick={save} disabled={saving} className="flex gap-1 items-center text-sm">
+              <Save size={14} /> Save
             </button>
           </>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          {notes.title}
-        </h1>
+      <div className="px-6 py-10 max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-10">{notes.title}</h1>
 
-        {sectionsWithReview.map((section, sectionIdx) => (
-          <div key={sectionIdx} className="mb-12">
-            <h2 className="text-xl font-semibold mb-3">
-              {section.heading}
-            </h2>
+        {notes.review_questions?.length > 0 && (
+          <div className="mb-3 italic opacity-80 font-semibold">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {notes.review_questions.map((q, i) => `**Q${i + 1}:** ${q}`).join('\n\r')}
+            </ReactMarkdown>
+          </div>
+        )}
 
-            {sectionIdx === 0 && !section.heading ? (
-              <div className="mx-auto border border-gray-400 dark:border-gray-600 rounded-lg p-4 max-w-xl text-center bg-gray-50 dark:bg-gray-800 italic mt-2">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {section.content}
-                </ReactMarkdown>
-              </div>
-            ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {section.content}
-              </ReactMarkdown>
-            )}
+        {sections.map((section, i) => (
+          <div key={i} className="mb-12 group">
+            {section.heading && <h2 className="text-2xl font-semibold mb-4">{section.heading}</h2>}
 
-            {section.visualizations?.map((viz, vizIdx) =>
-              viz.type === 'mermaid' ? (
-                <div key={vizIdx} className="my-6">
-                  <MermaidDiagram
-                    code={viz.code}
-                    theme={theme}
-                  />
-                  {viz.title && (
-                    <p className="text-sm text-center opacity-70 italic mt-2">
-                      {viz.title}
-                    </p>
-                  )}
-                </div>
-              ) : null
+            <TipTapSection
+              content={section.content}
+              isEditMode={isEditMode}
+              onChange={html => {
+                const next = [...sections]
+                next[i].content = html
+                setSections(next)
+              }}
+            />
+
+            {section.visualizations?.map(
+              (viz, j) => viz.type === 'mermaid' && <MermaidDiagram key={j} code={viz.code} theme={theme} />,
             )}
           </div>
         ))}
       </div>
     </div>
-  );
+  )
 }
