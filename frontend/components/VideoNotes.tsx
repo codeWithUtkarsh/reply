@@ -217,10 +217,19 @@ export default function VideoNotes({ notes }: { notes: VideoNotes }) {
         <h1 className="text-4xl font-bold mb-10">{notes.title}</h1>
 
         {notes.review_questions?.length > 0 && (
-          <div className="mb-3 italic opacity-80 font-semibold">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {notes.review_questions.map((q, i) => `**Q${i + 1}:** ${q}`).join('\n\r')}
-            </ReactMarkdown>
+          <div className="mb-8 flex justify-center">
+            <div className={`max-w-2xl w-full p-6 rounded-lg border-2 ${
+              theme === 'dark'
+                ? 'border-blue-500 bg-blue-950/30'
+                : 'border-blue-400 bg-blue-50'
+            }`}>
+              <h3 className="text-lg font-bold mb-4 text-center">Review Questions</h3>
+              <div className="prose dark:prose-invert max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {notes.review_questions.map((q, i) => `**Q${i + 1}:** ${q}`).join('\n\n')}
+                </ReactMarkdown>
+              </div>
+            </div>
           </div>
         )}
 
