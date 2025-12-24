@@ -9,6 +9,7 @@ import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { marked } from 'marked'
 
 /* ======================================================
    Mermaid Diagram
@@ -84,6 +85,15 @@ function MenuBar({ editor }: { editor: any }) {
 }
 
 /* ======================================================
+   Helper: Check if content is markdown vs HTML
+====================================================== */
+function isMarkdown(text: string): boolean {
+  // Simple heuristic: if it doesn't start with HTML tags, treat as markdown
+  const trimmed = text.trim()
+  return !trimmed.startsWith('<') || trimmed.includes('**') || trimmed.includes('##')
+}
+
+/* ======================================================
    TipTap Section
 ====================================================== */
 function TipTapSection({
@@ -95,13 +105,24 @@ function TipTapSection({
   isEditMode: boolean
   onChange: (html: string) => void
 }) {
+  const [htmlContent, setHtmlContent] = useState('')
+
+  // Convert markdown to HTML on mount if needed
+  useEffect(() => {
+    if (isMarkdown(content)) {
+      marked.parse(content).then(html => setHtmlContent(html as string))
+    } else {
+      setHtmlContent(content)
+    }
+  }, [content])
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
-    content,
+    content: htmlContent,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
@@ -115,9 +136,25 @@ function TipTapSection({
     immediatelyRender: false,
   })
 
+  // Update editor content when htmlContent changes
+  useEffect(() => {
+    if (editor && htmlContent && editor.getHTML() !== htmlContent) {
+      editor.commands.setContent(htmlContent)
+    }
+  }, [editor, htmlContent])
+
   if (typeof window === 'undefined' || !editor) return null
 
   if (!isEditMode) {
+    // If content is markdown, render with ReactMarkdown
+    if (isMarkdown(content)) {
+      return (
+        <div className="prose prose-lg dark:prose-invert max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        </div>
+      )
+    }
+    // Otherwise render HTML directly
     return (
       <div
         className="prose prose-lg dark:prose-invert max-w-none"
