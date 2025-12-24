@@ -220,24 +220,37 @@ export const reportsApi = {
   },
 };
 
+export interface NoteVisualization {
+  type: 'mermaid' | 'table' | 'list';
+  title: string;
+  code: string;
+  purpose: string;
+}
+
+export interface NoteSection {
+  heading: string;
+  content: string;
+  key_concepts?: string[];
+  visualizations: NoteVisualization[];
+  images?: string[]; // Base64 encoded images
+  // Legacy support
+  diagrams?: NoteDiagram[];
+}
+
+// Legacy diagram interface for backwards compatibility
 export interface NoteDiagram {
   type: string;
   code: string;
   caption: string;
 }
 
-export interface NoteSection {
-  heading: string;
-  content: string;
-  diagrams: NoteDiagram[];
-  images?: string[]; // Base64 encoded images
-}
-
 export interface VideoNotes {
   notes_id: string;
   video_id: string;
   title: string;
+  summary?: string;
   sections: NoteSection[];
+  review_questions?: string[];
   created_at?: string;
 }
 

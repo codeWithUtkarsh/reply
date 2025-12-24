@@ -173,20 +173,22 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
     console.log('🎯 VideoNotes useEffect triggered');
     console.log('📋 Notes sections:', notes.sections.length);
 
-    // Render diagrams directly with custom renderer (skip Mermaid)
+    // Render diagrams/visualizations directly with custom renderer (skip Mermaid)
     const renderDiagrams = () => {
       console.log('📊 Starting custom diagram rendering...');
       let diagramIndex = 0;
       let totalDiagrams = 0;
 
-      // Count total diagrams
+      // Count total diagrams (support both new visualizations and legacy diagrams)
       notes.sections.forEach(section => {
-        const count = (section.diagrams || []).length;
-        console.log(`Section "${section.heading}": ${count} diagrams`);
+        const vizCount = (section.visualizations || []).length;
+        const diagCount = (section.diagrams || []).length;
+        const count = vizCount + diagCount;
+        console.log(`Section "${section.heading}": ${count} visualizations (${vizCount} new + ${diagCount} legacy)`);
         totalDiagrams += count;
       });
 
-      console.log(`✨ Found ${totalDiagrams} diagrams total to render with custom renderer`);
+      console.log(`✨ Found ${totalDiagrams} total visualizations to render with custom renderer`);
 
       if (totalDiagrams === 0) {
         console.log('⚠️ No diagrams to render');
@@ -196,12 +198,47 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
       // Query DOM directly instead of using refs
       for (const section of notes.sections) {
-        for (const diagram of section.diagrams || []) {
+        // Handle new visualizations format
+        const visualizations = section.visualizations || [];
+        for (const viz of visualizations) {
           const id = `diagram-${diagramIndex}`;
-          // Get element directly from DOM using getElementById
           const element = document.getElementById(id);
 
-          console.log(`\n--- Diagram ${diagramIndex} ---`);
+          console.log(`\n--- Visualization ${diagramIndex} ---`);
+          console.log('ID:', id);
+          console.log('Element found in DOM:', !!element);
+          console.log('Type:', viz.type);
+          console.log('Code:', viz.code);
+          console.log('Title:', viz.title);
+
+          if (element && viz.code && viz.type === 'mermaid') {
+            try {
+              const html = renderCustomDiagram(viz.code, viz.title);
+              console.log('Generated HTML length:', html.length);
+              element.innerHTML = html;
+              console.log(`✅ Visualization ${diagramIndex} rendered successfully!`);
+            } catch (error) {
+              console.error(`❌ Error rendering visualization ${diagramIndex}:`, error);
+              element.innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                  <p style="font-weight: 600; margin-bottom: 8px;">📊 ${viz.title || 'Visual Concept'}</p>
+                  <p style="font-size: 14px; opacity: 0.9;">${viz.purpose || 'Diagram visualization'}</p>
+                </div>
+              `;
+            }
+          } else if (!element) {
+            console.warn(`⚠️ Element not found for visualization ${diagramIndex}`);
+          }
+          diagramIndex++;
+        }
+
+        // Handle legacy diagrams format for backwards compatibility
+        const diagrams = section.diagrams || [];
+        for (const diagram of diagrams) {
+          const id = `diagram-${diagramIndex}`;
+          const element = document.getElementById(id);
+
+          console.log(`\n--- Legacy Diagram ${diagramIndex} ---`);
           console.log('ID:', id);
           console.log('Element found in DOM:', !!element);
           console.log('Diagram code:', diagram.code);
@@ -209,14 +246,12 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
           if (element && diagram.code) {
             try {
-              // Use custom renderer directly - ALWAYS works
               const html = renderCustomDiagram(diagram.code, diagram.caption);
               console.log('Generated HTML length:', html.length);
               element.innerHTML = html;
-              console.log(`✅ Diagram ${diagramIndex} rendered successfully!`);
+              console.log(`✅ Legacy diagram ${diagramIndex} rendered successfully!`);
             } catch (error) {
-              console.error(`❌ Error rendering diagram ${diagramIndex}:`, error);
-              // Last resort fallback
+              console.error(`❌ Error rendering legacy diagram ${diagramIndex}:`, error);
               element.innerHTML = `
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                   <p style="font-weight: 600; margin-bottom: 8px;">📊 ${diagram.caption || 'Visual Concept'}</p>
@@ -224,15 +259,8 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
                 </div>
               `;
             }
-          } else {
-            console.warn(`⚠️ Cannot render diagram ${diagramIndex}:`);
-            console.warn('  - Element found in DOM?', !!element);
-            console.warn('  - Code exists?', !!diagram.code);
-            if (!element) {
-              console.warn('  - Trying to find element with querySelectorAll...');
-              const allDivs = document.querySelectorAll('[id^="diagram-"]');
-              console.warn(`  - Found ${allDivs.length} diagram elements in DOM`);
-            }
+          } else if (!element) {
+            console.warn(`⚠️ Element not found for legacy diagram ${diagramIndex}`);
           }
           diagramIndex++;
         }
@@ -500,7 +528,40 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
                   </div>
                 )}
 
-                {/* Diagrams */}
+                {/* Visualizations (new format) */}
+                {section.visualizations && section.visualizations.length > 0 && (
+                  <div className="my-6 space-y-6">
+                    {section.visualizations.map((viz, vizIndex) => {
+                      const currentDiagramId = `diagram-${globalDiagramIndex++}`;
+                      return (
+                        <div key={vizIndex} className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 shadow-sm">
+                          {/* Visualization */}
+                          <div
+                            id={currentDiagramId}
+                            ref={(el) => {
+                              diagramRefs.current[currentDiagramId] = el;
+                            }}
+                            className="flex justify-center items-center overflow-x-auto py-3"
+                          />
+
+                          {/* Title & Purpose */}
+                          {viz.title && (
+                            <p className="text-sm text-center text-gray-700 mt-3 italic font-medium">
+                              {viz.title}
+                            </p>
+                          )}
+                          {viz.purpose && (
+                            <p className="text-xs text-center text-gray-500 mt-1">
+                              {viz.purpose}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Legacy Diagrams (backwards compatibility) */}
                 {section.diagrams && section.diagrams.length > 0 && (
                   <div className="my-6 space-y-6">
                     {section.diagrams.map((diagram, diagIndex) => {
@@ -518,9 +579,7 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
 
                           {/* Caption */}
                           {diagram.caption && (
-                            <p
-                              className="text-sm text-center text-gray-700 mt-3 italic font-medium"
-                            >
+                            <p className="text-sm text-center text-gray-700 mt-3 italic font-medium">
                               {diagram.caption}
                             </p>
                           )}
