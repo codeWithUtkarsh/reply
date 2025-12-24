@@ -226,7 +226,7 @@ export default function VideoNotes({ notes }: { notes: VideoNotes }) {
               <h3 className="text-lg font-bold mb-4 text-center">Review Questions</h3>
               <div className="prose dark:prose-invert max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {notes.review_questions.map((q, i) => `**Q${i + 1}:** ${q}`).join('\n\n')}
+                  {notes.review_questions.map((q, i) => `**Q${i + 1}:** ${q}`).join('\n\r')}
                 </ReactMarkdown>
               </div>
             </div>
