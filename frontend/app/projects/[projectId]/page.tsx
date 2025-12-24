@@ -440,8 +440,8 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
     setLoading(true);
 
     try {
-      // Process video with project_id
-      const response = await videoApi.processVideo(videoUrl, undefined, projectId);
+      // Process video with project_id (async)
+      const response = await videoApi.processVideoAsync(videoUrl, undefined, projectId);
 
       // Log activity
       await supabase.from('activity_log').insert({
@@ -453,7 +453,7 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
         metadata: { video_url: videoUrl }
       });
 
-      // Redirect to learning page
+      // Redirect to learning page immediately (video will process in background)
       router.push(`/learn/${response.video_id}`);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to process video');
