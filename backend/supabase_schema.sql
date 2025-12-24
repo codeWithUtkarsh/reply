@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS videos (
     url TEXT NOT NULL,
     processing_status VARCHAR(50) DEFAULT 'processing', -- processing, transcribing, generating_flashcards, completed, failed
     error_message TEXT, -- Error details if processing failed
+    batch_current INTEGER DEFAULT 0, -- Current batch being processed (0 if not using batches)
+    batch_total INTEGER DEFAULT 0, -- Total number of batches (0 if not using batches)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
