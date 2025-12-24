@@ -58,6 +58,9 @@ export default function LearnPage() {
   const [showNotes, setShowNotes] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string>('completed');
   const [flashcardsLoading, setFlashcardsLoading] = useState(false);
+  const [missedFlashcards, setMissedFlashcards] = useState<FlashCard[]>([]);
+  const [showMissedFlashcards, setShowMissedFlashcards] = useState(false);
+  const [currentMissedIndex, setCurrentMissedIndex] = useState(0);
 
   useEffect(() => {
     loadVideo();
@@ -101,6 +104,17 @@ export default function LearnPage() {
     }
   }, [currentTime, flashcards, showFlashcard, answeredFlashcards, flashcardLearningEnabled]);
 
+  // Check if video ended and show missed flashcards
+  useEffect(() => {
+    if (videoData && currentTime > 0 && Math.abs(currentTime - videoData.duration) < 2) {
+      // Video ended - check for missed flashcards
+      if (missedFlashcards.length > 0 && !showMissedFlashcards) {
+        setShowMissedFlashcards(true);
+        setCurrentMissedIndex(0);
+      }
+    }
+  }, [currentTime, videoData, missedFlashcards, showMissedFlashcards]);
+
   const loadVideo = async () => {
     try {
       setLoading(true);
@@ -131,7 +145,19 @@ export default function LearnPage() {
     try {
       setFlashcardsLoading(true);
       const questionsData = await questionsApi.getFlashcards(videoId);
-      setFlashcards(questionsData.flashcards || []);
+      const newFlashcards = questionsData.flashcards || [];
+      setFlashcards(newFlashcards);
+
+      // Detect missed flashcards (generated after user passed their timestamp)
+      const missed = newFlashcards.filter(
+        fc => fc.show_at_timestamp < currentTime && !answeredFlashcards.has(fc.question.id)
+      );
+
+      if (missed.length > 0) {
+        setMissedFlashcards(missed);
+        console.log(`Detected ${missed.length} missed flashcards`);
+      }
+
       setFlashcardsLoading(false);
     } catch (err: any) {
       console.error('Failed to load flashcards:', err);
@@ -244,6 +270,45 @@ export default function LearnPage() {
     } finally {
       setGeneratingNotes(false);
     }
+  };
+
+  const handleMissedFlashcardAnswer = async (questionId: string, selectedAnswer: number) => {
+    const currentCard = missedFlashcards[currentMissedIndex];
+
+    // Mark as answered
+    setAnsweredFlashcards((prev) => new Set([...prev, questionId]));
+
+    // Record the attempt
+    if (currentCard) {
+      try {
+        await reportsApi.recordAttempt(
+          userId,
+          videoId,
+          questionId,
+          'flashcard',
+          selectedAnswer,
+          currentCard.question.correct_answer,
+          currentCard.show_at_timestamp
+        );
+      } catch (err) {
+        console.error('Failed to record missed flashcard attempt:', err);
+      }
+    }
+
+    // Move to next missed flashcard or close
+    if (currentMissedIndex < missedFlashcards.length - 1) {
+      setCurrentMissedIndex(currentMissedIndex + 1);
+    } else {
+      setShowMissedFlashcards(false);
+      setMissedFlashcards([]);
+      setCurrentMissedIndex(0);
+    }
+  };
+
+  const handleSkipMissedFlashcards = () => {
+    setShowMissedFlashcards(false);
+    setMissedFlashcards([]);
+    setCurrentMissedIndex(0);
   };
 
   const handleShowNotes = async () => {
@@ -597,6 +662,48 @@ export default function LearnPage() {
           onClose={handleCloseFlashcard}
           onSeekTo={handleSeekTo}
         />
+      )}
+
+      {/* Missed Flashcards Modal */}
+      {showMissedFlashcards && missedFlashcards.length > 0 && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-purple-500/5 pointer-events-none rounded-2xl"></div>
+
+            {/* Header */}
+            <div className="relative z-10 mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                ⏰ Missed Flashcards
+              </h2>
+              <p className="text-gray-400 text-sm">
+                These flashcards were generated while you were watching. Complete them now!
+              </p>
+              <p className="text-emerald-400 text-sm mt-2">
+                {currentMissedIndex + 1} of {missedFlashcards.length}
+              </p>
+            </div>
+
+            {/* Current Missed Flashcard */}
+            <div className="relative z-10">
+              <FlashCardModal
+                flashcard={missedFlashcards[currentMissedIndex]}
+                onAnswer={handleMissedFlashcardAnswer}
+                onClose={handleSkipMissedFlashcards}
+                onSeekTo={handleSeekTo}
+              />
+            </div>
+
+            {/* Skip Button */}
+            <div className="relative z-10 mt-6 flex justify-center">
+              <button
+                onClick={handleSkipMissedFlashcards}
+                className="px-6 py-2 text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Skip Remaining ({missedFlashcards.length - currentMissedIndex - 1})
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </AuthenticatedLayout>
   );
