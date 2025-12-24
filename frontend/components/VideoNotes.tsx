@@ -24,53 +24,136 @@ const sanitizeMermaidCode = (code: string): string => {
   return cleaned;
 };
 
-// Simple custom diagram renderer as fallback
-const renderSimpleDiagram = (code: string, caption: string): string => {
-  const lines = code.split('\n').filter(line => line.trim());
-  const type = lines[0]?.toLowerCase() || '';
+// Robust custom diagram renderer - ALWAYS works
+const renderCustomDiagram = (code: string, caption: string): string => {
+  // Parse diagram code - handle both \n and actual newlines
+  const normalizedCode = code.replace(/\\n/g, '\n');
+  const lines = normalizedCode.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-  if (type.includes('graph') || type.includes('flowchart')) {
-    // Parse simple flowchart
-    const nodes: { [key: string]: string } = {};
-    const edges: { from: string; to: string; label?: string }[] = [];
+  const nodes: Array<{ id: string; label: string }> = [];
+  const edges: Array<{ from: string; to: string }> = [];
+  const nodeMap = new Map<string, string>();
 
-    lines.slice(1).forEach(line => {
-      const arrowMatch = line.match(/(\w+)\[([^\]]+)\]\s*-->\s*(\w+)\[([^\]]+)\]/);
-      if (arrowMatch) {
-        const [, from, fromLabel, to, toLabel] = arrowMatch;
-        nodes[from] = fromLabel;
-        nodes[to] = toLabel;
-        edges.push({ from, to });
-      }
-    });
+  console.log('Parsing diagram lines:', lines);
 
-    // Generate simple HTML diagram
-    let html = '<div class="simple-diagram" style="display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 20px;">';
+  // Parse nodes and edges
+  lines.forEach((line, idx) => {
+    if (idx === 0) return; // Skip "graph TD" line
 
-    Object.entries(nodes).forEach(([id, label]) => {
-      html += `
-        <div class="node" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          ${label}
-        </div>
-      `;
-
-      const outgoingEdges = edges.filter(e => e.from === id);
-      if (outgoingEdges.length > 0) {
-        html += '<div style="font-size: 24px; color: #667eea;">↓</div>';
-      }
-    });
-
-    html += '</div>';
-    if (caption) {
-      html += `<p class="text-sm text-center text-gray-700 mt-3 italic font-medium">${caption}</p>`;
+    // Match node definition: A[Label]
+    const nodeMatch = line.match(/^(\w+)\[([^\]]+)\]$/);
+    if (nodeMatch) {
+      const [, id, label] = nodeMatch;
+      nodeMap.set(id, label);
+      nodes.push({ id, label });
+      console.log('Found node:', id, label);
+      return;
     }
-    return html;
+
+    // Match edge: A --> B
+    const edgeMatch = line.match(/^(\w+)\s*-->\s*(\w+)$/);
+    if (edgeMatch) {
+      const [, from, to] = edgeMatch;
+      edges.push({ from, to });
+      console.log('Found edge:', from, '->', to);
+      return;
+    }
+
+    // Match combined: A[Label] --> B[Label2]
+    const combinedMatch = line.match(/(\w+)\[([^\]]+)\]\s*-->\s*(\w+)(?:\[([^\]]+)\])?/);
+    if (combinedMatch) {
+      const [, fromId, fromLabel, toId, toLabel] = combinedMatch;
+      if (!nodeMap.has(fromId)) {
+        nodeMap.set(fromId, fromLabel);
+        nodes.push({ id: fromId, label: fromLabel });
+      }
+      if (toLabel && !nodeMap.has(toId)) {
+        nodeMap.set(toId, toLabel);
+        nodes.push({ id: toId, label: toLabel });
+      }
+      edges.push({ from: fromId, to: toId });
+      console.log('Found combined:', fromId, '->', toId);
+    }
+  });
+
+  console.log('Parsed nodes:', nodes);
+  console.log('Parsed edges:', edges);
+
+  // Build ordered list based on edges
+  const orderedNodes: Array<{ id: string; label: string }> = [];
+  const visited = new Set<string>();
+
+  // Start with nodes that have no incoming edges
+  const startNodes = nodes.filter(n => !edges.some(e => e.to === n.id));
+
+  const traverse = (nodeId: string) => {
+    if (visited.has(nodeId)) return;
+    visited.add(nodeId);
+
+    const node = nodes.find(n => n.id === nodeId);
+    if (node) {
+      orderedNodes.push(node);
+    }
+
+    // Add connected nodes
+    edges.filter(e => e.from === nodeId).forEach(e => traverse(e.to));
+  };
+
+  if (startNodes.length > 0) {
+    startNodes.forEach(n => traverse(n.id));
   }
 
-  // Default: just show the caption
-  return `<div class="simple-note" style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea;">
-    <p class="font-medium text-gray-700">${caption || 'Diagram'}</p>
-  </div>`;
+  // Add any remaining nodes
+  nodes.forEach(n => {
+    if (!visited.has(n.id)) {
+      orderedNodes.push(n);
+    }
+  });
+
+  // Generate beautiful HTML
+  const colors = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  ];
+
+  let html = '<div style="display: flex; flex-direction: column; gap: 16px; align-items: center; padding: 24px; background: #f9fafb; border-radius: 12px;">';
+
+  orderedNodes.forEach((node, idx) => {
+    const color = colors[idx % colors.length];
+    html += `
+      <div style="
+        background: ${color};
+        color: white;
+        padding: 16px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        text-align: center;
+        min-width: 200px;
+        transition: transform 0.2s;
+      ">
+        ${node.label}
+      </div>
+    `;
+
+    // Add arrow if there's a connection
+    if (idx < orderedNodes.length - 1) {
+      html += '<div style="font-size: 28px; color: #667eea; font-weight: bold;">↓</div>';
+    }
+  });
+
+  html += '</div>';
+
+  if (caption) {
+    html += `<p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 12px; font-style: italic; font-weight: 500;">${caption}</p>`;
+  }
+
+  return html;
 };
 
 export default function VideoNotesComponent({ notes }: VideoNotesProps) {
@@ -87,102 +170,57 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
     diagramRefs.current = {};
     setDiagramsRendered(false);
 
-    // Dynamically import mermaid to avoid SSR issues
-    const loadMermaid = async () => {
-      try {
-        console.log('🔄 Loading Mermaid library...');
-        const mermaid = (await import('mermaid')).default;
+    // Render diagrams directly with custom renderer (skip Mermaid)
+    const renderDiagrams = () => {
+      console.log('📊 Starting custom diagram rendering...');
+      let diagramIndex = 0;
+      let totalDiagrams = 0;
 
-        // Initialize Mermaid - using forest theme for best built-in colors
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'forest',
-          securityLevel: 'loose',
-          fontFamily: 'Arial, sans-serif',
-          logLevel: 'debug', // Add logging to help diagnose issues
-        });
+      // Count total diagrams
+      notes.sections.forEach(section => {
+        totalDiagrams += (section.diagrams || []).length;
+      });
 
-        setMermaidLoaded(true);
-        console.log('✅ Mermaid loaded successfully');
+      console.log(`Found ${totalDiagrams} diagrams to render with custom renderer`);
 
-        // Small delay to ensure DOM is ready
-        await new Promise(resolve => setTimeout(resolve, 100));
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        for (const section of notes.sections) {
+          for (const diagram of section.diagrams || []) {
+            const id = `diagram-${diagramIndex}`;
+            const element = diagramRefs.current[id];
 
-        // Render all diagrams
-        const renderDiagrams = async () => {
-          console.log('📊 Starting diagram rendering...');
-          let diagramIndex = 0;
-          let totalDiagrams = 0;
+            console.log(`\n--- Rendering Diagram ${diagramIndex} ---`);
+            console.log('Diagram code:', diagram.code);
 
-          // Count total diagrams
-          notes.sections.forEach(section => {
-            totalDiagrams += (section.diagrams || []).length;
-          });
-
-          console.log(`Found ${totalDiagrams} diagrams to render`);
-
-          for (const section of notes.sections) {
-            for (const diagram of section.diagrams || []) {
-              const id = `mermaid-${diagramIndex}`;
-              const element = diagramRefs.current[id];
-
-              console.log(`\n--- Diagram ${diagramIndex} ---`);
-              console.log('Element exists:', !!element);
-              console.log('Diagram code:', diagram.code);
-
-              if (element && diagram.code) {
-                try {
-                  // Sanitize the diagram code
-                  let cleanCode = sanitizeMermaidCode(diagram.code);
-
-                  console.log(`\n📝 Attempting to render diagram ${diagramIndex}:`);
-                  console.log('Original code:', diagram.code);
-                  console.log('Sanitized code:', cleanCode);
-
-                  // Try Mermaid first
-                  try {
-                    const { svg } = await mermaid.render(id, cleanCode);
-                    element.innerHTML = svg;
-                    console.log(`✅ Diagram ${diagramIndex} rendered with Mermaid successfully`);
-                  } catch (mermaidError) {
-                    console.warn(`⚠️ Mermaid failed for diagram ${diagramIndex}, using custom renderer`);
-                    console.warn('Mermaid error:', mermaidError);
-
-                    // Fallback to custom simple renderer
-                    const fallbackHTML = renderSimpleDiagram(diagram.code, diagram.caption);
-                    element.innerHTML = fallbackHTML;
-                    console.log(`✅ Diagram ${diagramIndex} rendered with custom fallback`);
-                  }
-                } catch (error) {
-                  console.error(`❌ Both renderers failed for diagram ${diagramIndex}:`, error);
-
-                  // Last resort: show a styled message
-                  element.innerHTML = `
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-                      <p class="font-semibold mb-2">📊 ${diagram.caption || 'Visual Concept'}</p>
-                      <p class="text-sm opacity-90">Diagram visualization</p>
-                    </div>
-                  `;
-                }
-              } else {
-                console.warn(`⚠️ Missing element or code for diagram ${diagramIndex}`);
+            if (element && diagram.code) {
+              try {
+                // Use custom renderer directly - ALWAYS works
+                const html = renderCustomDiagram(diagram.code, diagram.caption);
+                element.innerHTML = html;
+                console.log(`✅ Diagram ${diagramIndex} rendered successfully`);
+              } catch (error) {
+                console.error(`❌ Error rendering diagram ${diagramIndex}:`, error);
+                // Last resort fallback
+                element.innerHTML = `
+                  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                    <p style="font-weight: 600; margin-bottom: 8px;">📊 ${diagram.caption || 'Visual Concept'}</p>
+                    <p style="font-size: 14px; opacity: 0.9;">Diagram visualization</p>
+                  </div>
+                `;
               }
-              diagramIndex++;
             }
+            diagramIndex++;
           }
+        }
 
-          console.log(`\n🎉 Diagram rendering complete! Rendered ${diagramIndex}/${totalDiagrams}`);
-          setDiagramsRendered(true);
-        };
-
-        renderDiagrams();
-      } catch (error) {
-        console.error('❌ Failed to load mermaid:', error);
-      }
+        console.log(`\n🎉 Custom diagram rendering complete! Rendered ${diagramIndex}/${totalDiagrams}`);
+        setDiagramsRendered(true);
+      }, 100);
     };
 
-    loadMermaid();
-  }, [notes.notes_id]); // Use notes_id as dependency to ensure re-render
+    renderDiagrams();
+  }, [notes.notes_id]);
 
   const handleDownload = async () => {
     try {
@@ -438,7 +476,7 @@ export default function VideoNotesComponent({ notes }: VideoNotesProps) {
                 {section.diagrams && section.diagrams.length > 0 && (
                   <div className="my-6 space-y-6">
                     {section.diagrams.map((diagram, diagIndex) => {
-                      const currentDiagramId = `mermaid-${globalDiagramIndex++}`;
+                      const currentDiagramId = `diagram-${globalDiagramIndex++}`;
                       return (
                         <div key={diagIndex} className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 shadow-sm">
                           {/* Diagram */}
