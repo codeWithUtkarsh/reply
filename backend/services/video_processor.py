@@ -35,7 +35,18 @@ class VideoProcessor:
             }
 
     def generate_video_id(self, url: str) -> str:
-        """Generate unique video ID from URL"""
+        """Extract YouTube video ID from URL or generate hash for other URLs"""
+        # Try to extract YouTube video ID
+        try:
+            with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                # For YouTube videos, use the video ID
+                if 'id' in info and info.get('extractor') == 'youtube':
+                    return info['id']
+        except Exception:
+            pass
+
+        # Fallback: generate hash for non-YouTube or failed extractions
         return hashlib.md5(url.encode()).hexdigest()
 
     def get_video_url(self, url: str) -> str:
