@@ -51,6 +51,26 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
         return;
       }
 
+      // Check if a project with the same name already exists
+      const { data: existingProjects, error: checkError } = await supabase
+        .from('projects')
+        .select('id, project_name')
+        .eq('user_id', user!.id)
+        .eq('project_name', projectName)
+        .limit(1);
+
+      if (checkError) {
+        setError('Failed to check existing projects: ' + checkError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (existingProjects && existingProjects.length > 0) {
+        setError(`A project named "${projectName}" already exists. Please choose a different name.`);
+        setLoading(false);
+        return;
+      }
+
       // Create project
       const { data: project, error: projectError } = await supabase
         .from('projects')
