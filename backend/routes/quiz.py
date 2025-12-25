@@ -14,8 +14,26 @@ async def generate_quiz(request: QuizRequest):
     """
     Generate a final quiz for a video
     Creates 10 questions covering the entire video content
+    Costs 5 notes credits
     """
     try:
+        # Check and deduct credits before generating quiz
+        if request.user_id:
+            credits_required = 5  # Fixed cost: 5 notes credits per quiz
+
+            has_credits, current_credits = await db.check_notes_credits(request.user_id, credits_required)
+
+            if not has_credits:
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "error": "Insufficient notes credits",
+                        "required": credits_required,
+                        "available": current_credits,
+                        "message": f"You need {credits_required} notes credits to generate a quiz but only have {current_credits}."
+                    }
+                )
+
         # Get video and transcript
         video = await db.get_video(request.video_id)
         if not video:
@@ -42,6 +60,18 @@ async def generate_quiz(request: QuizRequest):
         quiz_id = str(uuid.uuid4())
         questions_data = [q.dict() for q in questions]
         await db.store_quiz(quiz_id, request.video_id, questions_data)
+
+        # Deduct credits after successful quiz generation
+        if request.user_id:
+            result = await db.deduct_notes_credits(
+                request.user_id,
+                credits_required,
+                video_id=request.video_id,
+                description=f"Quiz generation for video: {video.get('title')}",
+                metadata={"video_title": video.get('title'), "num_questions": len(questions)}
+            )
+            if not result:
+                print(f"Warning: Failed to deduct credits for user {request.user_id}, but quiz generation completed")
 
         return QuizResponse(
             quiz_id=quiz_id,

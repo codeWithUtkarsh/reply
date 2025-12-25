@@ -7,9 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
-import LearningReportComponent from '@/components/LearningReportV2';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
-import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
+import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, VideoNotes } from '@/lib/api';
 import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
 
 // Dynamically import VideoNotes component to avoid SSR issues with Mermaid
@@ -43,8 +42,6 @@ export default function LearnPage() {
   const [quizData, setQuizData] = useState<{ quiz_id: string; questions: Question[] } | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [seekTimestamp, setSeekTimestamp] = useState<number | null>(null);
-  const [learningReport, setLearningReport] = useState<LearningReport | null>(null);
-  const [generatingReport, setGeneratingReport] = useState(false);
   const [flashcardLearningEnabled, setFlashcardLearningEnabled] = useState(() => {
     // Load preference from localStorage
     if (typeof window !== 'undefined') {
@@ -203,11 +200,25 @@ export default function LearnPage() {
 
   const handleStartQuiz = async () => {
     try {
-      const quiz = await quizApi.generateQuiz(videoId);
+      const quiz = await quizApi.generateQuiz(videoId, userId);
       setQuizData(quiz);
       setShowQuiz(true);
+      setQuizResult(null); // Reset quiz result when starting new quiz
     } catch (err: any) {
-      alert('Failed to generate quiz');
+      // Handle credit errors (402) specially
+      if (err.response?.status === 402 && err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        let errorMsg = 'Insufficient credits to generate quiz';
+        if (typeof detail === 'object' && detail.message) {
+          errorMsg = detail.message;
+        } else if (typeof detail === 'string') {
+          errorMsg = detail;
+        }
+        alert(errorMsg);
+      } else {
+        alert('Failed to generate quiz. Please try again.');
+      }
+      console.error('Quiz generation error:', err);
     }
   };
 
@@ -236,21 +247,19 @@ export default function LearnPage() {
       // Submit quiz to get results
       const result = await quizApi.submitQuiz(quizData.quiz_id, answers);
       setQuizResult(result);
-
-      // Generate learning report
-      setGeneratingReport(true);
-      try {
-        const reportResponse = await reportsApi.generateReport(userId, videoId, quizData.quiz_id);
-        setLearningReport(reportResponse.report);
-      } catch (err) {
-        console.error('Failed to generate report:', err);
-      } finally {
-        setGeneratingReport(false);
-      }
     } catch (err: any) {
       alert('Failed to submit quiz');
       console.error('Quiz submission error:', err);
     }
+  };
+
+  const handleRetakeQuiz = async () => {
+    // Reset quiz state and start a new quiz
+    setQuizData(null);
+    setQuizResult(null);
+    setShowQuiz(false);
+    // Start a new quiz (will deduct credits again)
+    await handleStartQuiz();
   };
 
   const handleSeekTo = (timestamp: number) => {
@@ -446,7 +455,7 @@ export default function LearnPage() {
             </div>
 
             {/* Quiz Section */}
-            {showQuiz && quizData && !learningReport ? (
+            {showQuiz && quizData ? (
               <div className="mt-8">
                 <QuizComponent
                   questions={quizData.questions}
@@ -454,20 +463,30 @@ export default function LearnPage() {
                   onSubmit={handleSubmitQuiz}
                   onSeekTo={handleSeekTo}
                 />
-                {generatingReport && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                      <p className="text-blue-800 dark:text-blue-200">
-                        Generating your learning report...
-                      </p>
+                {/* Show Retake Quiz button after quiz is submitted */}
+                {quizResult && (
+                  <div className="mt-6 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
+                    <div className="w-20 h-20 mx-auto mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-10 h-10 text-emerald-500" />
                     </div>
+                    <h2 className="text-2xl font-light text-white mb-2">
+                      Quiz Completed!
+                    </h2>
+                    <p className="text-gray-400 font-light mb-1">
+                      You scored {quizResult.correct_answers} out of {quizResult.total_questions}
+                    </p>
+                    <p className="text-2xl font-bold text-emerald-400 mb-6">
+                      {quizResult.score_percentage}%
+                    </p>
+                    <button
+                      onClick={handleRetakeQuiz}
+                      className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-8 rounded-xl transition-all inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                    >
+                      <BookOpen className="w-5 h-5" />
+                      Retake Quiz (5 credits)
+                    </button>
                   </div>
                 )}
-              </div>
-            ) : learningReport ? (
-              <div className="mt-8">
-                <LearningReportComponent report={learningReport} />
               </div>
             ) : (
               !showQuiz &&

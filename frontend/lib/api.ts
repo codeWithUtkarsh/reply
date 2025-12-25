@@ -295,9 +295,10 @@ export const questionsApi = {
 };
 
 export const quizApi = {
-  generateQuiz: async (videoId: string): Promise<QuizResponse> => {
+  generateQuiz: async (videoId: string, userId?: string): Promise<QuizResponse> => {
     const response = await api.post('/api/quiz/generate', {
       video_id: videoId,
+      user_id: userId,
     });
     return response.data;
   },
