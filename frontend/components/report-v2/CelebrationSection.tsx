@@ -1,19 +1,21 @@
 'use client';
 
-import { Trophy, TrendingUp, Star, Zap } from 'lucide-react';
+import { Trophy, TrendingUp, Star, Zap, CheckCircle } from 'lucide-react';
 
 interface CelebrationProps {
   masteredTopics: Array<{ concept: string; accuracy: number }>;
   overallScore: number;
   improvement?: number; // Compared to previous
   totalAttempts: number;
+  correctAnswers: number;
 }
 
 export default function CelebrationSection({
   masteredTopics,
   overallScore,
   improvement,
-  totalAttempts
+  totalAttempts,
+  correctAnswers
 }: CelebrationProps) {
   const hasWins = masteredTopics.length > 0 || overallScore >= 70;
 
@@ -68,17 +70,32 @@ export default function CelebrationSection({
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Overall Achievement Card */}
-          <div className="bg-emerald-500/10 rounded-xl p-6 border border-emerald-500/30">
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-light text-lg text-white">Great Score!</h3>
+          {/* Left Column - Score Cards */}
+          <div className="space-y-4">
+            {/* Overall Achievement Card */}
+            <div className="bg-emerald-500/10 rounded-xl p-6 border border-emerald-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-light text-lg text-white">Great Score!</h3>
+              </div>
+              <p className="text-4xl font-light text-emerald-400 mb-1">{overallScore}%</p>
+              <p className="text-gray-400 text-sm font-light">Overall Performance</p>
             </div>
-            <p className="text-4xl font-light text-emerald-400 mb-1">{overallScore}%</p>
-            <p className="text-gray-400 text-sm font-light">Overall Performance</p>
+
+            {/* Answered Card */}
+            <div className="bg-purple-500/10 rounded-xl p-6 border border-purple-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-5 h-5 text-purple-400" />
+                <h3 className="font-light text-lg text-white">Answered</h3>
+              </div>
+              <p className="text-4xl font-light text-purple-400 mb-1">
+                {correctAnswers}/{totalAttempts}
+              </p>
+              <p className="text-gray-400 text-sm font-light">Questions Completed</p>
+            </div>
           </div>
 
-          {/* Mastered Knowledge - Table Format */}
+          {/* Right Column - Mastered Knowledge Table */}
           {masteredTopics.length > 0 && (
             <div className="lg:col-span-2 bg-emerald-500/10 rounded-xl border border-emerald-500/30 overflow-hidden">
               <div className="p-4 bg-emerald-500/20 border-b border-emerald-500/30">

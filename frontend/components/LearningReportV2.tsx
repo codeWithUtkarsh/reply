@@ -2,7 +2,6 @@
 
 import { LearningReport } from '@/lib/api';
 import CelebrationSection from './report-v2/CelebrationSection';
-import QuickOverview from './report-v2/QuickOverview';
 import ActionPlan from './report-v2/ActionPlan';
 import StrengthsAndGrowth from './report-v2/StrengthsAndGrowth';
 import { useState } from 'react';
@@ -89,25 +88,15 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         masteredTopics={masteredTopics}
         overallScore={report.executive_summary?.overall_score || report.performance_stats.accuracy_rate}
         totalAttempts={report.performance_stats.total_attempts}
-      />
-
-      {/* 2. QUICK OVERVIEW - Scannable in 5 seconds */}
-      <QuickOverview
-        score={report.executive_summary?.overall_score || report.performance_stats.accuracy_rate}
-        totalQuestions={report.performance_stats.total_attempts}
         correctAnswers={report.performance_stats.correct_count}
-        timeSpent={report.performance_stats.total_attempts} // Could be enhanced with actual time tracking
-        topicsMastered={report.executive_summary?.topics_mastered || masteredTopics.length}
-        topicsLearning={report.executive_summary?.topics_in_progress || (report.weak_areas?.mastery_analysis?.learning?.length || 0)}
-        topicsFocus={report.executive_summary?.topics_to_review || (report.weak_areas?.mastery_analysis?.needs_review?.length || 0)}
       />
 
-      {/* 3. ACTION PLAN - Max 3 specific priorities */}
+      {/* 2. ACTION PLAN - Max 3 specific priorities */}
       {actionItems.length > 0 && (
         <ActionPlan actions={actionItems} />
       )}
 
-      {/* 4. STRENGTHS & GROWTH - Balanced view */}
+      {/* 3. GROWTH OPPORTUNITIES - Areas to strengthen */}
       {(strengths.length > 0 || growthAreas.length > 0) && (
         <StrengthsAndGrowth
           strengths={strengths}
@@ -115,7 +104,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         />
       )}
 
-      {/* 5. DETAILED ANALYSIS - Collapsible for those who want it */}
+      {/* 4. DETAILED ANALYSIS - Collapsible for those who want it */}
       <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
         <button
           onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
@@ -242,7 +231,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         )}
       </div>
 
-      {/* 6. ENCOURAGEMENT - End on a positive note */}
+      {/* 5. ENCOURAGEMENT - End on a positive note */}
       <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 text-center shadow-xl shadow-emerald-500/10">
         <h3 className="text-2xl font-light text-white mb-2">
           {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :
