@@ -138,10 +138,12 @@ class Database:
         self,
         video_id: str,
         status: str,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
+        batch_current: Optional[int] = None,
+        batch_total: Optional[int] = None
     ) -> Optional[Dict]:
-        """Update video processing status"""
-        logger.info(f"DB: update_video_status | video_id={video_id}, status={status}")
+        """Update video processing status with optional batch tracking"""
+        logger.info(f"DB: update_video_status | video_id={video_id}, status={status}, batch={batch_current}/{batch_total}")
 
         data = {
             "processing_status": status,
@@ -150,6 +152,12 @@ class Database:
 
         if error_message:
             data["error_message"] = error_message
+
+        if batch_current is not None:
+            data["batch_current"] = batch_current
+
+        if batch_total is not None:
+            data["batch_total"] = batch_total
 
         result = await run_in_threadpool(
             lambda: self.client.table("videos")

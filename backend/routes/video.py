@@ -14,12 +14,9 @@ logger = get_logger(__name__)
 
 # Background task for async video processing
 async def process_video_background(video_id: str, video_url: str, title: str):
-    """Background task to transcribe video and generate flashcards"""
+    """Background task to transcribe video and generate flashcards with batch processing for long videos"""
     try:
         logger.info(f"=== Background processing started for video: {video_id} ===")
-
-        # Update status to transcribing
-        await db.update_video_status(video_id, "transcribing")
 
         # Get video duration
         video = await db.get_video(video_id)
@@ -27,28 +24,124 @@ async def process_video_background(video_id: str, video_url: str, title: str):
             raise Exception("Video not found in database")
 
         duration = video["video_length"]
+        BATCH_THRESHOLD = 600  # 10 minutes
+        BATCH_SIZE = 600  # 10 minutes per batch
 
-        # Transcribe video
-        logger.info(f"Starting transcription for video: {video_id}")
-        transcript = await whisper_service.transcribe_video(video_url, duration)
-        logger.info(f"Transcription completed. Segments: {len(transcript.segments)}")
+        # Check if batch processing is needed
+        if duration > BATCH_THRESHOLD:
+            logger.info(f"Video duration ({duration}s) > {BATCH_THRESHOLD}s - Using batch processing")
+            await process_video_in_batches(video_id, video_url, title, duration, BATCH_SIZE)
+        else:
+            logger.info(f"Video duration ({duration}s) <= {BATCH_THRESHOLD}s - Using standard processing")
+            await process_video_standard(video_id, video_url, title, duration)
 
-        # Store transcript
-        await db.update_video_transcript(video_id, transcript.dict())
+        logger.info(f"=== Background processing completed for video: {video_id} ===")
 
-        # Update status to generating flashcards
-        await db.update_video_status(video_id, "generating_flashcards")
+    except Exception as e:
+        logger.error(f"Background processing failed for video {video_id}: {str(e)}", exc_info=True)
+        await db.update_video_status(video_id, "failed", error_message=str(e))
 
-        # Generate flashcards
-        logger.info("Generating flashcards with context...")
-        flashcards = await question_generator.generate_flashcards(
-            transcript.segments,
-            interval=settings.flashcard_interval,
-            video_title=title
+
+async def process_video_standard(video_id: str, video_url: str, title: str, duration: float):
+    """Standard processing for videos <= 10 minutes"""
+    # Update status to transcribing
+    await db.update_video_status(video_id, "transcribing")
+
+    # Transcribe video
+    logger.info(f"Starting transcription for video: {video_id}")
+    transcript = await whisper_service.transcribe_video(video_url, duration)
+    logger.info(f"Transcription completed. Segments: {len(transcript.segments)}")
+
+    # Store transcript
+    await db.update_video_transcript(video_id, transcript.dict())
+
+    # Update status to generating flashcards
+    await db.update_video_status(video_id, "generating_flashcards")
+
+    # Generate flashcards
+    logger.info("Generating flashcards with context...")
+    flashcards = await question_generator.generate_flashcards(
+        transcript.segments,
+        interval=settings.flashcard_interval,
+        video_title=title
+    )
+    logger.info(f"Generated {len(flashcards)} flashcards")
+
+    # Store flashcards
+    questions_data = [
+        {
+            **fc.question.dict(),
+            "show_at_timestamp": fc.show_at_timestamp,
+        }
+        for fc in flashcards
+    ]
+    await db.store_questions(video_id, questions_data)
+
+    # Mark as completed
+    await db.update_video_status(video_id, "completed")
+
+
+async def process_video_in_batches(video_id: str, video_url: str, title: str, duration: float, batch_size: int):
+    """Process long videos in batches (10-minute segments)"""
+    # Create segments
+    segments = []
+    start = 0
+    while start < duration:
+        end = min(start + batch_size, duration)
+        segments.append((start, end))
+        start = end
+
+    total_batches = len(segments)
+    logger.info(f"Processing video in {total_batches} batches of {batch_size}s each")
+
+    # Collect all transcript segments from all batches
+    all_transcript_segments = []
+    all_transcript_text_parts = []
+
+    # Process each batch
+    for batch_num, (batch_start, batch_end) in enumerate(segments, 1):
+        logger.info(f"=== Processing batch {batch_num}/{total_batches} ({batch_start}s-{batch_end}s) ===")
+
+        # Update status to show batch progress
+        await db.update_video_status(
+            video_id,
+            f"transcribing_batch",
+            batch_current=batch_num,
+            batch_total=total_batches
         )
-        logger.info(f"Generated {len(flashcards)} flashcards")
 
-        # Store flashcards
+        # Transcribe this batch only
+        logger.info(f"Transcribing segment {batch_start}s - {batch_end}s")
+        batch_transcript = await whisper_service.transcribe_video(
+            video_url,
+            duration,
+            start_time=batch_start,
+            end_time=batch_end
+        )
+        logger.info(f"Batch {batch_num} transcription completed. Segments: {len(batch_transcript.segments)}")
+
+        # Accumulate transcript segments for final storage
+        all_transcript_segments.extend(batch_transcript.segments)
+        all_transcript_text_parts.append(batch_transcript.full_text)
+
+        # Update status to generating flashcards for this batch
+        await db.update_video_status(
+            video_id,
+            f"generating_flashcards_batch",
+            batch_current=batch_num,
+            batch_total=total_batches
+        )
+
+        # Generate flashcards for this batch
+        logger.info(f"Generating flashcards for batch {batch_num}...")
+        flashcards = await question_generator.generate_flashcards(
+            batch_transcript.segments,
+            interval=settings.flashcard_interval,
+            video_title=f"{title} (Part {batch_num}/{total_batches})"
+        )
+        logger.info(f"Batch {batch_num}: Generated {len(flashcards)} flashcards")
+
+        # Store flashcards immediately (available to frontend!)
         questions_data = [
             {
                 **fc.question.dict(),
@@ -58,14 +151,20 @@ async def process_video_background(video_id: str, video_url: str, title: str):
         ]
         await db.store_questions(video_id, questions_data)
 
-        # Mark as completed
-        await db.update_video_status(video_id, "completed")
+        logger.info(f"Batch {batch_num}/{total_batches} completed and flashcards stored")
 
-        logger.info(f"=== Background processing completed for video: {video_id} ===")
+    # All batches complete - store the complete transcript
+    logger.info(f"Storing complete transcript with {len(all_transcript_segments)} total segments")
+    complete_transcript = {
+        "segments": [seg.dict() for seg in all_transcript_segments],
+        "full_text": " ".join(all_transcript_text_parts),
+        "duration": duration
+    }
+    await db.update_video_transcript(video_id, complete_transcript)
 
-    except Exception as e:
-        logger.error(f"Background processing failed for video {video_id}: {str(e)}", exc_info=True)
-        await db.update_video_status(video_id, "failed", error_message=str(e))
+    # Mark video as completed
+    await db.update_video_status(video_id, "completed", batch_current=0, batch_total=0)
+    logger.info(f"All {total_batches} batches processed successfully")
 
 
 @router.post("/process-async")
@@ -347,6 +446,8 @@ async def get_video_status(video_id: str):
             "error_message": video.get("error_message"),
             "has_transcript": video.get("transcript") is not None,
             "flashcard_count": question_count,
+            "batch_current": video.get("batch_current", 0),
+            "batch_total": video.get("batch_total", 0),
         }
 
     except HTTPException:

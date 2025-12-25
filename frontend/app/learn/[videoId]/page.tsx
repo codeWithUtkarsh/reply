@@ -61,6 +61,8 @@ export default function LearnPage() {
   const [missedFlashcards, setMissedFlashcards] = useState<FlashCard[]>([]);
   const [showMissedFlashcards, setShowMissedFlashcards] = useState(false);
   const [currentMissedIndex, setCurrentMissedIndex] = useState(0);
+  const [batchCurrent, setBatchCurrent] = useState(0);
+  const [batchTotal, setBatchTotal] = useState(0);
 
   useEffect(() => {
     loadVideo();
@@ -73,9 +75,17 @@ export default function LearnPage() {
         try {
           const status = await videoApi.getVideoStatus(videoId);
           setProcessingStatus(status.processing_status);
+          setBatchCurrent(status.batch_current || 0);
+          setBatchTotal(status.batch_total || 0);
 
-          // Load flashcards when completed (without reloading page)
-          if (status.processing_status === 'completed') {
+          // For batch processing, reload flashcards continuously as new ones are generated
+          const isBatchProcessing = status.processing_status?.includes('batch') || (status.batch_total > 0);
+
+          if (isBatchProcessing) {
+            // Reload flashcards during batch processing to show new ones as they arrive
+            await loadFlashcardsOnly();
+          } else if (status.processing_status === 'completed') {
+            // Load flashcards when completed (without reloading page)
             await loadFlashcardsOnly();
           }
         } catch (err) {
@@ -619,9 +629,22 @@ export default function LearnPage() {
                   ) : processingStatus !== 'completed' ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      {processingStatus === 'transcribing' && 'Transcribing video...'}
-                      {processingStatus === 'generating_flashcards' && 'Generating flashcards...'}
-                      {processingStatus === 'processing' && 'Processing video...'}
+                      {batchTotal > 0 ? (
+                        // Batch processing
+                        <>
+                          {processingStatus.includes('transcribing') && `Transcribing batch ${batchCurrent}/${batchTotal}...`}
+                          {processingStatus.includes('generating_flashcards') && `Generating flashcards ${batchCurrent}/${batchTotal}...`}
+                          {!processingStatus.includes('transcribing') && !processingStatus.includes('generating_flashcards') &&
+                            `Processing batch ${batchCurrent}/${batchTotal}...`}
+                        </>
+                      ) : (
+                        // Standard processing
+                        <>
+                          {processingStatus === 'transcribing' && 'Transcribing video...'}
+                          {processingStatus === 'generating_flashcards' && 'Generating flashcards...'}
+                          {processingStatus === 'processing' && 'Processing video...'}
+                        </>
+                      )}
                     </>
                   ) : (
                     <>

@@ -27,6 +27,14 @@ async def generate_notes(request: GenerateNotesRequest):
         if not video:
             raise HTTPException(status_code=404, detail="Video not found")
 
+        # Check processing status
+        processing_status = video.get('processing_status', 'completed')
+        if processing_status != 'completed':
+            raise HTTPException(
+                status_code=400,
+                detail=f"Video is still processing (status: {processing_status}). Please wait for processing to complete."
+            )
+
         # Check if notes already exist
         existing_notes = await db.get_notes_by_video(request.video_id)
         if existing_notes:
@@ -37,7 +45,23 @@ async def generate_notes(request: GenerateNotesRequest):
 
         # Parse transcript
         import json
+
+        # Check if video has been transcribed
+        if not video['transcript']:
+            raise HTTPException(
+                status_code=400,
+                detail="Video transcript not yet available. Please wait for video processing to complete."
+            )
+
         transcript_data = json.loads(video['transcript']) if isinstance(video['transcript'], str) else video['transcript']
+
+        # Handle case where transcript_data might still be None
+        if not transcript_data:
+            raise HTTPException(
+                status_code=400,
+                detail="Video transcript is empty or invalid."
+            )
+
         transcript_text = transcript_data.get('full_text', '')
 
         print(f"Generating notes for video: {video['title']}")
