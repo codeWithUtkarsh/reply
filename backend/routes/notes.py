@@ -11,6 +11,7 @@ notes_generator = NotesGenerator()
 
 class GenerateNotesRequest(BaseModel):
     video_id: str
+    user_id: Optional[str] = None
 
 
 class UpdateNotesRequest(BaseModel):
@@ -67,6 +68,29 @@ async def generate_notes(request: GenerateNotesRequest):
         print(f"Generating notes for video: {video['title']}")
         print(f"Transcript length: {len(transcript_text)}")
 
+        # Check notes credits before generating
+        if request.user_id:
+            import math
+            # 1 credit per 50,000 characters
+            credits_required = math.ceil(len(transcript_text) / 50000)
+            print(f"Credits required for notes generation: {credits_required}")
+
+            has_credits, current_credits = await db.check_notes_credits(request.user_id, credits_required)
+
+            if not has_credits:
+                print(f"Insufficient notes credits for user {request.user_id}: {current_credits} < {credits_required}")
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "error": "Insufficient notes credits",
+                        "required": credits_required,
+                        "available": current_credits,
+                        "message": f"You need {credits_required} notes credits but only have {current_credits}. Each 50,000 characters of transcript requires 1 credit."
+                    }
+                )
+
+            print(f"User {request.user_id} has sufficient credits: {current_credits} >= {credits_required}")
+
         # Generate notes
         notes_data = await notes_generator.generate_notes(
             transcript_text=transcript_text,
@@ -82,6 +106,21 @@ async def generate_notes(request: GenerateNotesRequest):
         stored_notes = await db.store_notes(notes_data)
 
         print(f"Notes stored successfully")
+
+        # Deduct notes credits after successful generation
+        if request.user_id:
+            import math
+            credits_to_deduct = math.ceil(len(transcript_text) / 50000)
+            print(f"Deducting {credits_to_deduct} notes credits for user {request.user_id}")
+            result = await db.deduct_notes_credits(
+                request.user_id,
+                credits_to_deduct,
+                video_id=request.video_id,
+                description=f"Notes generation for video: {video['title']}",
+                metadata={"transcript_length": len(transcript_text), "video_title": video['title']}
+            )
+            if not result:
+                print(f"Warning: Failed to deduct credits for user {request.user_id}, but notes generation completed")
 
         return {
             "message": "Notes generated successfully",

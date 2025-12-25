@@ -609,5 +609,267 @@ class Database:
             return notes
         return None
 
+    # -------------------------
+    # Credit Management
+    # -------------------------
+
+    async def get_user_profile(self, user_id: str) -> Optional[Dict]:
+        """Get user profile including credit information"""
+        result = await run_in_threadpool(
+            lambda: self.client.table("users")
+            .select("*")
+            .eq("id", user_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
+
+    async def check_transcription_credits(self, user_id: str, required_credits: int) -> tuple[bool, int]:
+        """
+        Check if user has enough transcription credits.
+        Returns (has_enough, current_credits)
+        DEVELOPER role users have unlimited credits.
+        """
+        user = await self.get_user_profile(user_id)
+        if not user:
+            return False, 0
+
+        # DEVELOPER role has unlimited credits
+        if user.get('role') == 'developer':
+            return True, float('inf')
+
+        current_credits = user.get('transcription_credits', 0)
+        return current_credits >= required_credits, current_credits
+
+    async def check_notes_credits(self, user_id: str, required_credits: int) -> tuple[bool, int]:
+        """
+        Check if user has enough notes generation credits.
+        Returns (has_enough, current_credits)
+        DEVELOPER role users have unlimited credits.
+        """
+        user = await self.get_user_profile(user_id)
+        if not user:
+            return False, 0
+
+        # DEVELOPER role has unlimited credits
+        if user.get('role') == 'developer':
+            return True, float('inf')
+
+        current_credits = user.get('notes_credits', 0)
+        return current_credits >= required_credits, current_credits
+
+    async def deduct_transcription_credits(
+        self,
+        user_id: str,
+        credits_to_deduct: int,
+        video_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Optional[Dict]:
+        """
+        Deduct transcription credits from user account.
+        Does nothing for DEVELOPER role users.
+        Returns updated user profile or None if insufficient credits.
+        """
+        user = await self.get_user_profile(user_id)
+        if not user:
+            logger.error(f"User {user_id} not found for credit deduction")
+            return None
+
+        # DEVELOPER role has unlimited credits, no deduction needed
+        if user.get('role') == 'developer':
+            logger.info(f"User {user_id} is DEVELOPER, skipping credit deduction")
+            return user
+
+        current_credits = user.get('transcription_credits', 0)
+        if current_credits < credits_to_deduct:
+            logger.warning(f"Insufficient transcription credits for user {user_id}: {current_credits} < {credits_to_deduct}")
+            return None
+
+        new_credits = current_credits - credits_to_deduct
+        data = {
+            "transcription_credits": new_credits,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("users")
+            .update(data)
+            .eq("id", user_id)
+            .execute()
+        )
+
+        if result.data:
+            logger.info(f"Deducted {credits_to_deduct} transcription credits from user {user_id}. New balance: {new_credits}")
+
+            # Log to credit history
+            await self._log_credit_history(
+                user_id=user_id,
+                video_id=video_id,
+                project_id=project_id,
+                credit_type='transcription',
+                amount=credits_to_deduct,
+                operation='deduct',
+                balance_before=current_credits,
+                balance_after=new_credits,
+                description=description or f"Deducted {credits_to_deduct} credits for video transcription",
+                metadata=metadata or {}
+            )
+
+            return result.data[0]
+        return None
+
+    async def deduct_notes_credits(
+        self,
+        user_id: str,
+        credits_to_deduct: int,
+        video_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Optional[Dict]:
+        """
+        Deduct notes generation credits from user account.
+        Does nothing for DEVELOPER role users.
+        Returns updated user profile or None if insufficient credits.
+        """
+        user = await self.get_user_profile(user_id)
+        if not user:
+            logger.error(f"User {user_id} not found for credit deduction")
+            return None
+
+        # DEVELOPER role has unlimited credits, no deduction needed
+        if user.get('role') == 'developer':
+            logger.info(f"User {user_id} is DEVELOPER, skipping credit deduction")
+            return user
+
+        current_credits = user.get('notes_credits', 0)
+        if current_credits < credits_to_deduct:
+            logger.warning(f"Insufficient notes credits for user {user_id}: {current_credits} < {credits_to_deduct}")
+            return None
+
+        new_credits = current_credits - credits_to_deduct
+        data = {
+            "notes_credits": new_credits,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("users")
+            .update(data)
+            .eq("id", user_id)
+            .execute()
+        )
+
+        if result.data:
+            logger.info(f"Deducted {credits_to_deduct} notes credits from user {user_id}. New balance: {new_credits}")
+
+            # Log to credit history
+            await self._log_credit_history(
+                user_id=user_id,
+                video_id=video_id,
+                project_id=project_id,
+                credit_type='notes',
+                amount=credits_to_deduct,
+                operation='deduct',
+                balance_before=current_credits,
+                balance_after=new_credits,
+                description=description or f"Deducted {credits_to_deduct} credits for notes generation",
+                metadata=metadata or {}
+            )
+
+            return result.data[0]
+        return None
+
+    async def add_credits(self, user_id: str, transcription_credits: int = 0, notes_credits: int = 0) -> Optional[Dict]:
+        """
+        Add credits to user account (for admin/promotional purposes).
+        """
+        user = await self.get_user_profile(user_id)
+        if not user:
+            logger.error(f"User {user_id} not found for adding credits")
+            return None
+
+        data = {
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+        if transcription_credits > 0:
+            current_transcription = user.get('transcription_credits', 0)
+            data["transcription_credits"] = current_transcription + transcription_credits
+
+        if notes_credits > 0:
+            current_notes = user.get('notes_credits', 0)
+            data["notes_credits"] = current_notes + notes_credits
+
+        result = await run_in_threadpool(
+            lambda: self.client.table("users")
+            .update(data)
+            .eq("id", user_id)
+            .execute()
+        )
+
+        if result.data:
+            logger.info(f"Added {transcription_credits} transcription and {notes_credits} notes credits to user {user_id}")
+            return result.data[0]
+        return None
+
+    # -------------------------
+    # Credit History
+    # -------------------------
+
+    async def _log_credit_history(
+        self,
+        user_id: str,
+        credit_type: str,
+        amount: int,
+        operation: str,
+        balance_before: int,
+        balance_after: int,
+        video_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Optional[Dict]:
+        """Internal method to log credit transactions"""
+        data = {
+            "user_id": user_id,
+            "video_id": video_id,
+            "project_id": project_id,
+            "credit_type": credit_type,
+            "amount": amount,
+            "operation": operation,
+            "balance_before": balance_before,
+            "balance_after": balance_after,
+            "description": description,
+            "metadata": json.dumps(metadata or {}),
+            "created_at": datetime.utcnow().isoformat()
+        }
+
+        try:
+            result = await run_in_threadpool(
+                lambda: self.client.table("credit_history").insert(data).execute()
+            )
+            return result.data[0] if result.data else None
+        except Exception as e:
+            logger.error(f"Failed to log credit history: {str(e)}")
+            return None
+
+    async def get_credit_history(self, user_id: str, limit: int = 100) -> List[Dict]:
+        """Get credit transaction history for a user"""
+        try:
+            result = await run_in_threadpool(
+                lambda: self.client.from_("credit_history_with_details")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("created_at", desc=True)
+                .limit(limit)
+                .execute()
+            )
+            return result.data or []
+        except Exception as e:
+            logger.error(f"Failed to fetch credit history: {str(e)}")
+            return []
+
 
 db = Database()

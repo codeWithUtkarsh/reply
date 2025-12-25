@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 # Background task for async video processing
-async def process_video_background(video_id: str, video_url: str, title: str):
+async def process_video_background(video_id: str, video_url: str, title: str, user_id: str = None, project_id: str = None):
     """Background task to transcribe video and generate flashcards with batch processing for long videos"""
     try:
         logger.info(f"=== Background processing started for video: {video_id} ===")
@@ -34,6 +34,22 @@ async def process_video_background(video_id: str, video_url: str, title: str):
         else:
             logger.info(f"Video duration ({duration}s) <= {BATCH_THRESHOLD}s - Using standard processing")
             await process_video_standard(video_id, video_url, title, duration)
+
+        # Deduct transcription credits after successful processing
+        if user_id:
+            import math
+            credits_to_deduct = math.ceil(duration / 60)  # 1 credit per minute, rounded up
+            logger.info(f"Deducting {credits_to_deduct} transcription credits for user {user_id}")
+            result = await db.deduct_transcription_credits(
+                user_id,
+                credits_to_deduct,
+                video_id=video_id,
+                project_id=project_id,
+                description=f"Transcription of video: {title}",
+                metadata={"duration_seconds": duration, "video_title": title}
+            )
+            if not result:
+                logger.warning(f"Failed to deduct credits for user {user_id}, but video processing completed")
 
         logger.info(f"=== Background processing completed for video: {video_id} ===")
 
@@ -180,6 +196,7 @@ async def process_video_async(request: VideoProcessRequest, background_tasks: Ba
     logger.info(f"Video URL: {request.video_url}")
     logger.info(f"Title: {request.title}")
     logger.info(f"Project ID: {request.project_id}")
+    logger.info(f"User ID: {request.user_id}")
 
     try:
         # Extract video metadata (fast operation)
@@ -192,6 +209,28 @@ async def process_video_async(request: VideoProcessRequest, background_tasks: Ba
             raise HTTPException(status_code=400, detail="Unable to determine video duration")
 
         logger.info(f"Video ID: {video_id}, Duration: {duration}s")
+
+        # Check transcription credits before processing (only for new videos)
+        if request.user_id:
+            import math
+            credits_required = math.ceil(duration / 60)  # 1 credit per minute, rounded up
+            logger.info(f"Credits required for transcription: {credits_required}")
+
+            has_credits, current_credits = await db.check_transcription_credits(request.user_id, credits_required)
+
+            if not has_credits:
+                logger.warning(f"Insufficient transcription credits for user {request.user_id}: {current_credits} < {credits_required}")
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "error": "Insufficient transcription credits",
+                        "required": credits_required,
+                        "available": current_credits,
+                        "message": f"You need {credits_required} transcription credits but only have {current_credits}. Each minute of video requires 1 credit."
+                    }
+                )
+
+            logger.info(f"User {request.user_id} has sufficient credits: {current_credits} >= {credits_required}")
 
         # Check existing video
         existing_video = await db.get_video(video_id)
@@ -247,7 +286,7 @@ async def process_video_async(request: VideoProcessRequest, background_tasks: Ba
         )
 
         # Add background task for transcription and flashcard generation
-        background_tasks.add_task(process_video_background, video_id, request.video_url, title)
+        background_tasks.add_task(process_video_background, video_id, request.video_url, title, request.user_id, request.project_id)
 
         logger.info(f"=== Video {video_id} queued for background processing ===")
 

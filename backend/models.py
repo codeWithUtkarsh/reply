@@ -34,6 +34,7 @@ class VideoProcessRequest(BaseModel):
     video_url: str
     title: Optional[str] = None
     project_id: Optional[str] = None
+    user_id: Optional[str] = None
 
 
 class VideoProcessResponse(BaseModel):
@@ -80,3 +81,22 @@ class QuizResult(BaseModel):
     score_percentage: float
     details: List[Dict]
     weak_areas: List[VideoSegment]
+
+
+class UserProfile(BaseModel):
+    id: str
+    role: str
+    transcription_credits: int
+    notes_credits: int
+    company: Optional[str] = None
+    country: Optional[str] = None
+    currency: Optional[str] = "USD"
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class CreditInfo(BaseModel):
+    transcription_credits: int
+    notes_credits: int
+    role: str
+    has_unlimited: bool

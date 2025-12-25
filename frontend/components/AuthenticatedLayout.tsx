@@ -55,7 +55,9 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
               </div>
               <div className="text-left hidden md:block">
                 <p className="text-sm font-light text-white">{user.email?.split('@')[0]}</p>
-                <p className="text-xs text-gray-400">{userProfile?.credit_available || 0} credits</p>
+                <p className="text-xs text-gray-400">
+                  {userProfile?.role === 'developer' ? '∞' : (userProfile?.transcription_credits ?? 0) + (userProfile?.notes_credits ?? 0)} credits
+                </p>
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
             </button>
@@ -70,7 +72,12 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                 <div className="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-20 overflow-hidden">
                   <div className="p-3 border-b border-gray-800">
                     <p className="text-sm text-white font-light">{user.email}</p>
-                    <p className="text-xs text-gray-400 mt-1">{userProfile?.credit_available || 0} credits available</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {userProfile?.role === 'developer'
+                        ? 'Unlimited credits'
+                        : `${(userProfile?.transcription_credits ?? 0) + (userProfile?.notes_credits ?? 0)} credits available`
+                      }
+                    </p>
                   </div>
                   <button
                     onClick={handleSignOut}

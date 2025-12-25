@@ -30,7 +30,13 @@ export default function UserMenu() {
           </p>
           {userProfile && (
             <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-              {userProfile.role} • {userProfile.credit_available} credits
+              {userProfile.role === 'developer' ? (
+                <>Developer • ∞ credits</>
+              ) : (
+                <>
+                  {userProfile.role} • T:{userProfile.transcription_credits ?? 0} N:{userProfile.notes_credits ?? 0}
+                </>
+              )}
             </p>
           )}
         </div>
@@ -53,9 +59,20 @@ export default function UserMenu() {
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Role: <span className="capitalize">{userProfile.role}</span>
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Credits: {userProfile.credit_available}
-                  </p>
+                  {userProfile.role === 'developer' ? (
+                    <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                      Credits: Unlimited ∞
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Transcription: <span className={userProfile.transcription_credits === 0 ? 'text-red-500 font-medium' : ''}>{userProfile.transcription_credits ?? 0} credits</span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Notes: <span className={userProfile.notes_credits === 0 ? 'text-red-500 font-medium' : ''}>{userProfile.notes_credits ?? 0} credits</span>
+                      </p>
+                    </>
+                  )}
                   {userProfile.company && (
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Company: {userProfile.company}

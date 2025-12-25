@@ -18,10 +18,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Types for our database tables
 export interface User {
   id: string;
-  role: 'admin' | 'user' | 'supervisor';
+  role: 'admin' | 'user' | 'supervisor' | 'developer';
   scope: Record<string, any>;
   company?: string;
-  credit_available: number;
+  credit_available: number;  // Deprecated - kept for backwards compatibility
+  transcription_credits?: number;
+  notes_credits?: number;
   subscription_id?: string;
   country?: string;
   currency: string;
