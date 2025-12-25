@@ -79,6 +79,10 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
     value,
   }));
 
+  // Debug: Log word cloud data to check if it's populated
+  console.log('Word Cloud Data:', wordCloudData);
+  console.log('Word Frequency:', report.word_frequency);
+
   return (
     <div className="w-full space-y-8">
       {/* 1. CELEBRATION FIRST - Start with wins! */}

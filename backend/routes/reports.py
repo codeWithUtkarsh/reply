@@ -94,7 +94,8 @@ async def generate_report(request: GenerateReportRequest):
                 'correct_answer': attempt['correct_answer'],
                 'is_correct': attempt['is_correct'],
                 'attempt_number': attempt.get('attempt_number', 1),
-                'timestamp': attempt.get('timestamp', 0)
+                'timestamp': attempt.get('timestamp', 0),
+                'quiz_id': attempt.get('quiz_id')  # Include quiz_id for quiz score calculation
             })
 
         # Generate enhanced report with weak area analysis
