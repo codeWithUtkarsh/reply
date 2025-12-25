@@ -3,7 +3,6 @@
 import { LearningReport } from '@/lib/api';
 import CelebrationSection from './report-v2/CelebrationSection';
 import ActionPlan from './report-v2/ActionPlan';
-import StrengthsAndGrowth from './report-v2/StrengthsAndGrowth';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, BarChart3, Tag } from 'lucide-react';
 import ReactWordcloud from 'react-wordcloud';
@@ -89,6 +88,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         overallScore={report.executive_summary?.overall_score || report.performance_stats.accuracy_rate}
         totalAttempts={report.performance_stats.total_attempts}
         correctAnswers={report.performance_stats.correct_count}
+        growthAreas={growthAreas}
       />
 
       {/* 2. ACTION PLAN - Max 3 specific priorities */}
@@ -96,15 +96,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         <ActionPlan actions={actionItems} />
       )}
 
-      {/* 3. GROWTH OPPORTUNITIES - Areas to strengthen */}
-      {(strengths.length > 0 || growthAreas.length > 0) && (
-        <StrengthsAndGrowth
-          strengths={strengths}
-          growthAreas={growthAreas}
-        />
-      )}
-
-      {/* 4. DETAILED ANALYSIS - Collapsible for those who want it */}
+      {/* 3. DETAILED ANALYSIS - Collapsible for those who want it */}
       <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
         <button
           onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
@@ -231,7 +223,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         )}
       </div>
 
-      {/* 5. ENCOURAGEMENT - End on a positive note */}
+      {/* 4. ENCOURAGEMENT - End on a positive note */}
       <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 text-center shadow-xl shadow-emerald-500/10">
         <h3 className="text-2xl font-light text-white mb-2">
           {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :

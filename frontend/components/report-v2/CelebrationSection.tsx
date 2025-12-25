@@ -8,6 +8,7 @@ interface CelebrationProps {
   improvement?: number; // Compared to previous
   totalAttempts: number;
   correctAnswers: number;
+  growthAreas?: Array<{ concept: string; accuracy: number }>;
 }
 
 export default function CelebrationSection({
@@ -15,7 +16,8 @@ export default function CelebrationSection({
   overallScore,
   improvement,
   totalAttempts,
-  correctAnswers
+  correctAnswers,
+  growthAreas = []
 }: CelebrationProps) {
   const hasWins = masteredTopics.length > 0 || overallScore >= 70;
 
@@ -128,6 +130,58 @@ export default function CelebrationSection({
             </div>
           )}
         </div>
+
+        {/* Growth Opportunities Section */}
+        {growthAreas.length > 0 && (
+          <div className="mt-6">
+            <div className="bg-purple-500/10 rounded-xl border border-purple-500/30 overflow-hidden">
+              <div className="p-4 bg-purple-500/20 border-b border-purple-500/30">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-purple-400" />
+                  <h3 className="font-light text-lg text-white">Growth Opportunities</h3>
+                  <span className="ml-auto bg-purple-500/30 border border-purple-500/40 rounded-full px-3 py-1 text-sm font-light text-purple-300">
+                    {growthAreas.length} {growthAreas.length === 1 ? 'area' : 'areas'}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                {growthAreas.map((area, index) => (
+                  <div
+                    key={index}
+                    className="bg-gray-800/50 border border-purple-700/50 rounded-lg p-4"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-2 flex-1">
+                        <TrendingUp className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                        <p className="font-light text-white">{area.concept}</p>
+                      </div>
+                      <span className="text-purple-400 font-light text-lg ml-2">
+                        {area.accuracy}%
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="mt-3">
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-purple-500 to-purple-400 h-2 rounded-full transition-all"
+                          style={{ width: `${area.accuracy}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Action Message */}
+                <div className="mt-4 bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">
+                  <p className="text-sm text-gray-300 font-light">
+                    💡 <strong className="text-white">Next Steps:</strong> Follow the action plan below to strengthen these areas, or retake the quiz to improve your score!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
