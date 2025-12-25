@@ -1,7 +1,7 @@
 'use client';
 
 import { WeakAreas } from '@/lib/api';
-import { AlertTriangle, Lightbulb, TrendingDown } from 'lucide-react';
+import { AlertTriangle, Lightbulb, TrendingDown, Trophy } from 'lucide-react';
 
 interface WeakAreasSectionProps {
   weakAreas: WeakAreas;
