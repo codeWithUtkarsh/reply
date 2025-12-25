@@ -93,6 +93,26 @@ export interface LearningReport {
   created_at?: string;
 }
 
+export interface CreditInfo {
+  transcription_credits: number;
+  notes_credits: number;
+  role: string;
+  has_unlimited: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  role: string;
+  transcription_credits: number;
+  notes_credits: number;
+  company?: string;
+  country?: string;
+  currency: string;
+  created_at?: string;
+  updated_at?: string;
+  has_unlimited: boolean;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -102,20 +122,22 @@ const api = axios.create({
 
 
 export const videoApi = {
-  processVideo: async (videoUrl: string, title?: string, projectId?: string): Promise<VideoProcessResponse> => {
+  processVideo: async (videoUrl: string, title?: string, projectId?: string, userId?: string): Promise<VideoProcessResponse> => {
     const response = await api.post('/api/video/process', {
       video_url: videoUrl,
       title,
       project_id: projectId,
+      user_id: userId,
     });
     return response.data;
   },
 
-  processVideoAsync: async (videoUrl: string, title?: string, projectId?: string) => {
+  processVideoAsync: async (videoUrl: string, title?: string, projectId?: string, userId?: string) => {
     const response = await api.post('/api/video/process-async', {
       video_url: videoUrl,
       title,
       project_id: projectId,
+      user_id: userId,
     });
     return response.data;
   },
@@ -269,9 +291,10 @@ export interface VideoNotes {
 }
 
 export const notesApi = {
-  generateNotes: async (videoId: string): Promise<{ message: string; notes: VideoNotes }> => {
+  generateNotes: async (videoId: string, userId?: string): Promise<{ message: string; notes: VideoNotes }> => {
     const response = await api.post('/api/notes/generate', {
       video_id: videoId,
+      user_id: userId,
     });
     return response.data;
   },
@@ -295,6 +318,18 @@ export const notesApi = {
 export const projectsApi = {
   deleteProject: async (projectId: string) => {
     const response = await api.delete(`/api/projects/${projectId}`);
+    return response.data;
+  },
+};
+
+export const usersApi = {
+  getCredits: async (userId: string): Promise<CreditInfo> => {
+    const response = await api.get(`/api/users/${userId}/credits`);
+    return response.data;
+  },
+
+  getProfile: async (userId: string): Promise<UserProfile> => {
+    const response = await api.get(`/api/users/${userId}/profile`);
     return response.data;
   },
 };
