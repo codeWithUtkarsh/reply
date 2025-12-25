@@ -61,14 +61,14 @@ export default function QuickOverview({
           <p className="text-4xl font-light text-purple-400">{correctAnswers}/{totalQuestions}</p>
         </div>
 
-        {/* Topics Mastered */}
+        {/* Knowledge Mastered */}
         <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle className="w-5 h-5 text-emerald-400" />
             <p className="text-sm font-light text-gray-300">Mastered</p>
           </div>
           <p className="text-4xl font-light text-emerald-400">{topicsMastered}</p>
-          <p className="text-xs text-gray-400 mt-1 font-light">topics</p>
+          <p className="text-xs text-gray-400 mt-1 font-light">knowledge areas</p>
         </div>
 
         {/* Learning */}
@@ -78,7 +78,7 @@ export default function QuickOverview({
             <p className="text-sm font-light text-gray-300">Learning</p>
           </div>
           <p className="text-4xl font-light text-yellow-400">{topicsLearning}</p>
-          <p className="text-xs text-gray-400 mt-1 font-light">topics</p>
+          <p className="text-xs text-gray-400 mt-1 font-light">knowledge areas</p>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export default function QuickOverview({
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-light text-gray-300">Learning Progress</p>
           <p className="text-sm font-light text-white">
-            {topicsMastered + topicsLearning} / {topicsMastered + topicsLearning + topicsFocus} topics
+            {topicsMastered + topicsLearning} / {topicsMastered + topicsLearning + topicsFocus} knowledge areas
           </p>
         </div>
         <div className="w-full bg-gray-800 rounded-full h-3">

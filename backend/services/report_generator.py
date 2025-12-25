@@ -336,8 +336,20 @@ IMPORTANT:
             }
 
     def _calculate_mastery_levels(self, attempts_data: List[Dict], questions_data: List[Dict]) -> Dict:
-        """Calculate which topics are mastered, learning, or need review"""
-        # Group attempts by question
+        """
+        Calculate which knowledge areas are mastered, learning, or need review.
+
+        Note: Currently each question represents a knowledge area/concept from flashcards.
+        In the future, quiz questions may come from multiple videos/sources beyond the current video.
+
+        Knowledge areas are classified based on accuracy:
+        - Mastered: 80%+ accuracy
+        - Learning: 50-79% accuracy
+        - Needs Review: <50% accuracy
+
+        This helps focus user attention on weaker knowledge areas for improvement.
+        """
+        # Group attempts by question to calculate per-knowledge-area accuracy
         question_performance = {}
         for attempt in attempts_data:
             q_id = attempt['question_id']
@@ -354,7 +366,7 @@ IMPORTANT:
         for q_id, perf in question_performance.items():
             accuracy = perf['correct'] / perf['total'] if perf['total'] > 0 else 0
 
-            # Find question to get topic/concept
+            # Find question to get knowledge area/concept
             question = next((q for q in questions_data if (q.get('id') or q.get('question_id')) == q_id), None)
             if question:
                 # Extract concept from question (handle both quiz and flashcard formats)
@@ -369,21 +381,21 @@ IMPORTANT:
                         parsed = json.loads(question['question_data'])
                         concept = parsed.get('question', '')[:100]
                     else:
-                        concept = f"Topic from question {q_id}"
+                        concept = f"Knowledge area from question {q_id}"
                 except:
-                    concept = f"Topic from question {q_id}"
+                    concept = f"Knowledge area from question {q_id}"
 
-                if accuracy >= 0.8:  # 80%+ correct
+                if accuracy >= 0.8:  # 80%+ correct - Mastered
                     mastered.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
-                elif accuracy >= 0.5:  # 50-79% correct
+                elif accuracy >= 0.5:  # 50-79% correct - Learning
                     learning.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
-                else:  # < 50% correct
+                else:  # < 50% correct - Needs Review (focus here!)
                     needs_review.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
 
         return {
-            'mastered': mastered[:10],  # Top 10 mastered concepts
-            'learning': learning[:10],   # Top 10 in-progress concepts
-            'needs_review': needs_review[:10]  # Top 10 concepts needing review
+            'mastered': mastered[:10],  # Top 10 mastered knowledge areas
+            'learning': learning[:10],   # Top 10 in-progress knowledge areas
+            'needs_review': needs_review[:10]  # Top 10 knowledge areas needing review (weaker areas to focus on)
         }
 
     async def generate_learning_path(self, weak_concepts: List[Dict], main_topics: List[str], domain: str) -> Dict:

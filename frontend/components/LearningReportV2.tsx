@@ -19,10 +19,10 @@ const COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
 export default function LearningReportV2({ report }: LearningReportV2Props) {
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
 
-  // Transform data for celebration section
+  // Transform data for celebration section - mastered knowledge areas
   const masteredTopics = report.weak_areas?.mastery_analysis?.mastered || [];
 
-  // Transform data for action plan
+  // Transform data for action plan - focus on weaker knowledge areas
   const actionItems = (report.weak_areas?.recommendations || []).slice(0, 3).map((rec, index) => {
     // Find the first video recommendation for this topic
     const videoRec = report.video_recommendations?.find(v =>

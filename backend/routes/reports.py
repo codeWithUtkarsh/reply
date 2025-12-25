@@ -68,6 +68,8 @@ async def generate_report(request: GenerateReportRequest):
         attempts = await db.get_user_attempts(request.user_id, request.video_id)
 
         # Get both flashcard questions and quiz questions for analysis
+        # Note: Currently quiz questions are from the same video/knowledge areas as flashcards
+        # Future: Quiz questions may come from multiple videos/sources to test broader knowledge
         flashcard_questions = await db.get_questions(request.video_id)
 
         # Also get quiz questions
@@ -77,7 +79,7 @@ async def generate_report(request: GenerateReportRequest):
             questions_json = json.loads(quiz_data['questions'])
             quiz_questions = questions_json
 
-        # Merge both types of questions
+        # Merge both types of questions for comprehensive knowledge assessment
         questions = flashcard_questions + quiz_questions
 
         # Convert attempts to the format needed by report generator
