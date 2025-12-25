@@ -67,6 +67,9 @@ async def generate_report(request: GenerateReportRequest):
         # Get all user attempts for this video
         attempts = await db.get_user_attempts(request.user_id, request.video_id)
 
+        # Get questions data for analysis
+        questions = await db.get_questions(request.video_id)
+
         # Convert attempts to the format needed by report generator
         attempts_data = []
         for attempt in attempts:
@@ -80,13 +83,14 @@ async def generate_report(request: GenerateReportRequest):
                 'timestamp': attempt.get('timestamp', 0)
             })
 
-        # Generate report
+        # Generate enhanced report with weak area analysis
         report = await report_generator.generate_report(
             user_id=request.user_id,
             video_id=request.video_id,
             quiz_id=request.quiz_id,
             transcript_text=transcript_text,
-            attempts_data=attempts_data
+            attempts_data=attempts_data,
+            questions_data=questions  # NEW: Pass questions for weak area analysis
         )
 
         # Store report in database
