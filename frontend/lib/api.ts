@@ -59,15 +59,106 @@ export interface QuizResult {
   weak_areas: VideoSegment[];
 }
 
+// Enhanced Report Interfaces
+export interface WeakConcept {
+  concept: string;
+  severity: 'high' | 'medium' | 'low';
+  description: string;
+}
+
+export interface MasteryLevel {
+  concept: string;
+  accuracy: number;
+}
+
+export interface MasteryAnalysis {
+  mastered: MasteryLevel[];
+  learning: MasteryLevel[];
+  needs_review: MasteryLevel[];
+}
+
+export interface Recommendation {
+  topic: string;
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface WeakAreas {
+  weak_concepts: WeakConcept[];
+  mastery_analysis: MasteryAnalysis;
+  knowledge_gaps: string[];
+  recommendations: Recommendation[];
+}
+
+export interface VideoSearchQuery {
+  query: string;
+  video_type: string;
+  youtube_search_url: string;
+}
+
+export interface VideoRecommendation {
+  concept: string;
+  search_queries: VideoSearchQuery[];
+  why_helpful: string;
+}
+
+export interface LearningPathStep {
+  step: number;
+  topic: string;
+  status: 'completed' | 'in_progress' | 'not_started';
+  description: string;
+  estimated_time: string;
+}
+
+export interface NextStep {
+  priority: number;
+  topic: string;
+  reason: string;
+  prerequisites: string[];
+}
+
+export interface CircuitNode {
+  id: string;
+  label: string;
+  status: 'mastered' | 'learning' | 'locked';
+  connections: string[];
+}
+
+export interface LearningPath {
+  learning_path: LearningPathStep[];
+  next_steps: NextStep[];
+  circuit_map: CircuitNode[];
+}
+
+export interface ExecutiveSummary {
+  overall_score: number;
+  status: 'excellent' | 'good' | 'needs_improvement';
+  time_spent: number;
+  topics_mastered: number;
+  topics_in_progress: number;
+  topics_to_review: number;
+}
+
 export interface LearningReport {
   report_id: string;
   user_id: string;
   video_id: string;
   quiz_id: string;
-  word_frequency: { [key: string]: number };
-  video_type?: string;
-  domain?: string;
-  main_topics?: string[];
+
+  // Priority 1: Executive Summary & Key Takeaways
+  key_takeaways: string[];
+  executive_summary: ExecutiveSummary;
+
+  // Priority 2: Weak Areas & Recommendations
+  weak_areas: WeakAreas;
+
+  // Priority 3: Video Recommendations
+  video_recommendations: VideoRecommendation[];
+
+  // Priority 4: Learning Path
+  learning_path: LearningPath;
+
+  // Priority 5: Performance Stats
   performance_stats: {
     total_attempts: number;
     correct_count: number;
@@ -89,7 +180,13 @@ export interface LearningReport {
       accuracy: number;
     };
   };
-  key_takeaways: string[];
+
+  // Priority 6: Content Analysis
+  word_frequency: { [key: string]: number };
+  video_type?: string;
+  domain?: string;
+  main_topics?: string[];
+
   created_at?: string;
 }
 
