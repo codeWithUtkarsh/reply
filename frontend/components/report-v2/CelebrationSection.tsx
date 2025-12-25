@@ -1,6 +1,7 @@
 'use client';
 
-import { Trophy, TrendingUp, Star, Zap, CheckCircle, Target, Play, ExternalLink, Clock, Lightbulb } from 'lucide-react';
+import { Trophy, TrendingUp, Star, Zap, CheckCircle, Target, Play, ExternalLink, Clock, Lightbulb, Tag } from 'lucide-react';
+import ReactWordcloud from 'react-wordcloud';
 
 interface ActionItem {
   priority: 1 | 2 | 3;
@@ -20,6 +21,7 @@ interface CelebrationProps {
   correctAnswers: number;
   growthAreas?: Array<{ concept: string; accuracy: number }>;
   actionItems?: ActionItem[];
+  wordCloudData?: Array<{ text: string; value: number }>;
 }
 
 export default function CelebrationSection({
@@ -29,7 +31,8 @@ export default function CelebrationSection({
   totalAttempts,
   correctAnswers,
   growthAreas = [],
-  actionItems = []
+  actionItems = [],
+  wordCloudData = []
 }: CelebrationProps) {
   const getPriorityColor = (priority: number) => {
     if (priority === 1) return {
@@ -101,6 +104,33 @@ export default function CelebrationSection({
             </div>
           )}
         </div>
+
+        {/* Key Topics Covered - Word Cloud */}
+        {wordCloudData.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xl font-light text-white mb-4 flex items-center gap-2">
+              <Tag className="w-5 h-5 text-gray-400" />
+              Key Topics Covered
+            </h3>
+            <div className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-4" style={{ height: '300px' }}>
+              <ReactWordcloud
+                words={wordCloudData}
+                options={{
+                  rotations: 2,
+                  rotationAngles: [0, 90],
+                  fontSizes: [14, 60],
+                  fontFamily: 'system-ui, sans-serif',
+                  fontWeight: 'bold',
+                  padding: 3,
+                  scale: 'sqrt',
+                  spiral: 'archimedean',
+                  transitionDuration: 1000,
+                  colors: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'],
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

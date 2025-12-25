@@ -89,36 +89,10 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         correctAnswers={report.performance_stats.correct_count}
         growthAreas={growthAreas}
         actionItems={actionItems}
+        wordCloudData={wordCloudData}
       />
 
-      {/* 2. KEY TOPICS COVERED - Word Cloud */}
-      {wordCloudData.length > 0 && (
-        <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 shadow-xl">
-          <h3 className="text-2xl font-light text-white mb-4 flex items-center gap-2">
-            <Tag className="w-6 h-6 text-gray-400" />
-            Key Topics Covered
-          </h3>
-          <div className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-4" style={{ height: '300px' }}>
-            <ReactWordcloud
-              words={wordCloudData}
-              options={{
-                rotations: 2,
-                rotationAngles: [0, 90],
-                fontSizes: [14, 60],
-                fontFamily: 'system-ui, sans-serif',
-                fontWeight: 'bold',
-                padding: 3,
-                scale: 'sqrt',
-                spiral: 'archimedean',
-                transitionDuration: 1000,
-                colors: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'],
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 3. DETAILED ANALYSIS - Collapsible for those who want it */}
+      {/* 2. DETAILED ANALYSIS - Collapsible for those who want it */}
       <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
         <button
           onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
@@ -219,7 +193,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         )}
       </div>
 
-      {/* 4. ENCOURAGEMENT - End on a positive note */}
+      {/* 3. ENCOURAGEMENT - End on a positive note */}
       <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 text-center shadow-xl shadow-emerald-500/10">
         <h3 className="text-2xl font-light text-white mb-2">
           {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :
