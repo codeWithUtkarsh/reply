@@ -228,13 +228,20 @@ export default function LearnPage() {
   const handleSubmitQuiz = async (
     answers: Array<{ question_id: string; selected_answer: number; timestamp: number }>
   ) => {
-    if (!quizData) return;
+    if (!quizData) {
+      console.error('handleSubmitQuiz: No quiz data available');
+      return;
+    }
+
+    console.log('handleSubmitQuiz: Starting quiz submission with', answers.length, 'answers');
 
     try {
       // Record all quiz attempts
+      console.log('handleSubmitQuiz: Recording attempts...');
       for (const answer of answers) {
         const question = quizData.questions.find(q => q.id === answer.question_id);
         if (question) {
+          console.log('handleSubmitQuiz: Recording attempt for question', answer.question_id);
           await reportsApi.recordAttempt(
             userId,
             videoId,
@@ -246,24 +253,31 @@ export default function LearnPage() {
           );
         }
       }
+      console.log('handleSubmitQuiz: All attempts recorded');
 
       // Submit quiz to get results
+      console.log('handleSubmitQuiz: Submitting quiz...');
       const result = await quizApi.submitQuiz(quizData.quiz_id, answers);
+      console.log('handleSubmitQuiz: Quiz result:', result);
       setQuizResult(result);
 
       // Automatically generate learning report after quiz submission
       setGeneratingReport(true);
       try {
+        console.log('handleSubmitQuiz: Generating report...');
         const reportResponse = await reportsApi.generateReport(userId, videoId, quizData.quiz_id);
+        console.log('handleSubmitQuiz: Report generated:', reportResponse);
         setLearningReport(reportResponse.report);
       } catch (err) {
-        console.error('Failed to generate report:', err);
+        console.error('handleSubmitQuiz: Failed to generate report:', err);
       } finally {
         setGeneratingReport(false);
       }
+      console.log('handleSubmitQuiz: Quiz submission complete');
     } catch (err: any) {
-      alert('Failed to submit quiz');
-      console.error('Quiz submission error:', err);
+      console.error('handleSubmitQuiz: Quiz submission error:', err);
+      console.error('handleSubmitQuiz: Error details:', err.response?.data);
+      alert('Failed to submit quiz: ' + (err.response?.data?.detail || err.message));
     }
   };
 
