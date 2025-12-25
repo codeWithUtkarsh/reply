@@ -113,6 +113,23 @@ export interface UserProfile {
   has_unlimited: boolean;
 }
 
+export interface CreditHistoryEntry {
+  id: number;
+  user_id: string;
+  video_id?: string;
+  video_title?: string;
+  project_id?: string;
+  project_name?: string;
+  credit_type: 'transcription' | 'notes';
+  amount: number;
+  operation: 'deduct' | 'add' | 'refund';
+  balance_before: number;
+  balance_after: number;
+  description?: string;
+  metadata?: any;
+  created_at: string;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -330,6 +347,11 @@ export const usersApi = {
 
   getProfile: async (userId: string): Promise<UserProfile> => {
     const response = await api.get(`/api/users/${userId}/profile`);
+    return response.data;
+  },
+
+  getCreditHistory: async (userId: string, limit: number = 100): Promise<{ history: CreditHistoryEntry[] }> => {
+    const response = await api.get(`/api/users/${userId}/credit-history?limit=${limit}`);
     return response.data;
   },
 };

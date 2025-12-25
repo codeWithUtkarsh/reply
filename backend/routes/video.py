@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 # Background task for async video processing
-async def process_video_background(video_id: str, video_url: str, title: str, user_id: str = None):
+async def process_video_background(video_id: str, video_url: str, title: str, user_id: str = None, project_id: str = None):
     """Background task to transcribe video and generate flashcards with batch processing for long videos"""
     try:
         logger.info(f"=== Background processing started for video: {video_id} ===")
@@ -40,7 +40,14 @@ async def process_video_background(video_id: str, video_url: str, title: str, us
             import math
             credits_to_deduct = math.ceil(duration / 60)  # 1 credit per minute, rounded up
             logger.info(f"Deducting {credits_to_deduct} transcription credits for user {user_id}")
-            result = await db.deduct_transcription_credits(user_id, credits_to_deduct)
+            result = await db.deduct_transcription_credits(
+                user_id,
+                credits_to_deduct,
+                video_id=video_id,
+                project_id=project_id,
+                description=f"Transcription of video: {title}",
+                metadata={"duration_seconds": duration, "video_title": title}
+            )
             if not result:
                 logger.warning(f"Failed to deduct credits for user {user_id}, but video processing completed")
 
@@ -279,7 +286,7 @@ async def process_video_async(request: VideoProcessRequest, background_tasks: Ba
         )
 
         # Add background task for transcription and flashcard generation
-        background_tasks.add_task(process_video_background, video_id, request.video_url, title, request.user_id)
+        background_tasks.add_task(process_video_background, video_id, request.video_url, title, request.user_id, request.project_id)
 
         logger.info(f"=== Video {video_id} queued for background processing ===")
 

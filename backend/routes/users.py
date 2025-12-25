@@ -53,3 +53,14 @@ async def get_user_profile(user_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{user_id}/credit-history")
+async def get_credit_history(user_id: str, limit: int = 100):
+    """Get credit transaction history for a user"""
+    try:
+        history = await db.get_credit_history(user_id, limit)
+        return {"history": history}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

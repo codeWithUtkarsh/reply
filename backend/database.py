@@ -657,7 +657,15 @@ class Database:
         current_credits = user.get('notes_credits', 0)
         return current_credits >= required_credits, current_credits
 
-    async def deduct_transcription_credits(self, user_id: str, credits_to_deduct: int) -> Optional[Dict]:
+    async def deduct_transcription_credits(
+        self,
+        user_id: str,
+        credits_to_deduct: int,
+        video_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Optional[Dict]:
         """
         Deduct transcription credits from user account.
         Does nothing for DEVELOPER role users.
@@ -693,10 +701,33 @@ class Database:
 
         if result.data:
             logger.info(f"Deducted {credits_to_deduct} transcription credits from user {user_id}. New balance: {new_credits}")
+
+            # Log to credit history
+            await self._log_credit_history(
+                user_id=user_id,
+                video_id=video_id,
+                project_id=project_id,
+                credit_type='transcription',
+                amount=credits_to_deduct,
+                operation='deduct',
+                balance_before=current_credits,
+                balance_after=new_credits,
+                description=description or f"Deducted {credits_to_deduct} credits for video transcription",
+                metadata=metadata or {}
+            )
+
             return result.data[0]
         return None
 
-    async def deduct_notes_credits(self, user_id: str, credits_to_deduct: int) -> Optional[Dict]:
+    async def deduct_notes_credits(
+        self,
+        user_id: str,
+        credits_to_deduct: int,
+        video_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Optional[Dict]:
         """
         Deduct notes generation credits from user account.
         Does nothing for DEVELOPER role users.
@@ -732,6 +763,21 @@ class Database:
 
         if result.data:
             logger.info(f"Deducted {credits_to_deduct} notes credits from user {user_id}. New balance: {new_credits}")
+
+            # Log to credit history
+            await self._log_credit_history(
+                user_id=user_id,
+                video_id=video_id,
+                project_id=project_id,
+                credit_type='notes',
+                amount=credits_to_deduct,
+                operation='deduct',
+                balance_before=current_credits,
+                balance_after=new_credits,
+                description=description or f"Deducted {credits_to_deduct} credits for notes generation",
+                metadata=metadata or {}
+            )
+
             return result.data[0]
         return None
 
@@ -767,6 +813,63 @@ class Database:
             logger.info(f"Added {transcription_credits} transcription and {notes_credits} notes credits to user {user_id}")
             return result.data[0]
         return None
+
+    # -------------------------
+    # Credit History
+    # -------------------------
+
+    async def _log_credit_history(
+        self,
+        user_id: str,
+        credit_type: str,
+        amount: int,
+        operation: str,
+        balance_before: int,
+        balance_after: int,
+        video_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Optional[Dict]:
+        """Internal method to log credit transactions"""
+        data = {
+            "user_id": user_id,
+            "video_id": video_id,
+            "project_id": project_id,
+            "credit_type": credit_type,
+            "amount": amount,
+            "operation": operation,
+            "balance_before": balance_before,
+            "balance_after": balance_after,
+            "description": description,
+            "metadata": json.dumps(metadata or {}),
+            "created_at": datetime.utcnow().isoformat()
+        }
+
+        try:
+            result = await run_in_threadpool(
+                lambda: self.client.table("credit_history").insert(data).execute()
+            )
+            return result.data[0] if result.data else None
+        except Exception as e:
+            logger.error(f"Failed to log credit history: {str(e)}")
+            return None
+
+    async def get_credit_history(self, user_id: str, limit: int = 100) -> List[Dict]:
+        """Get credit transaction history for a user"""
+        try:
+            result = await run_in_threadpool(
+                lambda: self.client.from_("credit_history_with_details")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("created_at", desc=True)
+                .limit(limit)
+                .execute()
+            )
+            return result.data or []
+        except Exception as e:
+            logger.error(f"Failed to fetch credit history: {str(e)}")
+            return []
 
 
 db = Database()

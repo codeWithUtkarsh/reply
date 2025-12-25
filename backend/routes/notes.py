@@ -112,7 +112,13 @@ async def generate_notes(request: GenerateNotesRequest):
             import math
             credits_to_deduct = math.ceil(len(transcript_text) / 50000)
             print(f"Deducting {credits_to_deduct} notes credits for user {request.user_id}")
-            result = await db.deduct_notes_credits(request.user_id, credits_to_deduct)
+            result = await db.deduct_notes_credits(
+                request.user_id,
+                credits_to_deduct,
+                video_id=request.video_id,
+                description=f"Notes generation for video: {video['title']}",
+                metadata={"transcript_length": len(transcript_text), "video_title": video['title']}
+            )
             if not result:
                 print(f"Warning: Failed to deduct credits for user {request.user_id}, but notes generation completed")
 
