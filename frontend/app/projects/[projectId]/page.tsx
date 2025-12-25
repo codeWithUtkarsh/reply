@@ -441,7 +441,7 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
 
     try {
       // Process video with project_id (async)
-      const response = await videoApi.processVideoAsync(videoUrl, undefined, projectId);
+      const response = await videoApi.processVideoAsync(videoUrl, undefined, projectId, user!.id);
 
       // Log activity
       await supabase.from('activity_log').insert({
@@ -456,7 +456,19 @@ function AddVideoModal({ projectId, projectName, onClose, onVideoAdded }: AddVid
       // Redirect to learning page immediately (video will process in background)
       router.push(`/learn/${response.video_id}`);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to process video');
+      // Handle credit errors (402) specially
+      if (err.response?.status === 402 && err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        if (typeof detail === 'object' && detail.message) {
+          setError(detail.message);
+        } else if (typeof detail === 'string') {
+          setError(detail);
+        } else {
+          setError('Insufficient credits to process this video');
+        }
+      } else {
+        setError(err.response?.data?.detail || 'Failed to process video');
+      }
       setLoading(false);
     }
   };

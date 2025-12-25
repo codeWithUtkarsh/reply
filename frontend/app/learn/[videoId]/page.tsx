@@ -271,12 +271,26 @@ export default function LearnPage() {
   const handleGenerateNotes = async () => {
     try {
       setGeneratingNotes(true);
-      const response = await notesApi.generateNotes(videoId);
+      const response = await notesApi.generateNotes(videoId, userId);
       setVideoNotes(response.notes);
       setShowNotes(true);
     } catch (err: any) {
       console.error('Failed to generate notes:', err);
-      alert('Failed to generate notes. Please try again.');
+
+      // Handle credit errors (402) specially
+      let errorMsg = 'Failed to generate notes. Please try again.';
+      if (err.response?.status === 402 && err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        if (typeof detail === 'object' && detail.message) {
+          errorMsg = detail.message;
+        } else if (typeof detail === 'string') {
+          errorMsg = detail;
+        } else {
+          errorMsg = 'Insufficient credits to generate notes for this video';
+        }
+      }
+
+      alert(errorMsg);
     } finally {
       setGeneratingNotes(false);
     }

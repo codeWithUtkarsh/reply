@@ -70,7 +70,7 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
 
       // Process video and link to project (async)
       try {
-        const response = await videoApi.processVideoAsync(videoUrl, projectName, project.id);
+        const response = await videoApi.processVideoAsync(videoUrl, projectName, project.id, user!.id);
 
         // Log activity
         await supabase.from('activity_log').insert({
@@ -86,7 +86,23 @@ export default function NewProjectModal({ isOpen, onClose, onProjectCreated }: N
         router.push(`/learn/${response.video_id}`);
       } catch (videoError: any) {
         // Project created but video processing failed
-        setError('Project created, but failed to process video: ' + (videoError.response?.data?.detail || 'Unknown error'));
+        let errorMsg = 'Unknown error';
+
+        // Handle credit errors (402) specially
+        if (videoError.response?.status === 402 && videoError.response?.data?.detail) {
+          const detail = videoError.response.data.detail;
+          if (typeof detail === 'object' && detail.message) {
+            errorMsg = detail.message;
+          } else if (typeof detail === 'string') {
+            errorMsg = detail;
+          } else {
+            errorMsg = 'Insufficient credits to process this video';
+          }
+        } else {
+          errorMsg = videoError.response?.data?.detail || 'Unknown error';
+        }
+
+        setError('Project created, but failed to process video: ' + errorMsg);
         onProjectCreated();
         setLoading(false);
         return;
