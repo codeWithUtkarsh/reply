@@ -115,29 +115,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         />
       )}
 
-      {/* 5. KEY INSIGHTS - AI-generated takeaways */}
-      {report.key_takeaways && report.key_takeaways.length > 0 && (
-        <div className="bg-gradient-to-b from-gray-900 to-black border border-purple-500/30 rounded-xl p-6 shadow-xl">
-          <h3 className="text-xl font-light text-white mb-4">
-            💡 Key Insights
-          </h3>
-          <ul className="space-y-3">
-            {report.key_takeaways.slice(0, 5).map((takeaway, index) => (
-              <li
-                key={index}
-                className="flex gap-3 items-start"
-              >
-                <span className="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-light mt-0.5">
-                  {index + 1}
-                </span>
-                <p className="text-gray-300 font-light flex-1">{takeaway}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* 6. DETAILED ANALYSIS - Collapsible for those who want it */}
+      {/* 5. DETAILED ANALYSIS - Collapsible for those who want it */}
       <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
         <button
           onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
@@ -264,7 +242,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         )}
       </div>
 
-      {/* 7. ENCOURAGEMENT - End on a positive note */}
+      {/* 6. ENCOURAGEMENT - End on a positive note */}
       <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 text-center shadow-xl shadow-emerald-500/10">
         <h3 className="text-2xl font-light text-white mb-2">
           {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :

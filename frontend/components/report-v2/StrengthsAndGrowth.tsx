@@ -39,19 +39,12 @@ export default function StrengthsAndGrowth({ strengths, growthAreas }: Strengths
                 key={index}
                 className="bg-gray-800/50 border border-emerald-700/50 rounded-lg p-4"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-start gap-2 flex-1">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-light text-white">
-                        {strength.concept}
-                      </p>
-                      {strength.evidence && (
-                        <p className="text-sm text-gray-400 font-light mt-1">
-                          {strength.evidence}
-                        </p>
-                      )}
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <p className="font-light text-white">
+                      {strength.concept}
+                    </p>
                   </div>
                   <span className="text-emerald-400 font-light text-lg ml-2">
                     {strength.accuracy}%
