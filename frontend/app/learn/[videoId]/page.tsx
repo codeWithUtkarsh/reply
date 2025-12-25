@@ -249,7 +249,8 @@ export default function LearnPage() {
             'quiz',
             answer.selected_answer,
             question.correct_answer,
-            answer.timestamp
+            answer.timestamp,
+            quizData.quiz_id  // Track which quiz this attempt belongs to for score calculation
           );
         }
       }

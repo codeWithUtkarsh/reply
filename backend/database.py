@@ -483,7 +483,8 @@ class Database:
         selected_answer: int,
         correct_answer: int,
         is_correct: bool,
-        timestamp: float = 0
+        timestamp: float = 0,
+        quiz_id: Optional[str] = None
     ) -> Optional[Dict]:
 
         existing = await run_in_threadpool(
@@ -506,6 +507,7 @@ class Database:
             "is_correct": is_correct,
             "attempt_number": attempt_number,
             "timestamp": timestamp,
+            "quiz_id": quiz_id,  # Store quiz_id for tracking quiz sessions
             "created_at": datetime.utcnow().isoformat()
         }
 

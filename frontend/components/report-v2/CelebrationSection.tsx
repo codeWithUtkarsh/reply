@@ -78,8 +78,8 @@ export default function CelebrationSection({
             <p className="text-gray-400 text-sm font-light">Overall Performance</p>
           </div>
 
-          {/* Mastered Knowledge */}
-          {masteredTopics.slice(0, 2).map((topic, index) => (
+          {/* Mastered Knowledge - Show all as individual strength cards */}
+          {masteredTopics.map((topic, index) => (
             <div
               key={index}
               className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/30"
@@ -92,16 +92,6 @@ export default function CelebrationSection({
               <p className="text-gray-400 text-sm font-light">{topic.accuracy}% accuracy</p>
             </div>
           ))}
-
-          {/* More achievements */}
-          {masteredTopics.length > 2 && (
-            <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/30 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-3xl font-light text-emerald-400 mb-1">+{masteredTopics.length - 2}</p>
-                <p className="text-gray-400 text-sm font-light">More knowledge areas mastered!</p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

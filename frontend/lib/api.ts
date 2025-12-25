@@ -329,7 +329,8 @@ export const reportsApi = {
     questionType: string,
     selectedAnswer: number,
     correctAnswer: number,
-    timestamp: number = 0
+    timestamp: number = 0,
+    quizId?: string
   ) => {
     const response = await api.post('/api/reports/attempt', {
       user_id: userId,
@@ -339,6 +340,7 @@ export const reportsApi = {
       selected_answer: selectedAnswer,
       correct_answer: correctAnswer,
       timestamp,
+      quiz_id: quizId,  // Track which quiz this attempt belongs to
     });
     return response.data;
   },

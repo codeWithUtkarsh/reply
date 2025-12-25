@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 interface ConceptDetail {
   concept: string;
@@ -9,59 +9,14 @@ interface ConceptDetail {
 }
 
 interface StrengthsAndGrowthProps {
-  strengths: ConceptDetail[];
+  strengths: ConceptDetail[];  // Kept for backwards compatibility but not used
   growthAreas: ConceptDetail[];
 }
 
 export default function StrengthsAndGrowth({ strengths, growthAreas }: StrengthsAndGrowthProps) {
+  // Only show Growth Opportunities - strengths are shown in the Celebration section
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Strengths */}
-      <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 shadow-xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-emerald-400" />
-          </div>
-          <div>
-            <h4 className="text-xl font-light text-white">
-              Your Strengths
-            </h4>
-            <p className="text-sm text-gray-400 font-light">
-              What you're excelling at
-            </p>
-          </div>
-        </div>
-
-        {strengths && strengths.length > 0 ? (
-          <div className="space-y-3">
-            {strengths.map((strength, index) => (
-              <div
-                key={index}
-                className="bg-gray-800/50 border border-emerald-700/50 rounded-lg p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 flex-1">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                    <p className="font-light text-white">
-                      {strength.concept}
-                    </p>
-                  </div>
-                  <span className="text-emerald-400 font-light text-lg ml-2">
-                    {strength.accuracy}%
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-400 font-light">
-              Keep practicing to build your strengths!
-            </p>
-          </div>
-        )}
-      </div>
-
+    <div>
       {/* Growth Opportunities */}
       <div className="bg-gradient-to-b from-gray-900 to-black border border-purple-500/30 rounded-xl p-6 shadow-xl">
         <div className="flex items-center gap-3 mb-4">

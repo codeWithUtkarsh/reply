@@ -155,6 +155,46 @@ Focus on:
         # Return up to 5 key takeaways
         return key_sentences[:5]
 
+    def _calculate_quiz_average_score(self, attempts_data: List[Dict]) -> float:
+        """
+        Calculate average quiz score across all quiz attempts.
+
+        For each quiz (identified by quiz_id), calculate:
+        - Individual quiz score = (correct answers / total questions) * 100
+
+        Then average across all quiz attempts (to handle retakes).
+
+        Returns the average quiz score as a percentage.
+        """
+        # Get only quiz attempts that have a quiz_id
+        quiz_attempts = [a for a in attempts_data if a.get('question_type') == 'quiz' and a.get('quiz_id')]
+
+        if not quiz_attempts:
+            return 0.0
+
+        # Group attempts by quiz_id
+        quiz_scores = {}
+        for attempt in quiz_attempts:
+            quiz_id = attempt['quiz_id']
+            if quiz_id not in quiz_scores:
+                quiz_scores[quiz_id] = {'correct': 0, 'total': 0}
+
+            quiz_scores[quiz_id]['total'] += 1
+            if attempt['is_correct']:
+                quiz_scores[quiz_id]['correct'] += 1
+
+        # Calculate score for each quiz
+        individual_scores = []
+        for quiz_id, stats in quiz_scores.items():
+            if stats['total'] > 0:
+                score = (stats['correct'] / stats['total']) * 100
+                individual_scores.append(score)
+
+        # Return average of all quiz scores
+        if individual_scores:
+            return round(sum(individual_scores) / len(individual_scores), 2)
+        return 0.0
+
     def analyze_performance(self, attempts_data: List[Dict]) -> Dict:
         """
         Analyze user performance from attempts data
@@ -165,12 +205,16 @@ Focus on:
                 'correct_count': 0,
                 'incorrect_count': 0,
                 'accuracy_rate': 0,
+                'quiz_average_score': 0,
                 'by_question': {}
             }
 
         total_attempts = len(attempts_data)
         correct_count = sum(1 for attempt in attempts_data if attempt['is_correct'])
         incorrect_count = total_attempts - correct_count
+
+        # Calculate average quiz score (for quiz type attempts only)
+        quiz_average_score = self._calculate_quiz_average_score(attempts_data)
 
         # Group by question
         by_question = {}
@@ -195,6 +239,7 @@ Focus on:
             'correct_count': correct_count,
             'incorrect_count': incorrect_count,
             'accuracy_rate': round((correct_count / total_attempts * 100) if total_attempts > 0 else 0, 2),
+            'quiz_average_score': quiz_average_score,  # Average of individual quiz scores
             'by_question': by_question
         }
 
@@ -530,8 +575,8 @@ Mark topics they've covered as "completed" or "in_progress" based on weak areas.
             # Priority 1: Executive Summary (NEW - at the top!)
             'key_takeaways': key_takeaways,
             'executive_summary': {
-                'overall_score': performance_stats['accuracy_rate'],
-                'status': 'excellent' if performance_stats['accuracy_rate'] >= 80 else 'good' if performance_stats['accuracy_rate'] >= 60 else 'needs_improvement',
+                'overall_score': performance_stats['quiz_average_score'],  # Average of individual quiz scores
+                'status': 'excellent' if performance_stats['quiz_average_score'] >= 80 else 'good' if performance_stats['quiz_average_score'] >= 60 else 'needs_improvement',
                 'time_spent': len(attempts_data),  # Could be enhanced with actual time tracking
                 'topics_mastered': len(weak_area_analysis.get('mastery_analysis', {}).get('mastered', [])),
                 'topics_in_progress': len(weak_area_analysis.get('mastery_analysis', {}).get('learning', [])),

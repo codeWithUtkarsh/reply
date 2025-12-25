@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS user_attempts (
     is_correct BOOLEAN NOT NULL,
     attempt_number INT DEFAULT 1,
     timestamp FLOAT,
+    quiz_id VARCHAR(255), -- ID of the quiz this attempt belongs to (for quiz question types)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -167,6 +168,7 @@ CREATE INDEX IF NOT EXISTS idx_quiz_results_user_id ON quiz_results(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_attempts_user_id ON user_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_attempts_video_id ON user_attempts(video_id);
 CREATE INDEX IF NOT EXISTS idx_user_attempts_question_id ON user_attempts(question_id);
+CREATE INDEX IF NOT EXISTS idx_user_attempts_quiz_id ON user_attempts(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_learning_reports_report_id ON learning_reports(report_id);
 CREATE INDEX IF NOT EXISTS idx_learning_reports_user_video ON learning_reports(user_id, video_id);
 CREATE INDEX IF NOT EXISTS idx_video_notes_video_id ON video_notes(video_id);

@@ -15,9 +15,17 @@ class QuestionGenerator:
         segment: VideoSegment,
         num_questions: int = 1,
         context_segments: List[VideoSegment] = None,
-        video_title: str = None
+        video_title: str = None,
+        focus_areas: dict = None
     ) -> List[Question]:
-        """Generate high-quality questions based on a video segment with surrounding context"""
+        """
+        Generate high-quality questions based on a video segment with surrounding context
+
+        If focus_areas is provided (user performance data), generates questions that:
+        - Target topics where the user struggled in flashcards
+        - Reinforce weak areas from previous quizzes
+        - Are slightly more challenging to help improve weak knowledge areas
+        """
 
         # Build context from surrounding segments
         context_text = ""
@@ -28,9 +36,28 @@ class QuestionGenerator:
 
         video_context = f"\nVideo Title: {video_title}\n" if video_title else ""
 
+        # Add adaptive learning context if performance data is available
+        adaptive_context = ""
+        if focus_areas and focus_areas.get('has_previous_data'):
+            video_accuracy = focus_areas.get('video_accuracy', 0)
+            weak_count = len(focus_areas.get('weak_flashcard_questions', [])) + len(focus_areas.get('weak_quiz_questions', []))
+
+            adaptive_context = f"""
+
+ADAPTIVE LEARNING MODE:
+The learner has previously studied this content with {video_accuracy}% accuracy.
+They struggled with {weak_count} topics. Generate questions that:
+1. Reinforce concepts they found challenging
+2. Are slightly more challenging than basic recall
+3. Help identify and address remaining knowledge gaps
+4. Focus on deeper understanding of core concepts
+
+Adjust difficulty to "medium" or "hard" to challenge the learner appropriately.
+"""
+
         prompt = f"""
 You are an expert educational assessment designer. Generate {num_questions} high-quality multiple-choice question(s)
-that test UNDERSTANDING and APPLICATION, not just memorization.
+that test UNDERSTANDING and APPLICATION, not just memorization.{adaptive_context}
 
 {video_context}{context_text}
 
@@ -191,32 +218,96 @@ Generate {num_questions} question(s) that meet ALL quality criteria above.
         self,
         segments: List[VideoSegment],
         num_questions: int = 10,
-        video_title: str = None
+        video_title: str = None,
+        performance_analysis: dict = None
     ) -> List[Question]:
-        """Generate a final comprehensive quiz with high-quality questions"""
+        """
+        Generate an adaptive quiz based on user performance
 
-        # Distribute questions across segments
-        questions_per_segment = max(1, num_questions // len(segments))
-        all_questions = []
+        If performance_analysis is provided, prioritizes:
+        1. Topics from weak flashcard questions
+        2. Topics from weak previous quiz questions
+        3. General review questions for comprehensive assessment
 
-        for i, segment in enumerate(segments):
-            # Get surrounding context
-            context_segments = []
-            if i > 0:
-                context_segments.append(segments[i - 1])
-            if i < len(segments) - 1:
-                context_segments.append(segments[i + 1])
+        Otherwise generates a balanced quiz covering all content
+        """
 
-            questions = await self.generate_questions_for_segment(
-                segment,
-                num_questions=questions_per_segment,
-                context_segments=context_segments,
-                video_title=video_title
-            )
-            all_questions.extend(questions)
+        # Determine if we should generate adaptive questions
+        use_adaptive = (
+            performance_analysis and
+            performance_analysis.get('has_previous_data', False) and
+            (len(performance_analysis.get('weak_flashcard_questions', [])) > 0 or
+             len(performance_analysis.get('weak_quiz_questions', [])) > 0)
+        )
 
-        # Return exactly num_questions
-        return all_questions[:num_questions]
+        if use_adaptive:
+            # ADAPTIVE MODE: Focus on weak areas
+            # Allocate questions: 60% on weak areas, 40% general review
+            weak_area_questions = int(num_questions * 0.6)
+            review_questions = num_questions - weak_area_questions
+
+            all_questions = []
+
+            # Generate questions targeting weak areas
+            if weak_area_questions > 0:
+                # Sample segments more heavily where user struggled
+                # For now, still use all segments but with performance context
+                questions_per_segment = max(1, weak_area_questions // len(segments))
+
+                for i, segment in enumerate(segments):
+                    context_segments = []
+                    if i > 0:
+                        context_segments.append(segments[i - 1])
+                    if i < len(segments) - 1:
+                        context_segments.append(segments[i + 1])
+
+                    # Pass performance data to make questions more challenging on weak areas
+                    questions = await self.generate_questions_for_segment(
+                        segment,
+                        num_questions=questions_per_segment,
+                        context_segments=context_segments,
+                        video_title=video_title,
+                        focus_areas=performance_analysis  # Tell AI to focus on user's weak areas
+                    )
+                    all_questions.extend(questions)
+
+            # Add some review questions for comprehensive coverage
+            if review_questions > 0 and len(all_questions) < num_questions:
+                remaining = num_questions - len(all_questions)
+                for segment in segments[:remaining]:
+                    question = await self.generate_questions_for_segment(
+                        segment,
+                        num_questions=1,
+                        context_segments=[],
+                        video_title=video_title
+                    )
+                    all_questions.extend(question)
+
+            return all_questions[:num_questions]
+
+        else:
+            # STANDARD MODE: Balanced quiz across all content
+            questions_per_segment = max(1, num_questions // len(segments))
+            all_questions = []
+
+            for i, segment in enumerate(segments):
+                # Get surrounding context
+                context_segments = []
+                if i > 0:
+                    context_segments.append(segments[i - 1])
+                if i < len(segments) - 1:
+                    context_segments.append(segments[i + 1])
+
+                questions = await self.generate_questions_for_segment(
+                    segment,
+                    num_questions=questions_per_segment,
+                    context_segments=context_segments,
+                    video_title=video_title
+                )
+                all_questions.extend(questions)
+
+            # Return exactly num_questions
+            return all_questions[:num_questions]
 
     def _create_fallback_question(self, segment: VideoSegment) -> Question:
         """Create a fallback question if generation fails"""

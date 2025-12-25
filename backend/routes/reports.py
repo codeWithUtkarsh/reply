@@ -16,6 +16,7 @@ class AttemptSubmission(BaseModel):
     selected_answer: int
     correct_answer: int
     timestamp: Optional[float] = 0
+    quiz_id: Optional[str] = None  # For tracking which quiz this attempt belongs to
 
 
 class GenerateReportRequest(BaseModel):
@@ -38,7 +39,8 @@ async def record_attempt(attempt: AttemptSubmission):
             selected_answer=attempt.selected_answer,
             correct_answer=attempt.correct_answer,
             is_correct=is_correct,
-            timestamp=attempt.timestamp
+            timestamp=attempt.timestamp,
+            quiz_id=attempt.quiz_id  # Track which quiz this attempt belongs to
         )
 
         return {
