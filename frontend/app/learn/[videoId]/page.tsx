@@ -7,8 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
+import LearningReportComponent from '@/components/LearningReportV2';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
-import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, VideoNotes } from '@/lib/api';
+import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
 import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
 
 // Dynamically import VideoNotes component to avoid SSR issues with Mermaid
@@ -42,6 +43,8 @@ export default function LearnPage() {
   const [quizData, setQuizData] = useState<{ quiz_id: string; questions: Question[] } | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [seekTimestamp, setSeekTimestamp] = useState<number | null>(null);
+  const [learningReport, setLearningReport] = useState<LearningReport | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
   const [flashcardLearningEnabled, setFlashcardLearningEnabled] = useState(() => {
     // Load preference from localStorage
     if (typeof window !== 'undefined') {
@@ -247,6 +250,17 @@ export default function LearnPage() {
       // Submit quiz to get results
       const result = await quizApi.submitQuiz(quizData.quiz_id, answers);
       setQuizResult(result);
+
+      // Automatically generate learning report after quiz submission
+      setGeneratingReport(true);
+      try {
+        const reportResponse = await reportsApi.generateReport(userId, videoId, quizData.quiz_id);
+        setLearningReport(reportResponse.report);
+      } catch (err) {
+        console.error('Failed to generate report:', err);
+      } finally {
+        setGeneratingReport(false);
+      }
     } catch (err: any) {
       alert('Failed to submit quiz');
       console.error('Quiz submission error:', err);
@@ -257,6 +271,7 @@ export default function LearnPage() {
     // Reset quiz state and start a new quiz
     setQuizData(null);
     setQuizResult(null);
+    setLearningReport(null);
     setShowQuiz(false);
     // Start a new quiz (will deduct credits again)
     await handleStartQuiz();
@@ -455,7 +470,7 @@ export default function LearnPage() {
             </div>
 
             {/* Quiz Section */}
-            {showQuiz && quizData ? (
+            {showQuiz && quizData && !learningReport ? (
               <div className="mt-8">
                 <QuizComponent
                   questions={quizData.questions}
@@ -463,30 +478,33 @@ export default function LearnPage() {
                   onSubmit={handleSubmitQuiz}
                   onSeekTo={handleSeekTo}
                 />
-                {/* Show Retake Quiz button after quiz is submitted */}
-                {quizResult && (
-                  <div className="mt-6 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
-                    <div className="w-20 h-20 mx-auto mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-10 h-10 text-emerald-500" />
+                {generatingReport && (
+                  <div className="mt-6 bg-gradient-to-b from-gray-900 to-black border border-blue-500/30 rounded-2xl p-6">
+                    <div className="flex items-center justify-center gap-3">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                      <p className="text-blue-200 font-light">
+                        Generating your personalized learning report...
+                      </p>
                     </div>
-                    <h2 className="text-2xl font-light text-white mb-2">
-                      Quiz Completed!
-                    </h2>
-                    <p className="text-gray-400 font-light mb-1">
-                      You scored {quizResult.correct_answers} out of {quizResult.total_questions}
-                    </p>
-                    <p className="text-2xl font-bold text-emerald-400 mb-6">
-                      {quizResult.score_percentage}%
-                    </p>
-                    <button
-                      onClick={handleRetakeQuiz}
-                      className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-8 rounded-xl transition-all inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20"
-                    >
-                      <BookOpen className="w-5 h-5" />
-                      Retake Quiz (5 credits)
-                    </button>
                   </div>
                 )}
+              </div>
+            ) : learningReport ? (
+              <div className="mt-8">
+                <LearningReportComponent report={learningReport} />
+                {/* Retake Quiz button at the bottom of the report */}
+                <div className="mt-6 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
+                  <h3 className="text-xl font-light text-white mb-4">
+                    Want to improve your score?
+                  </h3>
+                  <button
+                    onClick={handleRetakeQuiz}
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-8 rounded-xl transition-all inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    Retake Quiz (5 credits)
+                  </button>
+                </div>
               </div>
             ) : (
               !showQuiz &&
