@@ -66,10 +66,10 @@ export default function CelebrationSection({
           )}
         </div>
 
-        {/* Wins Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Overall Achievement */}
-          <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/30">
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Overall Achievement Card */}
+          <div className="bg-emerald-500/10 rounded-xl p-6 border border-emerald-500/30">
             <div className="flex items-center gap-2 mb-2">
               <Star className="w-5 h-5 text-emerald-400" />
               <h3 className="font-light text-lg text-white">Great Score!</h3>
@@ -78,20 +78,38 @@ export default function CelebrationSection({
             <p className="text-gray-400 text-sm font-light">Overall Performance</p>
           </div>
 
-          {/* Mastered Knowledge - Show all as individual strength cards */}
-          {masteredTopics.map((topic, index) => (
-            <div
-              key={index}
-              className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/30"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Trophy className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-light text-white">Mastered!</h3>
+          {/* Mastered Knowledge - Table Format */}
+          {masteredTopics.length > 0 && (
+            <div className="lg:col-span-2 bg-emerald-500/10 rounded-xl border border-emerald-500/30 overflow-hidden">
+              <div className="p-4 bg-emerald-500/20 border-b border-emerald-500/30">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-emerald-400" />
+                  <h3 className="font-light text-lg text-white">Knowledge Mastered</h3>
+                  <span className="ml-auto bg-emerald-500/30 border border-emerald-500/40 rounded-full px-3 py-1 text-sm font-light text-emerald-300">
+                    {masteredTopics.length} {masteredTopics.length === 1 ? 'area' : 'areas'}
+                  </span>
+                </div>
               </div>
-              <p className="font-light text-white mb-1 line-clamp-2">{topic.concept}</p>
-              <p className="text-gray-400 text-sm font-light">{topic.accuracy}% accuracy</p>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <tbody className="divide-y divide-emerald-500/20">
+                    {masteredTopics.map((topic, index) => (
+                      <tr key={index} className="hover:bg-emerald-500/5 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1">
+                              <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                            </div>
+                            <p className="font-light text-white">{topic.concept}</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
