@@ -112,13 +112,22 @@ CREATE TABLE IF NOT EXISTS learning_reports (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     video_id VARCHAR(255) NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
     quiz_id VARCHAR(255) REFERENCES quizzes(quiz_id) ON DELETE CASCADE,
+
+    -- Enhanced AI-powered report fields
+    executive_summary JSONB DEFAULT '{}'::jsonb,  -- Overall score, status, topic counts
+    key_takeaways TEXT[],                         -- AI-generated personalized insights
+    weak_areas JSONB DEFAULT '{}'::jsonb,         -- Weak concepts, mastery analysis, gaps
+    video_recommendations JSONB DEFAULT '[]'::jsonb,  -- YouTube search recommendations
+    learning_path JSONB DEFAULT '{}'::jsonb,      -- Learning path and circuit map
+
+    -- Performance and content analysis
     word_frequency JSONB NOT NULL,
     performance_stats JSONB NOT NULL,
     attempt_breakdown JSONB NOT NULL,
-    key_takeaways TEXT[],
     video_type VARCHAR(100) DEFAULT 'General',
     domain VARCHAR(100) DEFAULT 'Mixed',
     main_topics TEXT[],
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
