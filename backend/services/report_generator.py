@@ -600,7 +600,10 @@ Mark topics they've covered as "completed" or "in_progress" based on weak areas.
             'word_frequency': semantic_analysis.get('keywords', {}),
             'video_type': semantic_analysis.get('video_type', 'General'),
             'domain': semantic_analysis.get('domain', 'Mixed'),
-            'main_topics': semantic_analysis.get('main_topics', [])
+            'main_topics': semantic_analysis.get('main_topics', []),
+
+            # Priority 7: Raw attempts data for study pattern visualization
+            'attempts_data': attempts_data
         }
 
     async def _generate_ai_takeaways(self, transcript_text: str, performance_stats: Dict, weak_area_analysis: Dict) -> List[str]:

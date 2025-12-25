@@ -187,6 +187,18 @@ export interface LearningReport {
   domain?: string;
   main_topics?: string[];
 
+  // Priority 7: Raw attempts data for study pattern visualization
+  attempts_data?: Array<{
+    question_id: string;
+    question_type: string;
+    selected_answer: number;
+    correct_answer: number;
+    is_correct: boolean;
+    attempt_number: number;
+    timestamp: number;
+    quiz_id?: string;
+  }>;
+
   created_at?: string;
 }
 
