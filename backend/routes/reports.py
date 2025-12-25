@@ -108,8 +108,9 @@ async def generate_report(request: GenerateReportRequest):
             questions_data=questions  # NEW: Pass questions for weak area analysis
         )
 
-        # Store report in database
-        await db.store_report(report)
+        # Store report in database (exclude attempts_data as it's only needed for API response)
+        report_for_db = {k: v for k, v in report.items() if k != 'attempts_data'}
+        await db.store_report(report_for_db)
 
         return {
             "success": True,
@@ -136,6 +137,22 @@ async def get_report(report_id: str):
         report['performance_stats'] = json.loads(report['performance_stats'])
         report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
 
+        # Fetch attempts data for study pattern visualization
+        attempts = await db.get_user_attempts(report['user_id'], report['video_id'])
+        report['attempts_data'] = [
+            {
+                'question_id': attempt['question_id'],
+                'question_type': attempt['question_type'],
+                'selected_answer': attempt['selected_answer'],
+                'correct_answer': attempt['correct_answer'],
+                'is_correct': attempt['is_correct'],
+                'attempt_number': attempt.get('attempt_number', 1),
+                'timestamp': attempt.get('timestamp', 0),
+                'quiz_id': attempt.get('quiz_id')
+            }
+            for attempt in attempts
+        ]
+
         return report
 
     except HTTPException:
@@ -150,11 +167,27 @@ async def get_user_reports(user_id: str, video_id: Optional[str] = None):
     try:
         reports = await db.get_user_reports(user_id, video_id)
 
-        # Parse JSON fields for each report
+        # Parse JSON fields for each report and add attempts data
         for report in reports:
             report['word_frequency'] = json.loads(report['word_frequency'])
             report['performance_stats'] = json.loads(report['performance_stats'])
             report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
+
+            # Fetch attempts data for study pattern visualization
+            attempts = await db.get_user_attempts(report['user_id'], report['video_id'])
+            report['attempts_data'] = [
+                {
+                    'question_id': attempt['question_id'],
+                    'question_type': attempt['question_type'],
+                    'selected_answer': attempt['selected_answer'],
+                    'correct_answer': attempt['correct_answer'],
+                    'is_correct': attempt['is_correct'],
+                    'attempt_number': attempt.get('attempt_number', 1),
+                    'timestamp': attempt.get('timestamp', 0),
+                    'quiz_id': attempt.get('quiz_id')
+                }
+                for attempt in attempts
+            ]
 
         return {
             "user_id": user_id,
