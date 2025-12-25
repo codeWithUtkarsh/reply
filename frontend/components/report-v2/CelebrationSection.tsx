@@ -1,6 +1,16 @@
 'use client';
 
-import { Trophy, TrendingUp, Star, Zap, CheckCircle } from 'lucide-react';
+import { Trophy, TrendingUp, Star, Zap, CheckCircle, Target, Play, ExternalLink, Clock, Lightbulb } from 'lucide-react';
+
+interface ActionItem {
+  priority: 1 | 2 | 3;
+  topic: string;
+  why: string;
+  videoTitle: string;
+  videoUrl: string;
+  estimatedTime: string;
+  impact: 'high' | 'medium';
+}
 
 interface CelebrationProps {
   masteredTopics: Array<{ concept: string; accuracy: number }>;
@@ -9,6 +19,7 @@ interface CelebrationProps {
   totalAttempts: number;
   correctAnswers: number;
   growthAreas?: Array<{ concept: string; accuracy: number }>;
+  actionItems?: ActionItem[];
 }
 
 export default function CelebrationSection({
@@ -17,8 +28,29 @@ export default function CelebrationSection({
   improvement,
   totalAttempts,
   correctAnswers,
-  growthAreas = []
+  growthAreas = [],
+  actionItems = []
 }: CelebrationProps) {
+  const getPriorityColor = (priority: number) => {
+    if (priority === 1) return {
+      bg: 'from-gray-900 to-black',
+      border: 'border-emerald-500/30',
+      badge: 'bg-emerald-500',
+      text: 'text-emerald-400'
+    };
+    if (priority === 2) return {
+      bg: 'from-gray-900 to-black',
+      border: 'border-purple-500/30',
+      badge: 'bg-purple-500',
+      text: 'text-purple-400'
+    };
+    return {
+      bg: 'from-gray-900 to-black',
+      border: 'border-blue-500/30',
+      badge: 'bg-blue-500',
+      text: 'text-blue-400'
+    };
+  };
   const hasWins = masteredTopics.length > 0 || overallScore >= 70;
 
   if (!hasWins) {
@@ -175,7 +207,99 @@ export default function CelebrationSection({
                 {/* Action Message */}
                 <div className="mt-4 bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">
                   <p className="text-sm text-gray-300 font-light">
-                    💡 <strong className="text-white">Next Steps:</strong> Follow the action plan below to strengthen these areas, or retake the quiz to improve your score!
+                    💡 <strong className="text-white">Next Steps:</strong> Check the action plan below to strengthen these areas, or retake the quiz to improve your score!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Plan Section */}
+        {actionItems.length > 0 && (
+          <div className="mt-6">
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-500/30 rounded-xl overflow-hidden shadow-xl">
+              <div className="p-4 bg-blue-500/20 border-b border-blue-500/30">
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-blue-400" />
+                  <h3 className="font-light text-lg text-white">Your Action Plan</h3>
+                  <span className="ml-auto bg-blue-500/30 border border-blue-500/40 rounded-full px-3 py-1 text-sm font-light text-blue-300">
+                    {actionItems.length} {actionItems.length === 1 ? 'priority' : 'priorities'}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 space-y-4">
+                {actionItems.slice(0, 3).map((action) => {
+                  const colors = getPriorityColor(action.priority);
+
+                  return (
+                    <div
+                      key={action.priority}
+                      className={`bg-gradient-to-b ${colors.bg} border ${colors.border} rounded-lg p-4`}
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start gap-3">
+                          <div className={`${colors.badge} text-white rounded-full w-7 h-7 flex items-center justify-center font-light flex-shrink-0 text-sm`}>
+                            {action.priority}
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-light text-white mb-1">
+                              {action.topic}
+                            </h4>
+                            <div className="flex items-center gap-2 text-sm text-gray-400 font-light">
+                              <Lightbulb className="w-4 h-4" />
+                              <span>{action.why}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {action.impact === 'high' && (
+                          <span className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-xs font-light px-2 py-1 rounded-full">
+                            HIGH IMPACT
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Video Recommendation */}
+                      <a
+                        href={action.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:shadow-md hover:border-gray-600 transition-all group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center">
+                              <Play className="w-5 h-5 text-red-400" />
+                            </div>
+                            <div>
+                              <p className="font-light text-white text-sm group-hover:text-emerald-400 transition-colors">
+                                {action.videoTitle}
+                              </p>
+                              <div className="flex items-center gap-3 mt-1">
+                                <div className="flex items-center gap-1 text-xs text-gray-400 font-light">
+                                  <Clock className="w-3 h-3" />
+                                  <span>{action.estimatedTime}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-emerald-400 transition-colors" />
+                        </div>
+                      </a>
+                    </div>
+                  );
+                })}
+
+                {/* Total Time */}
+                <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+                  <p className="text-sm text-blue-300 font-light">
+                    ⏱️ <strong className="text-white">Total estimated time:</strong> {
+                      actionItems.slice(0, 3).reduce((total, action) => {
+                        const mins = parseInt(action.estimatedTime);
+                        return total + (isNaN(mins) ? 20 : mins);
+                      }, 0)
+                    } minutes · Complete these to unlock the next level! 🚀
                   </p>
                 </div>
               </div>
