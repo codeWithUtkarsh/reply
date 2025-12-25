@@ -67,8 +67,18 @@ async def generate_report(request: GenerateReportRequest):
         # Get all user attempts for this video
         attempts = await db.get_user_attempts(request.user_id, request.video_id)
 
-        # Get questions data for analysis
-        questions = await db.get_questions(request.video_id)
+        # Get both flashcard questions and quiz questions for analysis
+        flashcard_questions = await db.get_questions(request.video_id)
+
+        # Also get quiz questions
+        quiz_data = await db.get_quiz(request.quiz_id)
+        quiz_questions = []
+        if quiz_data:
+            questions_json = json.loads(quiz_data['questions'])
+            quiz_questions = questions_json
+
+        # Merge both types of questions
+        questions = flashcard_questions + quiz_questions
 
         # Convert attempts to the format needed by report generator
         attempts_data = []

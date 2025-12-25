@@ -249,15 +249,19 @@ Focus on:
             q_id = attempt['question_id']
             if q_id in question_map:
                 q_data = question_map[q_id]
-                # Extract question text
-                if isinstance(q_data.get('question_data'), dict):
-                    weak_questions.append(q_data['question_data'].get('question', ''))
-                elif isinstance(q_data.get('question_data'), str):
-                    try:
+                # Extract question text (handle both quiz and flashcard formats)
+                try:
+                    # Try quiz question format first (has question_text directly)
+                    if 'question_text' in q_data:
+                        weak_questions.append(q_data['question_text'])
+                    # Try flashcard format (has question_data)
+                    elif isinstance(q_data.get('question_data'), dict):
+                        weak_questions.append(q_data['question_data'].get('question', ''))
+                    elif isinstance(q_data.get('question_data'), str):
                         parsed = json.loads(q_data['question_data'])
                         weak_questions.append(parsed.get('question', ''))
-                    except:
-                        pass
+                except:
+                    pass
 
         if not weak_questions:
             return {
@@ -353,17 +357,21 @@ IMPORTANT:
             # Find question to get topic/concept
             question = next((q for q in questions_data if (q.get('id') or q.get('question_id')) == q_id), None)
             if question:
-                # Extract concept from question
+                # Extract concept from question (handle both quiz and flashcard formats)
                 try:
-                    if isinstance(question.get('question_data'), dict):
+                    # Try quiz question format first (has question_text directly)
+                    if 'question_text' in question:
+                        concept = question['question_text'][:100]
+                    # Try flashcard format (has question_data)
+                    elif isinstance(question.get('question_data'), dict):
                         concept = question['question_data'].get('question', '')[:100]
                     elif isinstance(question.get('question_data'), str):
                         parsed = json.loads(question['question_data'])
                         concept = parsed.get('question', '')[:100]
                     else:
-                        concept = f"Question {q_id}"
+                        concept = f"Topic from question {q_id}"
                 except:
-                    concept = f"Question {q_id}"
+                    concept = f"Topic from question {q_id}"
 
                 if accuracy >= 0.8:  # 80%+ correct
                     mastered.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
