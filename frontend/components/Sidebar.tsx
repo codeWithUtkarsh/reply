@@ -122,7 +122,16 @@ export default function Sidebar() {
           </div>
 
           <div className="text-sm text-gray-400">
-            {userProfile?.credit_available || 0} credits available
+            {userProfile?.role === 'developer' ? (
+              'Unlimited credits ∞'
+            ) : (
+              <>
+                {(userProfile?.transcription_credits ?? 0) + (userProfile?.notes_credits ?? 0)} credits
+                <span className="text-xs block mt-1">
+                  T:{userProfile?.transcription_credits ?? 0} • N:{userProfile?.notes_credits ?? 0}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
