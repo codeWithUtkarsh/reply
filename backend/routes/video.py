@@ -94,6 +94,10 @@ async def process_video_in_batches(video_id: str, video_url: str, title: str, du
     total_batches = len(segments)
     logger.info(f"Processing video in {total_batches} batches of {batch_size}s each")
 
+    # Collect all transcript segments from all batches
+    all_transcript_segments = []
+    all_transcript_text_parts = []
+
     # Process each batch
     for batch_num, (batch_start, batch_end) in enumerate(segments, 1):
         logger.info(f"=== Processing batch {batch_num}/{total_batches} ({batch_start}s-{batch_end}s) ===")
@@ -115,6 +119,10 @@ async def process_video_in_batches(video_id: str, video_url: str, title: str, du
             end_time=batch_end
         )
         logger.info(f"Batch {batch_num} transcription completed. Segments: {len(batch_transcript.segments)}")
+
+        # Accumulate transcript segments for final storage
+        all_transcript_segments.extend(batch_transcript.segments)
+        all_transcript_text_parts.append(batch_transcript.full_text)
 
         # Update status to generating flashcards for this batch
         await db.update_video_status(
@@ -145,7 +153,16 @@ async def process_video_in_batches(video_id: str, video_url: str, title: str, du
 
         logger.info(f"Batch {batch_num}/{total_batches} completed and flashcards stored")
 
-    # All batches complete - mark video as completed
+    # All batches complete - store the complete transcript
+    logger.info(f"Storing complete transcript with {len(all_transcript_segments)} total segments")
+    complete_transcript = {
+        "segments": [seg.dict() for seg in all_transcript_segments],
+        "full_text": " ".join(all_transcript_text_parts),
+        "duration": duration
+    }
+    await db.update_video_transcript(video_id, complete_transcript)
+
+    # Mark video as completed
     await db.update_video_status(video_id, "completed", batch_current=0, batch_total=0)
     logger.info(f"All {total_batches} batches processed successfully")
 
