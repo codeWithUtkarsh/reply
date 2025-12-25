@@ -117,8 +117,8 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
 
       {/* 5. KEY INSIGHTS - AI-generated takeaways */}
       {report.key_takeaways && report.key_takeaways.length > 0 && (
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-gradient-to-b from-gray-900 to-black border border-purple-500/30 rounded-xl p-6 shadow-xl">
+          <h3 className="text-xl font-light text-white mb-4">
             💡 Key Insights
           </h3>
           <ul className="space-y-3">
@@ -127,10 +127,10 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
                 key={index}
                 className="flex gap-3 items-start"
               >
-                <span className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">
+                <span className="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-light mt-0.5">
                   {index + 1}
                 </span>
-                <p className="text-gray-800 dark:text-gray-200 flex-1">{takeaway}</p>
+                <p className="text-gray-300 font-light flex-1">{takeaway}</p>
               </li>
             ))}
           </ul>
@@ -138,29 +138,29 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
       )}
 
       {/* 6. DETAILED ANALYSIS - Collapsible for those who want it */}
-      <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+      <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
         <button
           onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
-          className="w-full bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 px-6 py-4 flex items-center justify-between transition-colors"
+          className="w-full bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 px-6 py-4 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center gap-3">
-            <BarChart3 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="font-semibold text-gray-900 dark:text-white">
+            <BarChart3 className="w-5 h-5 text-gray-400" />
+            <span className="font-light text-white">
               Detailed Performance Analysis
             </span>
           </div>
           {showDetailedAnalysis ? (
-            <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <ChevronUp className="w-5 h-5 text-gray-400" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
         </button>
 
         {showDetailedAnalysis && (
-          <div className="p-6 space-y-6 bg-white dark:bg-gray-800">
+          <div className="p-6 space-y-6 bg-gradient-to-b from-gray-900 to-black">
             {/* Performance Charts */}
             <div>
-              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              <h4 className="text-lg font-light text-white mb-4">
                 Performance Distribution
               </h4>
               <ResponsiveContainer width="100%" height={250}>
@@ -187,7 +187,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
 
             {/* Attempt Breakdown */}
             <div>
-              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              <h4 className="text-lg font-light text-white mb-4">
                 Performance by Type
               </h4>
               <ResponsiveContainer width="100%" height={250}>
@@ -205,28 +205,28 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
 
             {/* Content Topics */}
             {(report.video_type || report.domain || (report.main_topics && report.main_topics.length > 0)) && (
-              <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Tag className="w-5 h-5 text-indigo-600" />
-                  <h4 className="font-bold text-gray-900 dark:text-white">
+                  <Tag className="w-5 h-5 text-emerald-400" />
+                  <h4 className="font-light text-white">
                     Content Overview
                   </h4>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {report.video_type && (
-                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-full text-sm font-semibold">
+                    <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-sm font-light">
                       {report.video_type}
                     </span>
                   )}
                   {report.domain && (
-                    <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-full text-sm font-semibold">
+                    <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full text-sm font-light">
                       {report.domain}
                     </span>
                   )}
                   {report.main_topics?.map((topic, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-sm"
+                      className="px-3 py-1 bg-gray-700 border border-gray-600 text-gray-300 rounded-full text-sm font-light"
                     >
                       {topic}
                     </span>
@@ -238,10 +238,10 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
             {/* Word Cloud */}
             {wordCloudData.length > 0 && (
               <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                <h4 className="text-lg font-light text-white mb-4">
                   Key Topics Covered
                 </h4>
-                <div className="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-4" style={{ height: '300px' }}>
+                <div className="w-full bg-gray-800 border border-gray-700 rounded-lg p-4" style={{ height: '300px' }}>
                   <ReactWordcloud
                     words={wordCloudData}
                     options={{
@@ -265,13 +265,13 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
       </div>
 
       {/* 7. ENCOURAGEMENT - End on a positive note */}
-      <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-xl p-6 text-white text-center">
-        <h3 className="text-2xl font-bold mb-2">
+      <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 text-center shadow-xl shadow-emerald-500/10">
+        <h3 className="text-2xl font-light text-white mb-2">
           {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :
            report.performance_stats.accuracy_rate >= 60 ? '💪 You\'re Making Great Progress!' :
            '🚀 Keep Building Your Skills!'}
         </h3>
-        <p className="text-white/90 text-lg">
+        <p className="text-gray-400 text-lg font-light">
           {report.performance_stats.accuracy_rate >= 80
             ? "You're mastering this material! Ready for the next challenge?"
             : report.performance_stats.accuracy_rate >= 60
