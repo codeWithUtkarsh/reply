@@ -286,6 +286,7 @@ function VideoListItem({ video, formatDuration, projectId, onVideoDeleted }: Vid
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState(false);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -315,14 +316,27 @@ function VideoListItem({ video, formatDuration, projectId, onVideoDeleted }: Vid
         <div className="flex items-center gap-4">
           {/* Thumbnail */}
           <div className="relative w-40 h-24 flex-shrink-0 bg-gray-800 rounded-lg overflow-hidden">
-            <img
-              src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
-              alt={video.title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
-              }}
-            />
+            {thumbnailError ? (
+              <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                <VideoIcon className="w-8 h-8 text-gray-600" />
+              </div>
+            ) : (
+              <img
+                src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
+                alt={video.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (img.src.includes('mqdefault')) {
+                    img.src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
+                  } else if (img.src.includes('hqdefault')) {
+                    img.src = `https://img.youtube.com/vi/${video.id}/default.jpg`;
+                  } else {
+                    setThumbnailError(true);
+                  }
+                }}
+              />
+            )}
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center">
                 <Play className="w-5 h-5 text-emerald-500" />
