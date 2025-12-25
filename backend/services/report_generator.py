@@ -267,33 +267,34 @@ Focus on:
                 'recommendations': []
             }
 
-        # Use AI to analyze weak areas
-        prompt = f"""Analyze the following learning data to identify knowledge gaps and weak areas:
+        # Use AI to analyze growth areas (positive framing)
+        prompt = f"""You are a supportive learning coach. Analyze this student's learning data to identify growth opportunities:
 
 Video Content Summary (first 1500 chars):
 {transcript_text[:1500]}
 
-Questions the student answered INCORRECTLY:
+Questions to practice more:
 {chr(10).join(f"{i+1}. {q}" for i, q in enumerate(weak_questions[:10]))}
 
-Total incorrect: {len(incorrect_attempts)} out of {len(attempts_data)} attempts
+Student progress: {len(attempts_data) - len(incorrect_attempts)} correct, {len(incorrect_attempts)} to improve on
 
-Provide a detailed analysis in JSON format:
+Provide a growth-oriented analysis in JSON format:
 {{
   "weak_concepts": [
-    {{"concept": "specific topic name", "severity": "high/medium/low", "description": "why this is weak"}}
+    {{"concept": "specific topic", "severity": "high/medium/low", "description": "strengthening this will help you [benefit]"}}
   ],
-  "knowledge_gaps": ["gap 1", "gap 2", "gap 3"],
+  "knowledge_gaps": ["opportunity 1", "opportunity 2"],
   "recommendations": [
-    {{"topic": "specific topic to learn", "reason": "why this will help", "priority": "high/medium/low"}}
+    {{"topic": "specific topic", "reason": "mastering this will unlock [concrete benefit]", "priority": "high/medium/low"}}
   ]
 }}
 
-Focus on:
-1. Identifying specific concepts/topics the student struggles with
-2. Severity of each weakness (high = fundamental gap, medium = needs practice, low = minor confusion)
-3. Actionable recommendations for improvement
-4. Prioritize recommendations by impact
+IMPORTANT:
+1. Use positive, growth-oriented language
+2. Focus on benefits, not deficits ("strengthen" not "weak", "opportunity" not "gap")
+3. Connect to bigger goals (why does mastering this matter?)
+4. Be specific and actionable
+5. Prioritize by impact on overall learning
 """
 
         try:
@@ -538,8 +539,8 @@ Mark topics they've covered as "completed" or "in_progress" based on weak areas.
         }
 
     async def _generate_ai_takeaways(self, transcript_text: str, performance_stats: Dict, weak_area_analysis: Dict) -> List[str]:
-        """Generate personalized key takeaways using AI"""
-        prompt = f"""Generate 5-7 personalized key takeaways for a student based on their learning session:
+        """Generate personalized, actionable insights using AI"""
+        prompt = f"""You are a motivating learning coach. Generate 5 personalized insights for this student:
 
 Video Content (first 1500 chars):
 {transcript_text[:1500]}
@@ -548,16 +549,30 @@ Student Performance:
 - Accuracy: {performance_stats['accuracy_rate']}%
 - Correct: {performance_stats['correct_count']}/{performance_stats['total_attempts']}
 
-Weak Areas:
+Growth Areas:
 {json.dumps(weak_area_analysis.get('weak_concepts', [])[:3], indent=2)}
 
-Generate takeaways that:
-1. Summarize what they learned well
-2. Highlight areas needing improvement
-3. Provide actionable advice
-4. Are specific and personalized
+Mastered Topics:
+{json.dumps(weak_area_analysis.get('mastery_analysis', {}).get('mastered', [])[:3], indent=2)}
 
-Return as JSON: {{"takeaways": ["takeaway1", "takeaway2", ...]}}
+Generate insights that:
+1. START with what they did well (celebrate wins first!)
+2. Frame challenges as opportunities, not failures
+3. Include specific, actionable next steps
+4. Connect learning to bigger goals
+5. Are motivating and supportive
+
+Return as JSON: {{"takeaways": ["insight1", "insight2", ...]}}
+
+Examples of GOOD insights:
+- "You've mastered arrays with 90% accuracy! This foundation will make learning linked lists much easier."
+- "Practice binary search trees for 20 minutes to unlock advanced algorithm skills."
+- "Your understanding of loops is strong - build on this by tackling recursion next."
+
+Examples of BAD insights (avoid these):
+- "You got 3 questions wrong on trees." (too negative)
+- "Review the material." (not specific)
+- "Weak in recursion." (not actionable)
 """
 
         try:
@@ -595,32 +610,37 @@ Return as JSON: {{"takeaways": ["takeaway1", "takeaway2", ...]}}
         if not high_priority_concepts:
             high_priority_concepts = weak_concepts[:3]
 
-        prompt = f"""Generate YouTube video search recommendations for a student with knowledge gaps:
+        prompt = f"""You are an expert at finding educational content. Recommend specific YouTube videos for a student:
 
 Domain: {domain}
-Main Topics: {', '.join(main_topics)}
+Topics: {', '.join(main_topics)}
 
-Weak Concepts:
+Growth Areas:
 {json.dumps(high_priority_concepts, indent=2)}
 
-For each weak concept, generate 2-3 highly specific YouTube search queries that would help the student.
-Also suggest the type of video that would be most helpful (e.g., "Tutorial", "Explained Simply", "Crash Course", etc.)
+For each area, recommend 1-2 SPECIFIC, POPULAR YouTube videos that actually exist.
 
 Return as JSON:
 {{
   "recommendations": [
     {{
-      "concept": "weak concept name",
+      "concept": "topic name",
       "search_queries": [
-        {{"query": "specific search query", "video_type": "Tutorial/Course/etc"}},
-        {{"query": "another search query", "video_type": "Explained/etc"}}
+        {{
+          "query": "Actual popular video title (e.g., 'Binary Search Tree - Abdul Bari')",
+          "video_type": "Tutorial"
+        }}
       ],
-      "why_helpful": "Brief explanation of why these will help"
+      "why_helpful": "This will help you [specific benefit]"
     }}
   ]
 }}
 
-Make search queries very specific and targeted to address the exact knowledge gap.
+IMPORTANT:
+- Recommend REAL, popular educational channels (CS Dojo, Abdul Bari, freeCodeCamp, etc.)
+- Use specific, well-known video titles when possible
+- Focus on beginner-friendly, highly-rated content
+- Be specific: "Binary Search Trees Explained - CS Dojo" not "BST tutorial"
 """
 
         try:
