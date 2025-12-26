@@ -120,6 +120,40 @@ export default function CelebrationSection({
           )}
         </div>
 
+        {/* Content Overview */}
+        {(videoType || domain || mainTopics.length > 0) && (
+          <div className="mb-6">
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-700 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Tag className="w-5 h-5 text-purple-400" />
+                <h4 className="font-light text-white text-lg">
+                  Content Overview
+                </h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {videoType && (
+                  <span className="px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-sm font-light">
+                    {videoType}
+                  </span>
+                )}
+                {domain && (
+                  <span className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full text-sm font-light">
+                    {domain}
+                  </span>
+                )}
+                {mainTopics.map((topic, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-full text-sm font-light"
+                  >
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Key Topics Covered - Word Cloud */}
         {wordCloudData.length > 0 && (
           <div className="mb-6">
@@ -334,40 +368,6 @@ export default function CelebrationSection({
         {attemptsData.length > 0 && (
           <div className="mt-6">
             <StudyPatternGraph attempts={attemptsData} />
-          </div>
-        )}
-
-        {/* Content Overview */}
-        {(videoType || domain || mainTopics.length > 0) && (
-          <div className="mt-6">
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-700 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Tag className="w-5 h-5 text-purple-400" />
-                <h4 className="font-light text-white text-lg">
-                  Content Overview
-                </h4>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {videoType && (
-                  <span className="px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-sm font-light">
-                    {videoType}
-                  </span>
-                )}
-                {domain && (
-                  <span className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full text-sm font-light">
-                    {domain}
-                  </span>
-                )}
-                {mainTopics.map((topic, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-full text-sm font-light"
-                  >
-                    {topic}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
         )}
       </div>
