@@ -73,6 +73,48 @@ export default function LearnPage() {
     loadVideo();
   }, [videoId]);
 
+  // Load flashcard progress when user becomes available
+  useEffect(() => {
+    const loadFlashcardProgress = async () => {
+      if (!userId || !videoId) {
+        console.log('Waiting for userId and videoId to load flashcard progress...');
+        return;
+      }
+
+      try {
+        console.log('🔄 Loading flashcard progress for user:', userId, 'video:', videoId);
+        const attemptsData = await reportsApi.getUserAttempts(userId, videoId);
+        console.log('Attempts data received:', attemptsData);
+
+        if (attemptsData && attemptsData.attempts && attemptsData.attempts.length > 0) {
+          // Filter flashcard attempts and extract question IDs
+          const flashcardAttempts = attemptsData.attempts
+            .filter((attempt: any) => attempt.question_type === 'flashcard');
+
+          const flashcardQuestionIds = flashcardAttempts
+            .map((attempt: any) => attempt.question_id);
+
+          console.log('Flashcard attempts found:', flashcardAttempts.length);
+          console.log('Question IDs to restore:', flashcardQuestionIds);
+
+          // Restore answered flashcards state
+          if (flashcardQuestionIds.length > 0) {
+            setAnsweredFlashcards(new Set(flashcardQuestionIds));
+            console.log(`✅ Successfully restored ${flashcardQuestionIds.length} answered flashcards from previous session`);
+          }
+        } else {
+          console.log('No previous flashcard attempts found - starting fresh');
+        }
+      } catch (err: any) {
+        console.error('Error loading flashcard attempts:', err);
+        console.error('Error details:', err.response?.data || err.message);
+        // This is okay - user might not have any attempts yet
+      }
+    };
+
+    loadFlashcardProgress();
+  }, [userId, videoId]); // Re-run when userId or videoId changes
+
   // Poll for processing status if not completed
   useEffect(() => {
     if (processingStatus && processingStatus !== 'completed' && processingStatus !== 'failed') {
@@ -149,40 +191,8 @@ export default function LearnPage() {
         setFlashcardsLoading(true);
       }
 
-      // Load user's previous attempts to restore answered flashcards
-      if (userId) {
-        try {
-          console.log('Loading flashcard progress for user:', userId, 'video:', videoId);
-          const attemptsData = await reportsApi.getUserAttempts(userId, videoId);
-          console.log('Attempts data received:', attemptsData);
-
-          if (attemptsData && attemptsData.attempts && attemptsData.attempts.length > 0) {
-            // Filter flashcard attempts and extract question IDs
-            const flashcardAttempts = attemptsData.attempts
-              .filter((attempt: any) => attempt.question_type === 'flashcard');
-
-            const flashcardQuestionIds = flashcardAttempts
-              .map((attempt: any) => attempt.question_id);
-
-            console.log('Flashcard attempts found:', flashcardAttempts.length);
-            console.log('Question IDs to restore:', flashcardQuestionIds);
-
-            // Restore answered flashcards state
-            if (flashcardQuestionIds.length > 0) {
-              setAnsweredFlashcards(new Set(flashcardQuestionIds));
-              console.log(`✅ Successfully restored ${flashcardQuestionIds.length} answered flashcards from previous session`);
-            }
-          } else {
-            console.log('No previous flashcard attempts found - starting fresh');
-          }
-        } catch (err: any) {
-          console.error('Error loading flashcard attempts:', err);
-          console.error('Error details:', err.response?.data || err.message);
-          // This is okay - user might not have any attempts yet
-        }
-      } else {
-        console.log('No userId available - skipping flashcard progress restoration');
-      }
+      // Note: Flashcard progress restoration is now handled by a separate useEffect
+      // that watches for userId changes (see useEffect with [userId, videoId] dependency)
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load video');
     } finally {
