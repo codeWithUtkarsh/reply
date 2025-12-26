@@ -10,7 +10,8 @@ import QuizComponent from '@/components/QuizComponent';
 import LearningReportComponent from '@/components/LearningReportV2';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
-import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
+import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText, Layers } from 'lucide-react';
+import FlashcardReviewModal from '@/components/report-v2/FlashcardModal';
 
 // Dynamically import VideoNotes component to avoid SSR issues with Mermaid
 const VideoNotesComponent = dynamic(() => import('@/components/VideoNotes'), {
@@ -63,6 +64,8 @@ export default function LearnPage() {
   const [currentMissedIndex, setCurrentMissedIndex] = useState(0);
   const [batchCurrent, setBatchCurrent] = useState(0);
   const [batchTotal, setBatchTotal] = useState(0);
+  const [showFlashcardReview, setShowFlashcardReview] = useState(false);
+  const [reviewFlashcards, setReviewFlashcards] = useState<any[]>([]);
 
   useEffect(() => {
     loadVideo();
@@ -386,6 +389,21 @@ export default function LearnPage() {
       }
     }
     setShowNotes(true);
+  };
+
+  const handleViewAllFlashcards = () => {
+    // Transform FlashCard format to the format expected by FlashcardModal
+    const transformedFlashcards = flashcards.map(fc => ({
+      id: fc.question.id,
+      question_data: {
+        question: fc.question.question_text,
+        answer: fc.question.options[fc.question.correct_answer],
+        options: fc.question.options,
+        correct_answer: fc.question.correct_answer
+      }
+    }));
+    setReviewFlashcards(transformedFlashcards);
+    setShowFlashcardReview(true);
   };
 
   if (loading) {
@@ -732,6 +750,18 @@ export default function LearnPage() {
                 </button>
               )}
             </div>
+
+            {/* View All Flashcards Card */}
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-4 shadow-xl">
+              <button
+                onClick={handleViewAllFlashcards}
+                disabled={flashcards.length === 0}
+                className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-500 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-orange-500/20"
+              >
+                <Layers className="w-4 h-4" />
+                {flashcards.length === 0 ? 'No Flashcards Yet' : `View All Flashcards (${flashcards.length})`}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -794,6 +824,13 @@ export default function LearnPage() {
           </div>
         </div>
       )}
+
+      {/* Flashcard Review Modal */}
+      <FlashcardReviewModal
+        isOpen={showFlashcardReview}
+        onClose={() => setShowFlashcardReview(false)}
+        flashcards={reviewFlashcards}
+      />
     </AuthenticatedLayout>
   );
 }
