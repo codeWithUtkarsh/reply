@@ -157,10 +157,6 @@ export default function CelebrationSection({
         {/* Key Topics Covered - Word Cloud */}
         {wordCloudData.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-xl font-light text-white mb-4 flex items-center gap-2">
-              <Tag className="w-5 h-5 text-gray-400" />
-              Key Topics Covered
-            </h3>
             <div className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-4" style={{ height: '300px' }}>
               <ReactWordcloud
                 words={wordCloudData}
