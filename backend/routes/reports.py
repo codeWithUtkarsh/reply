@@ -132,10 +132,13 @@ async def get_report(report_id: str):
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
 
-        # Parse JSON fields
-        report['word_frequency'] = json.loads(report['word_frequency'])
-        report['performance_stats'] = json.loads(report['performance_stats'])
-        report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
+        # Parse JSON fields - handle both string and dict formats
+        if isinstance(report.get('word_frequency'), str):
+            report['word_frequency'] = json.loads(report['word_frequency'])
+        if isinstance(report.get('performance_stats'), str):
+            report['performance_stats'] = json.loads(report['performance_stats'])
+        if isinstance(report.get('attempt_breakdown'), str):
+            report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
 
         # Fetch attempts data for study pattern visualization
         attempts = await db.get_user_attempts(report['user_id'], report['video_id'])
@@ -169,9 +172,13 @@ async def get_user_reports(user_id: str, video_id: Optional[str] = None):
 
         # Parse JSON fields for each report and add attempts data
         for report in reports:
-            report['word_frequency'] = json.loads(report['word_frequency'])
-            report['performance_stats'] = json.loads(report['performance_stats'])
-            report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
+            # Handle fields that might already be deserialized or still be JSON strings
+            if isinstance(report.get('word_frequency'), str):
+                report['word_frequency'] = json.loads(report['word_frequency'])
+            if isinstance(report.get('performance_stats'), str):
+                report['performance_stats'] = json.loads(report['performance_stats'])
+            if isinstance(report.get('attempt_breakdown'), str):
+                report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
 
             # Fetch attempts data for study pattern visualization
             attempts = await db.get_user_attempts(report['user_id'], report['video_id'])
