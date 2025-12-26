@@ -2,19 +2,12 @@
 
 import { LearningReport } from '@/lib/api';
 import CelebrationSection from './report-v2/CelebrationSection';
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
-import ReactWordcloud from 'react-wordcloud';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface LearningReportV2Props {
   report: LearningReport;
 }
 
-const COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
-
 export default function LearningReportV2({ report }: LearningReportV2Props) {
-  const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
 
   // Transform data for celebration section - mastered knowledge areas
   const masteredTopics = report.weak_areas?.mastery_analysis?.mastered || [];
@@ -57,25 +50,6 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
       end_time: item.end_time
     }));
 
-  // Prepare performance data for detailed section
-  const performanceData = [
-    { name: 'Correct', value: report.performance_stats.correct_count, color: '#10b981' },
-    { name: 'Incorrect', value: report.performance_stats.incorrect_count, color: '#ef4444' },
-  ];
-
-  const attemptData = [
-    {
-      type: 'Flashcards',
-      correct: report.attempt_breakdown.flashcards.correct,
-      incorrect: report.attempt_breakdown.flashcards.incorrect,
-    },
-    {
-      type: 'Quiz',
-      correct: report.attempt_breakdown.quiz.correct,
-      incorrect: report.attempt_breakdown.quiz.incorrect,
-    },
-  ];
-
   const wordCloudData = Object.entries(report.word_frequency || {}).map(([text, value]) => ({
     text,
     value,
@@ -87,7 +61,6 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
 
   return (
     <div className="w-full space-y-8">
-      {/* 1. CELEBRATION FIRST - Start with wins! */}
       <CelebrationSection
         masteredTopics={masteredTopics}
         overallScore={report.executive_summary?.overall_score || report.performance_stats.accuracy_rate}
@@ -101,91 +74,6 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         domain={report.domain}
         mainTopics={report.main_topics}
       />
-
-      {/* 2. DETAILED ANALYSIS - Collapsible for those who want it */}
-      <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
-        <button
-          onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
-          className="w-full bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 px-6 py-4 flex items-center justify-between transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <BarChart3 className="w-5 h-5 text-gray-400" />
-            <span className="font-light text-white">
-              Detailed Performance Analysis
-            </span>
-          </div>
-          {showDetailedAnalysis ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </button>
-
-        {showDetailedAnalysis && (
-          <div className="p-6 space-y-6 bg-gradient-to-b from-gray-900 to-black">
-            {/* Performance Charts */}
-            <div>
-              <h4 className="text-lg font-light text-white mb-4">
-                Performance Distribution
-              </h4>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={performanceData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {performanceData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Attempt Breakdown */}
-            <div>
-              <h4 className="text-lg font-light text-white mb-4">
-                Performance by Type
-              </h4>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={attemptData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="type" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="correct" fill="#10b981" name="Correct" />
-                  <Bar dataKey="incorrect" fill="#ef4444" name="Incorrect" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 4. ENCOURAGEMENT - End on a positive note */}
-      <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 text-center shadow-xl shadow-emerald-500/10">
-        <h3 className="text-2xl font-light text-white mb-2">
-          {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :
-           report.performance_stats.accuracy_rate >= 60 ? '💪 You\'re Making Great Progress!' :
-           '🚀 Keep Building Your Skills!'}
-        </h3>
-        <p className="text-gray-400 text-lg font-light">
-          {report.performance_stats.accuracy_rate >= 80
-            ? "You're mastering this material! Ready for the next challenge?"
-            : report.performance_stats.accuracy_rate >= 60
-            ? "Follow your action plan above and you'll be an expert in no time!"
-            : "Every expert was once a beginner. Stay consistent and watch your progress soar!"}
-        </p>
-      </div>
     </div>
   );
 }
