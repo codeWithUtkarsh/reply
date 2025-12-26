@@ -139,9 +139,17 @@ export default function LearnPage() {
           console.log('No previous quiz reports found - user hasn\'t taken quiz yet');
         }
       } catch (err: any) {
-        console.error('Error loading quiz report:', err);
-        console.error('Error details:', err.response?.data || err.message);
-        // This is okay - user might not have taken the quiz yet
+        // Only log errors that aren't 404 (not found is expected for users who haven't taken quiz)
+        if (err.response?.status === 404) {
+          console.log('No quiz report found (404) - user hasn\'t taken quiz yet');
+        } else if (err.response?.status === 500) {
+          console.warn('⚠️ Backend error loading quiz report (500) - continuing without report');
+          console.error('Error details:', err.response?.data);
+        } else {
+          console.error('❌ Error loading quiz report:', err);
+          console.error('Error details:', err.response?.data || err.message);
+        }
+        // Don't set error state - this is non-critical, user can still take quiz
       }
     };
 
