@@ -187,7 +187,14 @@ export default function Sidebar() {
           </div>
 
           {/* Other Menu Items */}
-          <button className="w-full px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all">
+          <button
+            onClick={() => router.push('/analytics')}
+            className={`w-full px-4 py-3 flex items-center gap-3 text-sm transition-all ${
+              pathname === '/analytics'
+                ? 'text-emerald-400 bg-emerald-500/10'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+            }`}
+          >
             <BarChart3 className="w-4 h-4" />
             <span className="font-light">Analytics</span>
           </button>
