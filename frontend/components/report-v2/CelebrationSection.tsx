@@ -181,7 +181,7 @@ export default function CelebrationSection({
                             <div className="mt-1">
                               <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                             </div>
-                            <p className="font-light text-white">{topic.concept}</p>
+                            <p className="font-light text-white text-sm break-words">{topic.concept}</p>
                           </div>
                         </td>
                       </tr>
@@ -214,10 +214,10 @@ export default function CelebrationSection({
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-start gap-2 flex-1">
-                        <TrendingUp className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                        <p className="font-light text-white">{area.concept}</p>
+                        <TrendingUp className="w-4 h-4 text-purple-400 flex-shrink-0 mt-1" />
+                        <p className="font-light text-white text-sm break-words">{area.concept}</p>
                       </div>
-                      <span className="text-purple-400 font-light text-lg ml-2">
+                      <span className="text-purple-400 font-light text-sm ml-2 whitespace-nowrap">
                         {area.accuracy}%
                       </span>
                     </div>

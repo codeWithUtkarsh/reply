@@ -416,17 +416,24 @@ IMPORTANT:
             if question:
                 # Extract concept from question (handle both quiz and flashcard formats)
                 try:
+                    full_concept = ""
                     # Try quiz question format first (has question_text directly)
                     if 'question_text' in question:
-                        concept = question['question_text'][:100]
+                        full_concept = question['question_text']
                     # Try flashcard format (has question_data)
                     elif isinstance(question.get('question_data'), dict):
-                        concept = question['question_data'].get('question', '')[:100]
+                        full_concept = question['question_data'].get('question', '')
                     elif isinstance(question.get('question_data'), str):
                         parsed = json.loads(question['question_data'])
-                        concept = parsed.get('question', '')[:100]
+                        full_concept = parsed.get('question', '')
                     else:
-                        concept = f"Knowledge area from question {q_id}"
+                        full_concept = f"Knowledge area from question {q_id}"
+
+                    # Truncate to 65 chars for concise display, add ellipsis if needed
+                    if len(full_concept) > 65:
+                        concept = full_concept[:65].strip() + "..."
+                    else:
+                        concept = full_concept
                 except:
                     concept = f"Knowledge area from question {q_id}"
 
