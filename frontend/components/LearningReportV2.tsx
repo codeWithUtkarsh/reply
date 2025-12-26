@@ -2,9 +2,8 @@
 
 import { LearningReport } from '@/lib/api';
 import CelebrationSection from './report-v2/CelebrationSection';
-import StrengthsAndGrowthSection from './report-v2/StrengthsAndGrowthSection';
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, BarChart3, Tag } from 'lucide-react';
+import { ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
 import ReactWordcloud from 'react-wordcloud';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -98,15 +97,12 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         actionItems={actionItems}
         wordCloudData={wordCloudData}
         attemptsData={report.attempts_data || []}
+        videoType={report.video_type}
+        domain={report.domain}
+        mainTopics={report.main_topics}
       />
 
-      {/* 2. STRENGTHS & GROWTH - Detailed breakdown of what you know and what to practice */}
-      <StrengthsAndGrowthSection
-        strengths={strengths}
-        growthAreas={growthAreas}
-      />
-
-      {/* 3. DETAILED ANALYSIS - Collapsible for those who want it */}
+      {/* 2. DETAILED ANALYSIS - Collapsible for those who want it */}
       <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
         <button
           onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
@@ -171,38 +167,6 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-
-            {/* Content Topics */}
-            {(report.video_type || report.domain || (report.main_topics && report.main_topics.length > 0)) && (
-              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Tag className="w-5 h-5 text-emerald-400" />
-                  <h4 className="font-light text-white">
-                    Content Overview
-                  </h4>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {report.video_type && (
-                    <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-sm font-light">
-                      {report.video_type}
-                    </span>
-                  )}
-                  {report.domain && (
-                    <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full text-sm font-light">
-                      {report.domain}
-                    </span>
-                  )}
-                  {report.main_topics?.map((topic, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-gray-700 border border-gray-600 text-gray-300 rounded-full text-sm font-light"
-                    >
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>

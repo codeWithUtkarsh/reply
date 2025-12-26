@@ -30,6 +30,9 @@ interface CelebrationProps {
   actionItems?: ActionItem[];
   wordCloudData?: Array<{ text: string; value: number }>;
   attemptsData?: AttemptData[];
+  videoType?: string;
+  domain?: string;
+  mainTopics?: string[];
 }
 
 export default function CelebrationSection({
@@ -41,7 +44,10 @@ export default function CelebrationSection({
   growthAreas = [],
   actionItems = [],
   wordCloudData = [],
-  attemptsData = []
+  attemptsData = [],
+  videoType,
+  domain,
+  mainTopics = []
 }: CelebrationProps) {
   const getPriorityColor = (priority: number) => {
     if (priority === 1) return {
@@ -328,6 +334,40 @@ export default function CelebrationSection({
         {attemptsData.length > 0 && (
           <div className="mt-6">
             <StudyPatternGraph attempts={attemptsData} />
+          </div>
+        )}
+
+        {/* Content Overview */}
+        {(videoType || domain || mainTopics.length > 0) && (
+          <div className="mt-6">
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-700 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Tag className="w-5 h-5 text-purple-400" />
+                <h4 className="font-light text-white text-lg">
+                  Content Overview
+                </h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {videoType && (
+                  <span className="px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-sm font-light">
+                    {videoType}
+                  </span>
+                )}
+                {domain && (
+                  <span className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full text-sm font-light">
+                    {domain}
+                  </span>
+                )}
+                {mainTopics.map((topic, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-full text-sm font-light"
+                  >
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
