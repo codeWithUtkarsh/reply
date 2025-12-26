@@ -3,19 +3,23 @@
 import { LearningReport } from '@/lib/api';
 import CelebrationSection from './report-v2/CelebrationSection';
 import StrengthsAndGrowthSection from './report-v2/StrengthsAndGrowthSection';
+import ResourceCard from './report-v2/ResourceCard';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, BarChart3, Tag } from 'lucide-react';
 import ReactWordcloud from 'react-wordcloud';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface LearningReportV2Props {
   report: LearningReport;
+  hasNotes?: boolean;
 }
 
 const COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
-export default function LearningReportV2({ report }: LearningReportV2Props) {
+export default function LearningReportV2({ report, hasNotes = false }: LearningReportV2Props) {
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
+  const router = useRouter();
 
   // Transform data for celebration section - mastered knowledge areas
   const masteredTopics = report.weak_areas?.mastery_analysis?.mastered || [];
@@ -86,8 +90,37 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
   console.log('Word Cloud Data:', wordCloudData);
   console.log('Word Frequency:', report.word_frequency);
 
+  // Resource card handlers
+  const handleGenerateNotes = () => {
+    router.push(`/videos/${report.video_id}/notes/generate`);
+  };
+
+  const handleViewNotes = () => {
+    router.push(`/videos/${report.video_id}/notes`);
+  };
+
+  const handleViewReport = () => {
+    // Already viewing the report, could scroll to top or show message
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleRetakeQuiz = () => {
+    router.push(`/videos/${report.video_id}/quiz`);
+  };
+
   return (
     <div className="w-full space-y-8">
+      {/* 0. RESOURCE CARD - Quick access to learning materials */}
+      <ResourceCard
+        hasNotes={hasNotes}
+        hasQuizReport={true}
+        videoId={report.video_id}
+        onGenerateNotes={handleGenerateNotes}
+        onViewNotes={handleViewNotes}
+        onViewReport={handleViewReport}
+        onRetakeQuiz={handleRetakeQuiz}
+      />
+
       {/* 1. CELEBRATION FIRST - Start with wins! */}
       <CelebrationSection
         masteredTopics={masteredTopics}
