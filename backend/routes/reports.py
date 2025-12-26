@@ -16,6 +16,7 @@ class AttemptSubmission(BaseModel):
     selected_answer: int
     correct_answer: int
     timestamp: Optional[float] = 0
+    quiz_id: Optional[str] = None  # For tracking which quiz this attempt belongs to
 
 
 class GenerateReportRequest(BaseModel):
@@ -38,7 +39,8 @@ async def record_attempt(attempt: AttemptSubmission):
             selected_answer=attempt.selected_answer,
             correct_answer=attempt.correct_answer,
             is_correct=is_correct,
-            timestamp=attempt.timestamp
+            timestamp=attempt.timestamp,
+            quiz_id=attempt.quiz_id  # Track which quiz this attempt belongs to
         )
 
         return {
@@ -67,6 +69,21 @@ async def generate_report(request: GenerateReportRequest):
         # Get all user attempts for this video
         attempts = await db.get_user_attempts(request.user_id, request.video_id)
 
+        # Get both flashcard questions and quiz questions for analysis
+        # Note: Currently quiz questions are from the same video/knowledge areas as flashcards
+        # Future: Quiz questions may come from multiple videos/sources to test broader knowledge
+        flashcard_questions = await db.get_questions(request.video_id)
+
+        # Also get quiz questions
+        quiz_data = await db.get_quiz(request.quiz_id)
+        quiz_questions = []
+        if quiz_data:
+            questions_json = json.loads(quiz_data['questions'])
+            quiz_questions = questions_json
+
+        # Merge both types of questions for comprehensive knowledge assessment
+        questions = flashcard_questions + quiz_questions
+
         # Convert attempts to the format needed by report generator
         attempts_data = []
         for attempt in attempts:
@@ -77,20 +94,23 @@ async def generate_report(request: GenerateReportRequest):
                 'correct_answer': attempt['correct_answer'],
                 'is_correct': attempt['is_correct'],
                 'attempt_number': attempt.get('attempt_number', 1),
-                'timestamp': attempt.get('timestamp', 0)
+                'timestamp': attempt.get('timestamp', 0),
+                'quiz_id': attempt.get('quiz_id')  # Include quiz_id for quiz score calculation
             })
 
-        # Generate report
+        # Generate enhanced report with weak area analysis
         report = await report_generator.generate_report(
             user_id=request.user_id,
             video_id=request.video_id,
             quiz_id=request.quiz_id,
             transcript_text=transcript_text,
-            attempts_data=attempts_data
+            attempts_data=attempts_data,
+            questions_data=questions  # NEW: Pass questions for weak area analysis
         )
 
-        # Store report in database
-        await db.store_report(report)
+        # Store report in database (exclude attempts_data as it's only needed for API response)
+        report_for_db = {k: v for k, v in report.items() if k != 'attempts_data'}
+        await db.store_report(report_for_db)
 
         return {
             "success": True,
@@ -112,10 +132,29 @@ async def get_report(report_id: str):
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
 
-        # Parse JSON fields
-        report['word_frequency'] = json.loads(report['word_frequency'])
-        report['performance_stats'] = json.loads(report['performance_stats'])
-        report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
+        # Parse JSON fields - handle both string and dict formats
+        if isinstance(report.get('word_frequency'), str):
+            report['word_frequency'] = json.loads(report['word_frequency'])
+        if isinstance(report.get('performance_stats'), str):
+            report['performance_stats'] = json.loads(report['performance_stats'])
+        if isinstance(report.get('attempt_breakdown'), str):
+            report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
+
+        # Fetch attempts data for study pattern visualization
+        attempts = await db.get_user_attempts(report['user_id'], report['video_id'])
+        report['attempts_data'] = [
+            {
+                'question_id': attempt['question_id'],
+                'question_type': attempt['question_type'],
+                'selected_answer': attempt['selected_answer'],
+                'correct_answer': attempt['correct_answer'],
+                'is_correct': attempt['is_correct'],
+                'attempt_number': attempt.get('attempt_number', 1),
+                'timestamp': attempt.get('timestamp', 0),
+                'quiz_id': attempt.get('quiz_id')
+            }
+            for attempt in attempts
+        ]
 
         return report
 
@@ -131,11 +170,31 @@ async def get_user_reports(user_id: str, video_id: Optional[str] = None):
     try:
         reports = await db.get_user_reports(user_id, video_id)
 
-        # Parse JSON fields for each report
+        # Parse JSON fields for each report and add attempts data
         for report in reports:
-            report['word_frequency'] = json.loads(report['word_frequency'])
-            report['performance_stats'] = json.loads(report['performance_stats'])
-            report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
+            # Handle fields that might already be deserialized or still be JSON strings
+            if isinstance(report.get('word_frequency'), str):
+                report['word_frequency'] = json.loads(report['word_frequency'])
+            if isinstance(report.get('performance_stats'), str):
+                report['performance_stats'] = json.loads(report['performance_stats'])
+            if isinstance(report.get('attempt_breakdown'), str):
+                report['attempt_breakdown'] = json.loads(report['attempt_breakdown'])
+
+            # Fetch attempts data for study pattern visualization
+            attempts = await db.get_user_attempts(report['user_id'], report['video_id'])
+            report['attempts_data'] = [
+                {
+                    'question_id': attempt['question_id'],
+                    'question_type': attempt['question_type'],
+                    'selected_answer': attempt['selected_answer'],
+                    'correct_answer': attempt['correct_answer'],
+                    'is_correct': attempt['is_correct'],
+                    'attempt_number': attempt.get('attempt_number', 1),
+                    'timestamp': attempt.get('timestamp', 0),
+                    'quiz_id': attempt.get('quiz_id')
+                }
+                for attempt in attempts
+            ]
 
         return {
             "user_id": user_id,

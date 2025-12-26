@@ -23,6 +23,7 @@ class VideoProcessor:
                     'url': url,
                     'thumbnail': info.get('thumbnail'),
                     'description': info.get('description', ''),
+                    'language': info.get('language', ''),
                 }
         except Exception as e:
             # For direct video URLs or non-YouTube sources
@@ -32,6 +33,7 @@ class VideoProcessor:
                 'url': url,
                 'thumbnail': None,
                 'description': '',
+                'language': '',
             }
 
     def generate_video_id(self, url: str) -> str:

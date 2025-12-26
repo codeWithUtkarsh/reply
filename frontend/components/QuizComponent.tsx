@@ -54,6 +54,8 @@ export default function QuizComponent({
       await onSubmit(formattedAnswers);
     } catch (err) {
       console.error('Failed to submit quiz:', err);
+    } finally {
+      // Always reset submitting state after completion (success or failure)
       setSubmitting(false);
     }
   };

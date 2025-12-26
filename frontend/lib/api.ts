@@ -59,15 +59,108 @@ export interface QuizResult {
   weak_areas: VideoSegment[];
 }
 
+// Enhanced Report Interfaces
+export interface WeakConcept {
+  concept: string;
+  severity: 'high' | 'medium' | 'low';
+  description: string;
+}
+
+export interface MasteryLevel {
+  concept: string;
+  accuracy: number;
+  start_time?: number;
+  end_time?: number;
+}
+
+export interface MasteryAnalysis {
+  mastered: MasteryLevel[];
+  learning: MasteryLevel[];
+  needs_review: MasteryLevel[];
+}
+
+export interface Recommendation {
+  topic: string;
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface WeakAreas {
+  weak_concepts: WeakConcept[];
+  mastery_analysis: MasteryAnalysis;
+  knowledge_gaps: string[];
+  recommendations: Recommendation[];
+}
+
+export interface VideoSearchQuery {
+  query: string;
+  video_type: string;
+  youtube_search_url: string;
+}
+
+export interface VideoRecommendation {
+  concept: string;
+  search_queries: VideoSearchQuery[];
+  why_helpful: string;
+}
+
+export interface LearningPathStep {
+  step: number;
+  topic: string;
+  status: 'completed' | 'in_progress' | 'not_started';
+  description: string;
+  estimated_time: string;
+}
+
+export interface NextStep {
+  priority: number;
+  topic: string;
+  reason: string;
+  prerequisites: string[];
+}
+
+export interface CircuitNode {
+  id: string;
+  label: string;
+  status: 'mastered' | 'learning' | 'locked';
+  connections: string[];
+}
+
+export interface LearningPath {
+  learning_path: LearningPathStep[];
+  next_steps: NextStep[];
+  circuit_map: CircuitNode[];
+}
+
+export interface ExecutiveSummary {
+  overall_score: number;
+  status: 'excellent' | 'good' | 'needs_improvement';
+  time_spent: number;
+  topics_mastered: number;
+  topics_in_progress: number;
+  topics_to_review: number;
+}
+
 export interface LearningReport {
   report_id: string;
   user_id: string;
   video_id: string;
   quiz_id: string;
-  word_frequency: { [key: string]: number };
-  video_type?: string;
-  domain?: string;
-  main_topics?: string[];
+
+  // Priority 1: Executive Summary & Key Takeaways
+  key_takeaways: string[];
+  executive_summary: ExecutiveSummary;
+
+  // Priority 2: Weak Areas & Recommendations
+  weak_areas: WeakAreas;
+
+  // Priority 3: Video Recommendations
+  video_recommendations: VideoRecommendation[];
+
+  // Priority 4: Learning Path
+  learning_path: LearningPath;
+
+  // Priority 5: Performance Stats
   performance_stats: {
     total_attempts: number;
     correct_count: number;
@@ -89,7 +182,25 @@ export interface LearningReport {
       accuracy: number;
     };
   };
-  key_takeaways: string[];
+
+  // Priority 6: Content Analysis
+  word_frequency: { [key: string]: number };
+  video_type?: string;
+  domain?: string;
+  main_topics?: string[];
+
+  // Priority 7: Raw attempts data for study pattern visualization
+  attempts_data?: Array<{
+    question_id: string;
+    question_type: string;
+    selected_answer: number;
+    correct_answer: number;
+    is_correct: boolean;
+    attempt_number: number;
+    timestamp: number;
+    quiz_id?: string;
+  }>;
+
   created_at?: string;
 }
 
@@ -198,9 +309,10 @@ export const questionsApi = {
 };
 
 export const quizApi = {
-  generateQuiz: async (videoId: string): Promise<QuizResponse> => {
+  generateQuiz: async (videoId: string, userId?: string): Promise<QuizResponse> => {
     const response = await api.post('/api/quiz/generate', {
       video_id: videoId,
+      user_id: userId,
     });
     return response.data;
   },
@@ -231,7 +343,8 @@ export const reportsApi = {
     questionType: string,
     selectedAnswer: number,
     correctAnswer: number,
-    timestamp: number = 0
+    timestamp: number = 0,
+    quizId?: string
   ) => {
     const response = await api.post('/api/reports/attempt', {
       user_id: userId,
@@ -241,6 +354,7 @@ export const reportsApi = {
       selected_answer: selectedAnswer,
       correct_answer: correctAnswer,
       timestamp,
+      quiz_id: quizId,  // Track which quiz this attempt belongs to
     });
     return response.data;
   },

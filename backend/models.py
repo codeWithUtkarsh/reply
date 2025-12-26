@@ -61,6 +61,7 @@ class AnswerResponse(BaseModel):
 
 class QuizRequest(BaseModel):
     video_id: str
+    user_id: Optional[str] = None
 
 
 class QuizResponse(BaseModel):

@@ -4,6 +4,11 @@ import { LearningReport } from '@/lib/api';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Award, TrendingUp, Brain, Target, BookOpen, Tag, Lightbulb } from 'lucide-react';
 import ReactWordcloud from 'react-wordcloud';
+import ExecutiveSummaryBanner from './report/ExecutiveSummaryBanner';
+import WeakAreasSection from './report/WeakAreasSection';
+import VideoRecommendationsSection from './report/VideoRecommendationsSection';
+import MasteryProgressBars from './report/MasteryProgressBars';
+import LearningPathCircuitMap from './report/LearningPathCircuitMap';
 
 interface LearningReportProps {
   report: LearningReport;
@@ -40,18 +45,57 @@ export default function LearningReportComponent({ report }: LearningReportProps)
 
   return (
     <div className="w-full space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <div className="flex items-center justify-center mb-4">
-          <Award className="w-16 h-16 text-yellow-500" />
+      {/* PRIORITY 1: Executive Summary Banner */}
+      {report.executive_summary && (
+        <ExecutiveSummaryBanner summary={report.executive_summary} />
+      )}
+
+      {/* PRIORITY 2: Key Takeaways (MOVED TO TOP!) */}
+      {report.key_takeaways && report.key_takeaways.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <BookOpen className="w-6 h-6 text-indigo-600" />
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              Key Takeaways
+            </h3>
+          </div>
+          <ul className="space-y-3">
+            {report.key_takeaways.map((takeaway, index) => (
+              <li
+                key={index}
+                className="p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg"
+              >
+                <div className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    {index + 1}
+                  </span>
+                  <p className="text-gray-800 dark:text-gray-200">{takeaway}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Learning Report
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Your comprehensive performance analysis
-        </p>
-      </div>
+      )}
+
+      {/* PRIORITY 3: Weak Areas & Recommendations */}
+      {report.weak_areas && (
+        <WeakAreasSection weakAreas={report.weak_areas} />
+      )}
+
+      {/* PRIORITY 4: Video Recommendations */}
+      {report.video_recommendations && report.video_recommendations.length > 0 && (
+        <VideoRecommendationsSection recommendations={report.video_recommendations} />
+      )}
+
+      {/* PRIORITY 5: Mastery Progress */}
+      {report.weak_areas?.mastery_analysis && (
+        <MasteryProgressBars mastery={report.weak_areas.mastery_analysis} />
+      )}
+
+      {/* PRIORITY 6: Learning Path / Circuit Map */}
+      {report.learning_path && (
+        <LearningPathCircuitMap learningPath={report.learning_path} />
+      )}
 
       {/* Video Classification */}
       {(report.video_type || report.domain || (report.main_topics && report.main_topics.length > 0)) && (
@@ -101,44 +145,48 @@ export default function LearningReportComponent({ report }: LearningReportProps)
         </div>
       )}
 
-      {/* Performance Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Target className="w-6 h-6 text-blue-600" />
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100">Accuracy Rate</h3>
-          </div>
-          <p className="text-4xl font-bold text-blue-600">
-            {report.performance_stats.accuracy_rate}%
-          </p>
-        </div>
-
-        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="w-6 h-6 text-green-600" />
-            <h3 className="font-semibold text-green-900 dark:text-green-100">Total Attempts</h3>
-          </div>
-          <p className="text-4xl font-bold text-green-600">
-            {report.performance_stats.total_attempts}
-          </p>
-        </div>
-
-        <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Brain className="w-6 h-6 text-purple-600" />
-            <h3 className="font-semibold text-purple-900 dark:text-purple-100">Correct Answers</h3>
-          </div>
-          <p className="text-4xl font-bold text-purple-600">
-            {report.performance_stats.correct_count}/{report.performance_stats.total_attempts}
-          </p>
-        </div>
-      </div>
-
-      {/* Performance Pie Chart */}
+      {/* PRIORITY 7: Performance Breakdown */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-          Overall Performance
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+          Detailed Performance Breakdown
         </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Target className="w-6 h-6 text-blue-600" />
+              <h4 className="font-semibold text-blue-900 dark:text-blue-100">Accuracy Rate</h4>
+            </div>
+            <p className="text-4xl font-bold text-blue-600">
+              {report.performance_stats.accuracy_rate}%
+            </p>
+          </div>
+
+          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp className="w-6 h-6 text-green-600" />
+              <h4 className="font-semibold text-green-900 dark:text-green-100">Total Attempts</h4>
+            </div>
+            <p className="text-4xl font-bold text-green-600">
+              {report.performance_stats.total_attempts}
+            </p>
+          </div>
+
+          <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Brain className="w-6 h-6 text-purple-600" />
+              <h4 className="font-semibold text-purple-900 dark:text-purple-100">Correct Answers</h4>
+            </div>
+            <p className="text-4xl font-bold text-purple-600">
+              {report.performance_stats.correct_count}/{report.performance_stats.total_attempts}
+            </p>
+          </div>
+        </div>
+
+        {/* Performance Pie Chart */}
+        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 mt-6">
+          Overall Performance Distribution
+        </h4>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
@@ -260,15 +308,19 @@ export default function LearningReportComponent({ report }: LearningReportProps)
         </div>
       )}
 
-      {/* Summary */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6 text-center">
+      {/* Encouragement Footer */}
+      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6 text-center">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          Great Work!
+          {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :
+           report.performance_stats.accuracy_rate >= 60 ? '💪 Great Progress!' :
+           '🚀 Keep Learning!'}
         </h3>
         <p className="text-gray-700 dark:text-gray-300">
-          {report.performance_stats.accuracy_rate >= 70
-            ? "Excellent performance! You've demonstrated a strong understanding of the material."
-            : "Keep practicing! Review the key takeaways and weak areas to improve your understanding."}
+          {report.performance_stats.accuracy_rate >= 80
+            ? "You've mastered this content! Consider helping others or moving on to more advanced topics."
+            : report.performance_stats.accuracy_rate >= 60
+            ? "You're on the right track! Focus on the weak areas and watch the recommended videos."
+            : "Learning takes time. Review the recommendations above and keep practicing!"}
         </p>
       </div>
     </div>

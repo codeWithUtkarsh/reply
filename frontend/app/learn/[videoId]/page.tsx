@@ -7,10 +7,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import VideoPlayer from '@/components/VideoPlayer';
 import FlashCardModal from '@/components/FlashCardModal';
 import QuizComponent from '@/components/QuizComponent';
-import LearningReportComponent from '@/components/LearningReport';
+import LearningReportComponent from '@/components/LearningReportV2';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
-import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
+import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText, Layers, BarChart3 } from 'lucide-react';
+import FlashcardReviewModal from '@/components/report-v2/FlashcardModal';
 
 // Dynamically import VideoNotes component to avoid SSR issues with Mermaid
 const VideoNotesComponent = dynamic(() => import('@/components/VideoNotes'), {
@@ -63,10 +64,98 @@ export default function LearnPage() {
   const [currentMissedIndex, setCurrentMissedIndex] = useState(0);
   const [batchCurrent, setBatchCurrent] = useState(0);
   const [batchTotal, setBatchTotal] = useState(0);
+  const [showFlashcardReview, setShowFlashcardReview] = useState(false);
+  const [reviewFlashcards, setReviewFlashcards] = useState<any[]>([]);
+  const [showFlashcardWarning, setShowFlashcardWarning] = useState(false);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [showReport, setShowReport] = useState(false); // Control report visibility
 
   useEffect(() => {
     loadVideo();
   }, [videoId]);
+
+  // Load flashcard progress when user becomes available
+  useEffect(() => {
+    const loadFlashcardProgress = async () => {
+      if (!userId || !videoId) {
+        console.log('Waiting for userId and videoId to load flashcard progress...');
+        return;
+      }
+
+      try {
+        console.log('🔄 Loading flashcard progress for user:', userId, 'video:', videoId);
+        const attemptsData = await reportsApi.getUserAttempts(userId, videoId);
+        console.log('Attempts data received:', attemptsData);
+
+        if (attemptsData && attemptsData.attempts && attemptsData.attempts.length > 0) {
+          // Filter flashcard attempts and extract question IDs
+          const flashcardAttempts = attemptsData.attempts
+            .filter((attempt: any) => attempt.question_type === 'flashcard');
+
+          const flashcardQuestionIds = flashcardAttempts
+            .map((attempt: any) => attempt.question_id);
+
+          console.log('Flashcard attempts found:', flashcardAttempts.length);
+          console.log('Question IDs to restore:', flashcardQuestionIds);
+
+          // Restore answered flashcards state
+          if (flashcardQuestionIds.length > 0) {
+            setAnsweredFlashcards(new Set(flashcardQuestionIds));
+            console.log(`✅ Successfully restored ${flashcardQuestionIds.length} answered flashcards from previous session`);
+          }
+        } else {
+          console.log('No previous flashcard attempts found - starting fresh');
+        }
+      } catch (err: any) {
+        console.error('Error loading flashcard attempts:', err);
+        console.error('Error details:', err.response?.data || err.message);
+        // This is okay - user might not have any attempts yet
+      }
+    };
+
+    loadFlashcardProgress();
+  }, [userId, videoId]); // Re-run when userId or videoId changes
+
+  // Load quiz report when user becomes available
+  useEffect(() => {
+    const loadQuizReport = async () => {
+      if (!userId || !videoId) {
+        console.log('Waiting for userId and videoId to load quiz report...');
+        return;
+      }
+
+      try {
+        console.log('🔄 Loading quiz report for user:', userId, 'video:', videoId);
+        const reportsData = await reportsApi.getUserReports(userId, videoId);
+        console.log('Reports data received:', reportsData);
+
+        if (reportsData && reportsData.reports && reportsData.reports.length > 0) {
+          // Get the most recent report (first one, assuming API returns them sorted by date)
+          const latestReport = reportsData.reports[0];
+          console.log('Latest report found:', latestReport);
+
+          setLearningReport(latestReport);
+          console.log(`✅ Successfully loaded quiz report from previous session`);
+        } else {
+          console.log('No previous quiz reports found - user hasn\'t taken quiz yet');
+        }
+      } catch (err: any) {
+        // Only log errors that aren't 404 (not found is expected for users who haven't taken quiz)
+        if (err.response?.status === 404) {
+          console.log('No quiz report found (404) - user hasn\'t taken quiz yet');
+        } else if (err.response?.status === 500) {
+          console.warn('⚠️ Backend error loading quiz report (500) - continuing without report');
+          console.error('Error details:', err.response?.data);
+        } else {
+          console.error('❌ Error loading quiz report:', err);
+          console.error('Error details:', err.response?.data || err.message);
+        }
+        // Don't set error state - this is non-critical, user can still take quiz
+      }
+    };
+
+    loadQuizReport();
+  }, [userId, videoId]); // Re-run when userId or videoId changes
 
   // Poll for processing status if not completed
   useEffect(() => {
@@ -143,6 +232,9 @@ export default function LearnPage() {
       } else {
         setFlashcardsLoading(true);
       }
+
+      // Note: Flashcard progress restoration is now handled by a separate useEffect
+      // that watches for userId changes (see useEffect with [userId, videoId] dependency)
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load video');
     } finally {
@@ -181,6 +273,14 @@ export default function LearnPage() {
     // Record the attempt in the database
     if (currentFlashcard) {
       try {
+        console.log('Recording flashcard attempt:', {
+          userId,
+          videoId,
+          questionId,
+          selectedAnswer,
+          correctAnswer: currentFlashcard.question.correct_answer
+        });
+
         await reportsApi.recordAttempt(
           userId,
           videoId,
@@ -190,8 +290,11 @@ export default function LearnPage() {
           currentFlashcard.question.correct_answer,
           currentTime
         );
-      } catch (err) {
-        console.error('Failed to record flashcard attempt:', err);
+
+        console.log('✅ Flashcard attempt recorded successfully');
+      } catch (err: any) {
+        console.error('❌ Failed to record flashcard attempt:', err);
+        console.error('Error details:', err.response?.data || err.message);
       }
     }
   };
@@ -203,24 +306,48 @@ export default function LearnPage() {
 
   const handleStartQuiz = async () => {
     try {
-      const quiz = await quizApi.generateQuiz(videoId);
+      setLoadingQuiz(true);
+      const quiz = await quizApi.generateQuiz(videoId, userId);
       setQuizData(quiz);
       setShowQuiz(true);
+      setQuizResult(null); // Reset quiz result when starting new quiz
     } catch (err: any) {
-      alert('Failed to generate quiz');
+      // Handle credit errors (402) specially
+      if (err.response?.status === 402 && err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        let errorMsg = 'Insufficient credits to generate quiz';
+        if (typeof detail === 'object' && detail.message) {
+          errorMsg = detail.message;
+        } else if (typeof detail === 'string') {
+          errorMsg = detail;
+        }
+        alert(errorMsg);
+      } else {
+        alert('Failed to generate quiz. Please try again.');
+      }
+      console.error('Quiz generation error:', err);
+    } finally {
+      setLoadingQuiz(false);
     }
   };
 
   const handleSubmitQuiz = async (
     answers: Array<{ question_id: string; selected_answer: number; timestamp: number }>
   ) => {
-    if (!quizData) return;
+    if (!quizData) {
+      console.error('handleSubmitQuiz: No quiz data available');
+      return;
+    }
+
+    console.log('handleSubmitQuiz: Starting quiz submission with', answers.length, 'answers');
 
     try {
       // Record all quiz attempts
+      console.log('handleSubmitQuiz: Recording attempts...');
       for (const answer of answers) {
         const question = quizData.questions.find(q => q.id === answer.question_id);
         if (question) {
+          console.log('handleSubmitQuiz: Recording attempt for question', answer.question_id);
           await reportsApi.recordAttempt(
             userId,
             videoId,
@@ -228,29 +355,49 @@ export default function LearnPage() {
             'quiz',
             answer.selected_answer,
             question.correct_answer,
-            answer.timestamp
+            answer.timestamp,
+            quizData.quiz_id  // Track which quiz this attempt belongs to for score calculation
           );
         }
       }
+      console.log('handleSubmitQuiz: All attempts recorded');
 
       // Submit quiz to get results
+      console.log('handleSubmitQuiz: Submitting quiz...');
       const result = await quizApi.submitQuiz(quizData.quiz_id, answers);
+      console.log('handleSubmitQuiz: Quiz result:', result);
       setQuizResult(result);
 
-      // Generate learning report
+      // Automatically generate learning report after quiz submission
       setGeneratingReport(true);
       try {
+        console.log('handleSubmitQuiz: Generating report...');
         const reportResponse = await reportsApi.generateReport(userId, videoId, quizData.quiz_id);
+        console.log('handleSubmitQuiz: Report generated:', reportResponse);
         setLearningReport(reportResponse.report);
+        setShowReport(true); // Show report after generation
       } catch (err) {
-        console.error('Failed to generate report:', err);
+        console.error('handleSubmitQuiz: Failed to generate report:', err);
       } finally {
         setGeneratingReport(false);
       }
+      console.log('handleSubmitQuiz: Quiz submission complete');
     } catch (err: any) {
-      alert('Failed to submit quiz');
-      console.error('Quiz submission error:', err);
+      console.error('handleSubmitQuiz: Quiz submission error:', err);
+      console.error('handleSubmitQuiz: Error details:', err.response?.data);
+      alert('Failed to submit quiz: ' + (err.response?.data?.detail || err.message));
     }
+  };
+
+  const handleRetakeQuiz = async () => {
+    // Reset quiz state and start a new quiz
+    setQuizData(null);
+    setQuizResult(null);
+    setLearningReport(null);
+    setShowQuiz(false);
+    setShowReport(false); // Hide report when retaking quiz
+    // Start a new quiz (will deduct credits again)
+    await handleStartQuiz();
   };
 
   const handleSeekTo = (timestamp: number) => {
@@ -305,6 +452,14 @@ export default function LearnPage() {
     // Record the attempt
     if (currentCard) {
       try {
+        console.log('Recording missed flashcard attempt:', {
+          userId,
+          videoId,
+          questionId,
+          selectedAnswer,
+          correctAnswer: currentCard.question.correct_answer
+        });
+
         await reportsApi.recordAttempt(
           userId,
           videoId,
@@ -314,8 +469,11 @@ export default function LearnPage() {
           currentCard.question.correct_answer,
           currentCard.show_at_timestamp
         );
-      } catch (err) {
-        console.error('Failed to record missed flashcard attempt:', err);
+
+        console.log('✅ Missed flashcard attempt recorded successfully');
+      } catch (err: any) {
+        console.error('❌ Failed to record missed flashcard attempt:', err);
+        console.error('Error details:', err.response?.data || err.message);
       }
     }
 
@@ -347,6 +505,27 @@ export default function LearnPage() {
       }
     }
     setShowNotes(true);
+  };
+
+  const handleViewAllFlashcards = () => {
+    // Check if user has answered at least one flashcard
+    if (answeredFlashcards.size === 0) {
+      setShowFlashcardWarning(true);
+      return;
+    }
+
+    // Transform FlashCard format to the format expected by FlashcardModal
+    const transformedFlashcards = flashcards.map(fc => ({
+      id: fc.question.id,
+      question_data: {
+        question: fc.question.question_text,
+        answer: fc.question.options[fc.question.correct_answer],
+        options: fc.question.options,
+        correct_answer: fc.question.correct_answer
+      }
+    }));
+    setReviewFlashcards(transformedFlashcards);
+    setShowFlashcardReview(true);
   };
 
   if (loading) {
@@ -406,28 +585,46 @@ export default function LearnPage() {
               </div>
             </div>
 
-            {/* Flashcard Learning Toggle */}
-            <div className="flex items-center gap-3 bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl px-4 py-3">
-              <div>
-                <p className="text-sm font-light text-white">Flashcard Learning</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {flashcardLearningEnabled ? 'Auto-pause enabled' : 'Disabled'}
-                </p>
-              </div>
+            {/* Flashcard Controls */}
+            <div className="flex items-center gap-3">
+              {/* View All Flashcards Button */}
               <button
-                onClick={handleToggleFlashcardLearning}
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-black ${
-                  flashcardLearningEnabled ? 'bg-emerald-500' : 'bg-gray-700'
-                }`}
-                role="switch"
-                aria-checked={flashcardLearningEnabled}
+                onClick={handleViewAllFlashcards}
+                disabled={flashcards.length === 0}
+                className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 hover:border-purple-500/50 rounded-xl px-4 py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                    flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
+                <Layers className="w-5 h-5 text-purple-400" />
+                <div className="text-left">
+                  <p className="text-sm font-light text-white">View Flashcards</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {flashcards.length === 0 ? 'No cards yet' : `${flashcards.length} cards`}
+                  </p>
+                </div>
               </button>
+
+              {/* Flashcard Learning Toggle */}
+              <div className="flex items-center gap-3 bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl px-4 py-3">
+                <div>
+                  <p className="text-sm font-light text-white">Flashcard Learning</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {flashcardLearningEnabled ? 'Auto-pause enabled' : 'Disabled'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleFlashcardLearning}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-black ${
+                    flashcardLearningEnabled ? 'bg-emerald-500' : 'bg-gray-700'
+                  }`}
+                  role="switch"
+                  aria-checked={flashcardLearningEnabled}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -445,8 +642,43 @@ export default function LearnPage() {
               />
             </div>
 
+            {/* Quiz Loading State */}
+            {loadingQuiz && (
+              <div className="mt-8 bg-gradient-to-b from-gray-900 to-black border border-purple-500/30 rounded-2xl p-12 shadow-2xl">
+                <div className="flex flex-col items-center justify-center text-center">
+                  {/* Animated Coffee Cup */}
+                  <div className="relative mb-6">
+                    <div className="text-7xl animate-bounce">☕</div>
+                    {/* Steam animation */}
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 flex gap-1">
+                      <div className="w-1 h-8 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse" style={{ animationDelay: '0s' }}></div>
+                      <div className="w-1 h-10 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                      <div className="w-1 h-8 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                    </div>
+                  </div>
+
+                  <h3 className="text-2xl font-light text-white mb-3">
+                    Brewing Your Quiz...
+                  </h3>
+                  <p className="text-purple-300 font-light mb-2">
+                    Enjoy your coffee ☕ while we craft personalized questions for you
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    This usually takes just a few seconds
+                  </p>
+
+                  {/* Loading dots */}
+                  <div className="flex gap-2 mt-6">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Quiz Section */}
-            {showQuiz && quizData && !learningReport ? (
+            {!loadingQuiz && showQuiz && quizData && !showReport ? (
               <div className="mt-8">
                 <QuizComponent
                   questions={quizData.questions}
@@ -454,23 +686,27 @@ export default function LearnPage() {
                   onSubmit={handleSubmitQuiz}
                   onSeekTo={handleSeekTo}
                 />
-                {generatingReport && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                      <p className="text-blue-800 dark:text-blue-200">
-                        Generating your learning report...
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
-            ) : learningReport ? (
-              <div className="mt-8">
+            ) : learningReport && showReport ? (
+              <div className="mt-8" data-report-section>
                 <LearningReportComponent report={learningReport} />
+                {/* Retake Quiz button at the bottom of the report */}
+                <div className="mt-6 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
+                  <h3 className="text-xl font-light text-white mb-4">
+                    Want to improve your score?
+                  </h3>
+                  <button
+                    onClick={handleRetakeQuiz}
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-8 rounded-xl transition-all inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    Retake Quiz (5 credits)
+                  </button>
+                </div>
               </div>
             ) : (
               !showQuiz &&
+              !loadingQuiz &&
               answeredFlashcards.size === flashcards.length &&
               flashcards.length > 0 && (
                 <div className="mt-8 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
@@ -614,19 +850,38 @@ export default function LearnPage() {
               </div>
 
               {/* Quiz Button */}
-              {answeredFlashcards.size === flashcards.length && flashcards.length > 0 && (
+              {answeredFlashcards.size === flashcards.length && flashcards.length > 0 && !learningReport && (
                 <button
                   onClick={handleStartQuiz}
-                  className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-500/20"
+                  disabled={loadingQuiz}
+                  className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-500/20"
                 >
-                  <BookOpen className="w-4 h-4" />
-                  Take Quiz
+                  {loadingQuiz ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading Quiz...
+                    </>
+                  ) : (
+                    <>
+                      <BookOpen className="w-4 h-4" />
+                      Take Quiz
+                    </>
+                  )}
                 </button>
               )}
             </div>
 
-            {/* Generate Notes Card */}
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-4 shadow-xl">
+            {/* Resource Card */}
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-5 shadow-xl">
+              {/* Resource Card Heading */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-800"></div>
+                <h2 className="text-sm font-light text-gray-400 uppercase tracking-wider">
+                  Resources
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-800"></div>
+              </div>
+
               {/* Generate Notes Button */}
               {!videoNotes && (
                 <button
@@ -671,13 +926,72 @@ export default function LearnPage() {
 
               {/* View Notes Button */}
               {videoNotes && (
-                <button
-                  onClick={() => setShowNotes(!showNotes)}
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
-                >
-                  <FileText className="w-4 h-4" />
-                  {showNotes ? 'Hide Notes' : 'View Notes'}
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setShowNotes(!showNotes)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
+                  >
+                    <FileText className="w-4 h-4" />
+                    {showNotes ? 'Hide Notes' : 'View Notes'}
+                  </button>
+
+                  {/* Regenerate Notes Button */}
+                  <button
+                    onClick={handleGenerateNotes}
+                    disabled={generatingNotes}
+                    className="w-full border border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10 disabled:border-gray-700 disabled:text-gray-600 disabled:cursor-not-allowed text-purple-300 font-light py-2 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    {generatingNotes ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Regenerating...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-4 h-4" />
+                        Regenerate Notes
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Quiz Actions - Show if quiz has been taken */}
+              {learningReport && (
+                <div className="space-y-3 mt-4 pt-4 border-t border-gray-800">
+                  {/* View/Hide Quiz Report Button */}
+                  <button
+                    onClick={() => {
+                      if (showReport) {
+                        // Hide the report
+                        setShowReport(false);
+                      } else {
+                        // Show the report
+                        setShowReport(true);
+                        // Scroll to the learning report section after a brief delay to let it render
+                        setTimeout(() => {
+                          const reportElement = document.querySelector('[data-report-section]');
+                          if (reportElement) {
+                            reportElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-500/20"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    {showReport ? 'Hide Quiz Report' : 'View Quiz Report'}
+                  </button>
+
+                  {/* Retake Quiz Button */}
+                  <button
+                    onClick={handleRetakeQuiz}
+                    className="w-full border border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10 text-blue-300 font-light py-2 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    Retake Quiz
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -738,6 +1052,96 @@ export default function LearnPage() {
               >
                 Skip Remaining ({missedFlashcards.length - currentMissedIndex - 1})
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Flashcard Review Modal */}
+      <FlashcardReviewModal
+        isOpen={showFlashcardReview}
+        onClose={() => setShowFlashcardReview(false)}
+        flashcards={reviewFlashcards}
+      />
+
+      {/* Flashcard Warning Modal */}
+      {showFlashcardWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-yellow-500/30 rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 pointer-events-none rounded-2xl"></div>
+
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-full flex items-center justify-center">
+                <span className="text-3xl">⚠️</span>
+              </div>
+
+              <h3 className="text-xl font-light text-white mb-3">
+                Complete Flashcard Learning First
+              </h3>
+
+              <p className="text-gray-400 font-light mb-6 leading-relaxed">
+                You haven't taken the flashcard learning even once. Complete it to view all flashcards.
+              </p>
+
+              <button
+                onClick={() => setShowFlashcardWarning(false)}
+                className="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-white font-light py-3 px-6 rounded-xl transition-all shadow-lg shadow-yellow-500/20"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Generation Loading Overlay */}
+      {generatingReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-500/30 rounded-2xl shadow-2xl max-w-2xl w-full p-12 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none rounded-2xl"></div>
+
+            <div className="relative z-10 flex flex-col items-center justify-center text-center">
+              {/* Animated Chart Icon */}
+              <div className="relative mb-8">
+                {/* Animated bars */}
+                <div className="flex items-end gap-2 justify-center">
+                  <div className="w-8 h-12 bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0s', animationDuration: '1.5s' }}></div>
+                  <div className="w-8 h-20 bg-gradient-to-t from-purple-500 to-purple-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0.3s', animationDuration: '1.5s' }}></div>
+                  <div className="w-8 h-16 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0.6s', animationDuration: '1.5s' }}></div>
+                  <div className="w-8 h-24 bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0.9s', animationDuration: '1.5s' }}></div>
+                </div>
+                {/* Sparkle effect */}
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                  <span className="text-4xl animate-bounce">✨</span>
+                </div>
+              </div>
+
+              <h3 className="text-3xl font-light text-white mb-4">
+                Analyzing Your Performance...
+              </h3>
+
+              <p className="text-blue-300 font-light mb-2 text-lg">
+                Crafting your personalized learning report
+              </p>
+
+              <p className="text-gray-500 text-sm mb-8">
+                Hang tight! We're analyzing your responses and generating insights
+              </p>
+
+              {/* Animated progress indicator */}
+              <div className="w-full max-w-md">
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-full animate-pulse" style={{ width: '70%', animation: 'pulse 2s ease-in-out infinite' }}></div>
+                </div>
+              </div>
+
+              {/* Loading dots */}
+              <div className="flex gap-2 mt-8">
+                <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              </div>
             </div>
           </div>
         </div>

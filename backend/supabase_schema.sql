@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS user_attempts (
     is_correct BOOLEAN NOT NULL,
     attempt_number INT DEFAULT 1,
     timestamp FLOAT,
+    quiz_id VARCHAR(255), -- ID of the quiz this attempt belongs to (for quiz question types)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -112,13 +113,22 @@ CREATE TABLE IF NOT EXISTS learning_reports (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     video_id VARCHAR(255) NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
     quiz_id VARCHAR(255) REFERENCES quizzes(quiz_id) ON DELETE CASCADE,
+
+    -- Enhanced AI-powered report fields
+    executive_summary JSONB DEFAULT '{}'::jsonb,  -- Overall score, status, topic counts
+    key_takeaways TEXT[],                         -- AI-generated personalized insights
+    weak_areas JSONB DEFAULT '{}'::jsonb,         -- Weak concepts, mastery analysis, gaps
+    video_recommendations JSONB DEFAULT '[]'::jsonb,  -- YouTube search recommendations
+    learning_path JSONB DEFAULT '{}'::jsonb,      -- Learning path and circuit map
+
+    -- Performance and content analysis
     word_frequency JSONB NOT NULL,
     performance_stats JSONB NOT NULL,
     attempt_breakdown JSONB NOT NULL,
-    key_takeaways TEXT[],
     video_type VARCHAR(100) DEFAULT 'General',
     domain VARCHAR(100) DEFAULT 'Mixed',
     main_topics TEXT[],
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -158,6 +168,7 @@ CREATE INDEX IF NOT EXISTS idx_quiz_results_user_id ON quiz_results(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_attempts_user_id ON user_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_attempts_video_id ON user_attempts(video_id);
 CREATE INDEX IF NOT EXISTS idx_user_attempts_question_id ON user_attempts(question_id);
+CREATE INDEX IF NOT EXISTS idx_user_attempts_quiz_id ON user_attempts(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_learning_reports_report_id ON learning_reports(report_id);
 CREATE INDEX IF NOT EXISTS idx_learning_reports_user_video ON learning_reports(user_id, video_id);
 CREATE INDEX IF NOT EXISTS idx_video_notes_video_id ON video_notes(video_id);
