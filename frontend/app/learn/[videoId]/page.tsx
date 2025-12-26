@@ -68,6 +68,7 @@ export default function LearnPage() {
   const [reviewFlashcards, setReviewFlashcards] = useState<any[]>([]);
   const [showFlashcardWarning, setShowFlashcardWarning] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [showReport, setShowReport] = useState(false); // Control report visibility
 
   useEffect(() => {
     loadVideo();
@@ -374,6 +375,7 @@ export default function LearnPage() {
         const reportResponse = await reportsApi.generateReport(userId, videoId, quizData.quiz_id);
         console.log('handleSubmitQuiz: Report generated:', reportResponse);
         setLearningReport(reportResponse.report);
+        setShowReport(true); // Show report after generation
       } catch (err) {
         console.error('handleSubmitQuiz: Failed to generate report:', err);
       } finally {
@@ -393,6 +395,7 @@ export default function LearnPage() {
     setQuizResult(null);
     setLearningReport(null);
     setShowQuiz(false);
+    setShowReport(false); // Hide report when retaking quiz
     // Start a new quiz (will deduct credits again)
     await handleStartQuiz();
   };
@@ -675,7 +678,7 @@ export default function LearnPage() {
             )}
 
             {/* Quiz Section */}
-            {!loadingQuiz && showQuiz && quizData && !learningReport ? (
+            {!loadingQuiz && showQuiz && quizData && !showReport ? (
               <div className="mt-8">
                 <QuizComponent
                   questions={quizData.questions}
@@ -684,7 +687,7 @@ export default function LearnPage() {
                   onSeekTo={handleSeekTo}
                 />
               </div>
-            ) : learningReport ? (
+            ) : learningReport && showReport ? (
               <div className="mt-8" data-report-section>
                 <LearningReportComponent report={learningReport} />
                 {/* Retake Quiz button at the bottom of the report */}
@@ -959,11 +962,15 @@ export default function LearnPage() {
                   {/* View Quiz Report Button */}
                   <button
                     onClick={() => {
-                      // Scroll to the learning report section
-                      const reportElement = document.querySelector('[data-report-section]');
-                      if (reportElement) {
-                        reportElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
+                      // Show the report
+                      setShowReport(true);
+                      // Scroll to the learning report section after a brief delay to let it render
+                      setTimeout(() => {
+                        const reportElement = document.querySelector('[data-report-section]');
+                        if (reportElement) {
+                          reportElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 100);
                     }}
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-500/20"
                   >
