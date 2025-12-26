@@ -152,21 +152,36 @@ export default function LearnPage() {
       // Load user's previous attempts to restore answered flashcards
       if (userId) {
         try {
+          console.log('Loading flashcard progress for user:', userId, 'video:', videoId);
           const attemptsData = await reportsApi.getUserAttempts(userId, videoId);
-          if (attemptsData && attemptsData.attempts) {
+          console.log('Attempts data received:', attemptsData);
+
+          if (attemptsData && attemptsData.attempts && attemptsData.attempts.length > 0) {
             // Filter flashcard attempts and extract question IDs
-            const flashcardQuestionIds = attemptsData.attempts
-              .filter((attempt: any) => attempt.question_type === 'flashcard')
+            const flashcardAttempts = attemptsData.attempts
+              .filter((attempt: any) => attempt.question_type === 'flashcard');
+
+            const flashcardQuestionIds = flashcardAttempts
               .map((attempt: any) => attempt.question_id);
 
+            console.log('Flashcard attempts found:', flashcardAttempts.length);
+            console.log('Question IDs to restore:', flashcardQuestionIds);
+
             // Restore answered flashcards state
-            setAnsweredFlashcards(new Set(flashcardQuestionIds));
-            console.log(`Restored ${flashcardQuestionIds.length} answered flashcards from previous session`);
+            if (flashcardQuestionIds.length > 0) {
+              setAnsweredFlashcards(new Set(flashcardQuestionIds));
+              console.log(`✅ Successfully restored ${flashcardQuestionIds.length} answered flashcards from previous session`);
+            }
+          } else {
+            console.log('No previous flashcard attempts found - starting fresh');
           }
-        } catch (err) {
-          console.log('No previous attempts found or error loading attempts:', err);
+        } catch (err: any) {
+          console.error('Error loading flashcard attempts:', err);
+          console.error('Error details:', err.response?.data || err.message);
           // This is okay - user might not have any attempts yet
         }
+      } else {
+        console.log('No userId available - skipping flashcard progress restoration');
       }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load video');
@@ -206,6 +221,14 @@ export default function LearnPage() {
     // Record the attempt in the database
     if (currentFlashcard) {
       try {
+        console.log('Recording flashcard attempt:', {
+          userId,
+          videoId,
+          questionId,
+          selectedAnswer,
+          correctAnswer: currentFlashcard.question.correct_answer
+        });
+
         await reportsApi.recordAttempt(
           userId,
           videoId,
@@ -215,8 +238,11 @@ export default function LearnPage() {
           currentFlashcard.question.correct_answer,
           currentTime
         );
-      } catch (err) {
-        console.error('Failed to record flashcard attempt:', err);
+
+        console.log('✅ Flashcard attempt recorded successfully');
+      } catch (err: any) {
+        console.error('❌ Failed to record flashcard attempt:', err);
+        console.error('Error details:', err.response?.data || err.message);
       }
     }
   };
@@ -372,6 +398,14 @@ export default function LearnPage() {
     // Record the attempt
     if (currentCard) {
       try {
+        console.log('Recording missed flashcard attempt:', {
+          userId,
+          videoId,
+          questionId,
+          selectedAnswer,
+          correctAnswer: currentCard.question.correct_answer
+        });
+
         await reportsApi.recordAttempt(
           userId,
           videoId,
@@ -381,8 +415,11 @@ export default function LearnPage() {
           currentCard.question.correct_answer,
           currentCard.show_at_timestamp
         );
-      } catch (err) {
-        console.error('Failed to record missed flashcard attempt:', err);
+
+        console.log('✅ Missed flashcard attempt recorded successfully');
+      } catch (err: any) {
+        console.error('❌ Failed to record missed flashcard attempt:', err);
+        console.error('Error details:', err.response?.data || err.message);
       }
     }
 
