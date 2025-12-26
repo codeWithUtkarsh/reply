@@ -720,8 +720,17 @@ export default function LearnPage() {
               )}
             </div>
 
-            {/* Generate Notes Card */}
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-4 shadow-xl">
+            {/* Resource Card */}
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-5 shadow-xl">
+              {/* Resource Card Heading */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-800"></div>
+                <h2 className="text-sm font-light text-gray-400 uppercase tracking-wider">
+                  Resources
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-800"></div>
+              </div>
+
               {/* Generate Notes Button */}
               {!videoNotes && (
                 <button
