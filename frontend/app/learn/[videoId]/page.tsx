@@ -115,6 +115,39 @@ export default function LearnPage() {
     loadFlashcardProgress();
   }, [userId, videoId]); // Re-run when userId or videoId changes
 
+  // Load quiz report when user becomes available
+  useEffect(() => {
+    const loadQuizReport = async () => {
+      if (!userId || !videoId) {
+        console.log('Waiting for userId and videoId to load quiz report...');
+        return;
+      }
+
+      try {
+        console.log('🔄 Loading quiz report for user:', userId, 'video:', videoId);
+        const reportsData = await reportsApi.getUserReports(userId, videoId);
+        console.log('Reports data received:', reportsData);
+
+        if (reportsData && reportsData.reports && reportsData.reports.length > 0) {
+          // Get the most recent report (first one, assuming API returns them sorted by date)
+          const latestReport = reportsData.reports[0];
+          console.log('Latest report found:', latestReport);
+
+          setLearningReport(latestReport);
+          console.log(`✅ Successfully loaded quiz report from previous session`);
+        } else {
+          console.log('No previous quiz reports found - user hasn\'t taken quiz yet');
+        }
+      } catch (err: any) {
+        console.error('Error loading quiz report:', err);
+        console.error('Error details:', err.response?.data || err.message);
+        // This is okay - user might not have taken the quiz yet
+      }
+    };
+
+    loadQuizReport();
+  }, [userId, videoId]); // Re-run when userId or videoId changes
+
   // Poll for processing status if not completed
   useEffect(() => {
     if (processingStatus && processingStatus !== 'completed' && processingStatus !== 'failed') {
