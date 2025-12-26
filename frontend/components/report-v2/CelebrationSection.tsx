@@ -1,8 +1,9 @@
 'use client';
 
-import { Trophy, TrendingUp, Star, Zap, CheckCircle, Target, Play, ExternalLink, Clock, Lightbulb, Tag } from 'lucide-react';
+import { Trophy, TrendingUp, Star, Zap, CheckCircle, Target, Play, ExternalLink, Clock, Lightbulb, Tag, Download } from 'lucide-react';
 import ReactWordcloud from 'react-wordcloud';
 import StudyPatternGraph from './StudyPatternGraph';
+import { useRef } from 'react';
 
 interface ActionItem {
   priority: 1 | 2 | 3;
@@ -49,6 +50,8 @@ export default function CelebrationSection({
   domain,
   mainTopics = []
 }: CelebrationProps) {
+  const reportRef = useRef<HTMLDivElement>(null);
+
   const getPriorityColor = (priority: number) => {
     if (priority === 1) return {
       bg: 'from-gray-900 to-black',
@@ -69,6 +72,38 @@ export default function CelebrationSection({
       text: 'text-blue-400'
     };
   };
+
+  const handleDownloadReport = async () => {
+    if (!reportRef.current) return;
+
+    try {
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+
+      const canvas = await html2canvas(reportRef.current, {
+        backgroundColor: '#0a0a0a',
+        scale: 2,
+        logging: false,
+        useCORS: true,
+      });
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `quiz-report-${new Date().toISOString().split('T')[0]}.png`;
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+      });
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      alert('Failed to download report. Please try again.');
+    }
+  };
+
   const hasWins = masteredTopics.length > 0 || overallScore >= 70;
 
   if (!hasWins) {
@@ -93,7 +128,7 @@ export default function CelebrationSection({
   }
 
   return (
-    <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 shadow-xl shadow-emerald-500/10 relative overflow-hidden">
+    <div ref={reportRef} className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 shadow-xl shadow-emerald-500/10 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-purple-500/5"></div>
@@ -112,12 +147,24 @@ export default function CelebrationSection({
             </div>
           </div>
 
-          {improvement !== undefined && improvement > 0 && (
-            <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl px-4 py-2 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-emerald-400" />
-              <span className="font-light text-white">+{improvement}% from last time!</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {improvement !== undefined && improvement > 0 && (
+              <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl px-4 py-2 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <span className="font-light text-white">+{improvement}% from last time!</span>
+              </div>
+            )}
+
+            {/* Download Button */}
+            <button
+              onClick={handleDownloadReport}
+              className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 hover:border-purple-500/40 rounded-xl px-4 py-2 flex items-center gap-2 transition-all group"
+              title="Download Report"
+            >
+              <Download className="w-5 h-5 text-purple-400 group-hover:text-purple-300" />
+              <span className="font-light text-white text-sm">Download</span>
+            </button>
+          </div>
         </div>
 
         {/* Content Overview */}
