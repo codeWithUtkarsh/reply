@@ -10,7 +10,7 @@ import QuizComponent from '@/components/QuizComponent';
 import LearningReportComponent from '@/components/LearningReportV2';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { videoApi, questionsApi, quizApi, reportsApi, notesApi, FlashCard, Question, QuizResult, LearningReport, VideoNotes } from '@/lib/api';
-import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText, Layers } from 'lucide-react';
+import { Loader2, BookOpen, CheckCircle, ArrowLeft, FileText, Layers, BarChart3 } from 'lucide-react';
 import FlashcardReviewModal from '@/components/report-v2/FlashcardModal';
 
 // Dynamically import VideoNotes component to avoid SSR issues with Mermaid
@@ -548,7 +548,7 @@ export default function LearnPage() {
                 )}
               </div>
             ) : learningReport ? (
-              <div className="mt-8">
+              <div className="mt-8" data-report-section>
                 <LearningReportComponent report={learningReport} />
                 {/* Retake Quiz button at the bottom of the report */}
                 <div className="mt-6 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
@@ -801,6 +801,35 @@ export default function LearnPage() {
                         Regenerate Notes
                       </>
                     )}
+                  </button>
+                </div>
+              )}
+
+              {/* Quiz Actions - Show if quiz has been taken */}
+              {learningReport && (
+                <div className="space-y-3 mt-4 pt-4 border-t border-gray-800">
+                  {/* View Quiz Report Button */}
+                  <button
+                    onClick={() => {
+                      // Scroll to the learning report section
+                      const reportElement = document.querySelector('[data-report-section]');
+                      if (reportElement) {
+                        reportElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-500/20"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    View Quiz Report
+                  </button>
+
+                  {/* Retake Quiz Button */}
+                  <button
+                    onClick={handleRetakeQuiz}
+                    className="w-full border border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10 text-blue-300 font-light py-2 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    Retake Quiz
                   </button>
                 </div>
               )}
