@@ -73,6 +73,7 @@ export interface MasteryLevel {
 
 export interface MasteryAnalysis {
   mastered: MasteryLevel[];
+  mastered_summary?: string;  // AI-generated summary of mastered concepts
   learning: MasteryLevel[];
   needs_review: MasteryLevel[];
 }
