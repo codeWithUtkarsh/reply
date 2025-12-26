@@ -2,6 +2,7 @@
 
 import { Trophy, TrendingUp, Star, Zap, CheckCircle, Target, Play, ExternalLink, Clock, Lightbulb, Tag } from 'lucide-react';
 import ReactWordcloud from 'react-wordcloud';
+import StudyPatternGraph from './StudyPatternGraph';
 
 interface ActionItem {
   priority: 1 | 2 | 3;
@@ -13,6 +14,12 @@ interface ActionItem {
   impact: 'high' | 'medium';
 }
 
+interface AttemptData {
+  timestamp: number;
+  is_correct: boolean;
+  question_type: string;
+}
+
 interface CelebrationProps {
   masteredTopics: Array<{ concept: string; accuracy: number }>;
   overallScore: number;
@@ -22,6 +29,7 @@ interface CelebrationProps {
   growthAreas?: Array<{ concept: string; accuracy: number }>;
   actionItems?: ActionItem[];
   wordCloudData?: Array<{ text: string; value: number }>;
+  attemptsData?: AttemptData[];
 }
 
 export default function CelebrationSection({
@@ -32,7 +40,8 @@ export default function CelebrationSection({
   correctAnswers,
   growthAreas = [],
   actionItems = [],
-  wordCloudData = []
+  wordCloudData = [],
+  attemptsData = []
 }: CelebrationProps) {
   const getPriorityColor = (priority: number) => {
     if (priority === 1) return {
@@ -159,44 +168,9 @@ export default function CelebrationSection({
             </div>
           </div>
 
-          {/* Right Column - Mastered Knowledge Table */}
-          {masteredTopics.length > 0 && (
-            <div className="lg:col-span-2 bg-emerald-500/10 rounded-xl border border-emerald-500/30 overflow-hidden">
-              <div className="p-4 bg-emerald-500/20 border-b border-emerald-500/30">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-emerald-400" />
-                  <h3 className="font-light text-lg text-white">Knowledge Mastered</h3>
-                  <span className="ml-auto bg-emerald-500/30 border border-emerald-500/40 rounded-full px-3 py-1 text-sm font-light text-emerald-300">
-                    {masteredTopics.length} {masteredTopics.length === 1 ? 'area' : 'areas'}
-                  </span>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <tbody className="divide-y divide-emerald-500/20">
-                    {masteredTopics.map((topic, index) => (
-                      <tr key={index} className="hover:bg-emerald-500/5 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-start gap-3">
-                            <div className="mt-1">
-                              <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                            </div>
-                            <p className="font-light text-white text-sm break-words">{topic.concept}</p>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Growth Opportunities Section */}
-        {growthAreas.length > 0 && (
-          <div className="mt-6">
-            <div className="bg-purple-500/10 rounded-xl border border-purple-500/30 overflow-hidden">
+          {/* Right Column - Growth Opportunities */}
+          {growthAreas.length > 0 && (
+            <div className="lg:col-span-2 bg-purple-500/10 rounded-xl border border-purple-500/30 overflow-hidden">
               <div className="p-4 bg-purple-500/20 border-b border-purple-500/30">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-purple-400" />
@@ -242,8 +216,8 @@ export default function CelebrationSection({
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Action Plan Section */}
         {actionItems.length > 0 && (
@@ -334,6 +308,13 @@ export default function CelebrationSection({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Study Pattern Graph */}
+        {attemptsData.length > 0 && (
+          <div className="mt-6">
+            <StudyPatternGraph attempts={attemptsData} />
           </div>
         )}
       </div>

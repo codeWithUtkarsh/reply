@@ -2,7 +2,6 @@
 
 import { LearningReport } from '@/lib/api';
 import CelebrationSection from './report-v2/CelebrationSection';
-import StudyPatternGraph from './report-v2/StudyPatternGraph';
 import StrengthsAndGrowthSection from './report-v2/StrengthsAndGrowthSection';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, BarChart3, Tag } from 'lucide-react';
@@ -96,20 +95,16 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         growthAreas={growthAreas}
         actionItems={actionItems}
         wordCloudData={wordCloudData}
+        attemptsData={report.attempts_data || []}
       />
 
-      {/* 2. STUDY PATTERN - Show learning behavior over time */}
-      {report.attempts_data && report.attempts_data.length > 0 && (
-        <StudyPatternGraph attempts={report.attempts_data} />
-      )}
-
-      {/* 3. STRENGTHS & GROWTH - Detailed breakdown of what you know and what to practice */}
+      {/* 2. STRENGTHS & GROWTH - Detailed breakdown of what you know and what to practice */}
       <StrengthsAndGrowthSection
         strengths={strengths}
         growthAreas={growthAreas}
       />
 
-      {/* 4. DETAILED ANALYSIS - Collapsible for those who want it */}
+      {/* 3. DETAILED ANALYSIS - Collapsible for those who want it */}
       <div className="border border-gray-800 rounded-xl overflow-hidden shadow-xl">
         <button
           onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
@@ -210,7 +205,7 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
         )}
       </div>
 
-      {/* 5. ENCOURAGEMENT - End on a positive note */}
+      {/* 4. ENCOURAGEMENT - End on a positive note */}
       <div className="bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-xl p-6 text-center shadow-xl shadow-emerald-500/10">
         <h3 className="text-2xl font-light text-white mb-2">
           {report.performance_stats.accuracy_rate >= 80 ? '🎉 Outstanding Work!' :
