@@ -20,7 +20,6 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
 
   // Transform data for celebration section - mastered knowledge areas
   const masteredTopics = report.weak_areas?.mastery_analysis?.mastered || [];
-  const masteredSummary = report.weak_areas?.mastery_analysis?.mastered_summary;
 
   // Transform data for action plan - focus on weaker knowledge areas
   const actionItems = (report.weak_areas?.recommendations || []).slice(0, 3).map((rec, index) => {
@@ -91,7 +90,6 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
       {/* 1. CELEBRATION FIRST - Start with wins! */}
       <CelebrationSection
         masteredTopics={masteredTopics}
-        masteredSummary={masteredSummary}
         overallScore={report.executive_summary?.overall_score || report.performance_stats.accuracy_rate}
         totalAttempts={report.performance_stats.total_attempts}
         correctAnswers={report.performance_stats.correct_count}

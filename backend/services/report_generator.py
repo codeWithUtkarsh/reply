@@ -405,7 +405,6 @@ IMPORTANT:
                 question_performance[q_id]['correct'] += 1
 
         mastered = []
-        mastered_full_questions = []  # Keep full questions for AI summarization
         learning = []
         needs_review = []
 
@@ -437,11 +436,9 @@ IMPORTANT:
                         concept = full_concept
                 except:
                     concept = f"Knowledge area from question {q_id}"
-                    full_concept = concept
 
                 if accuracy >= 0.8:  # 80%+ correct - Mastered
                     mastered.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
-                    mastered_full_questions.append(full_concept)
                 elif accuracy >= 0.5:  # 50-79% correct - Learning
                     learning.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
                 else:  # < 50% correct - Needs Review (focus here!)
@@ -449,56 +446,9 @@ IMPORTANT:
 
         return {
             'mastered': mastered[:10],  # Top 10 mastered knowledge areas
-            'mastered_full_questions': mastered_full_questions,  # Full questions for AI summarization
             'learning': learning[:10],   # Top 10 in-progress knowledge areas
             'needs_review': needs_review[:10]  # Top 10 knowledge areas needing review (weaker areas to focus on)
         }
-
-    async def _generate_mastered_summary(self, mastered_questions: List[str], main_topics: List[str]) -> str:
-        """
-        Generate a concise summary paragraph of what the user has mastered
-        """
-        if not mastered_questions:
-            return ""
-
-        prompt = f"""You are a supportive learning coach. Create a concise, celebratory summary paragraph (2-3 sentences max) describing what the student has mastered based on these questions they answered correctly:
-
-Questions mastered:
-{chr(10).join(f"- {q}" for q in mastered_questions[:10])}
-
-Main topics: {', '.join(main_topics) if main_topics else 'General knowledge'}
-
-Write a paragraph that:
-1. Highlights the key concepts they've mastered (be specific)
-2. Uses positive, encouraging tone
-3. Connects the dots between concepts if applicable
-4. Is concise (2-3 sentences max)
-5. Avoids repeating the exact question text
-
-Return ONLY the summary paragraph, no JSON, no extra formatting.
-
-Example good summaries:
-- "You've mastered the core concepts of Web 3.0, including decentralization, blockchain technology, and digital identity. Your understanding of how these technologies transform user interaction and data privacy shows strong foundational knowledge."
-- "You demonstrate solid understanding of machine learning fundamentals, including supervised learning, neural networks, and model evaluation. You've grasped how these techniques apply to real-world problems."
-"""
-
-        try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "You are a supportive learning coach who creates concise, encouraging summaries."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.5,
-            )
-
-            summary = response.choices[0].message.content.strip()
-            return summary
-        except Exception as e:
-            print(f"Summary generation failed: {e}")
-            # Fallback to simple summary
-            num_mastered = len(mastered_questions)
-            return f"You've successfully mastered {num_mastered} key concept{'s' if num_mastered != 1 else ''} in this material, demonstrating strong understanding across the topics covered."
 
     async def generate_learning_path(self, weak_concepts: List[Dict], main_topics: List[str], domain: str) -> Dict:
         """
@@ -598,14 +548,6 @@ Mark topics they've covered as "completed" or "in_progress" based on weak areas.
             questions_data or [],
             transcript_text
         )
-
-        # Generate mastered knowledge summary paragraph
-        mastered_full_questions = weak_area_analysis.get('mastery_analysis', {}).get('mastered_full_questions', [])
-        mastered_summary = await self._generate_mastered_summary(
-            mastered_full_questions,
-            semantic_analysis.get('main_topics', [])
-        )
-        weak_area_analysis['mastery_analysis']['mastered_summary'] = mastered_summary
 
         # NEW: Generate learning path based on weak areas
         learning_path = await self.generate_learning_path(
