@@ -142,7 +142,7 @@ export default function CelebrationSection({
         )}
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Score Cards */}
           <div className="space-y-4">
             {/* Overall Achievement Card */}
@@ -168,9 +168,14 @@ export default function CelebrationSection({
             </div>
           </div>
 
-          {/* Right Column - Growth Opportunities */}
-          {growthAreas.length > 0 && (
-            <div className="lg:col-span-2 bg-purple-500/10 rounded-xl border border-purple-500/30 overflow-hidden">
+          {/* Right Column - Placeholder for balance */}
+          <div className="hidden lg:block"></div>
+        </div>
+
+        {/* Growth Opportunities - Full Width Section */}
+        {growthAreas.length > 0 && (
+          <div className="mt-6">
+            <div className="bg-purple-500/10 rounded-xl border border-purple-500/30 overflow-hidden">
               <div className="p-4 bg-purple-500/20 border-b border-purple-500/30">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-purple-400" />
@@ -186,23 +191,13 @@ export default function CelebrationSection({
                     key={index}
                     className="bg-gray-800/50 border border-purple-700/50 rounded-lg p-4"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-start gap-2 flex-1">
-                        <TrendingUp className="w-4 h-4 text-purple-400 flex-shrink-0 mt-1" />
-                        <p className="font-light text-white text-sm break-words">{area.concept}</p>
-                      </div>
-                      <span className="text-purple-400 font-light text-sm ml-2 whitespace-nowrap">
-                        {area.accuracy}%
-                      </span>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="mt-3">
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-purple-500 to-purple-400 h-2 rounded-full transition-all"
-                          style={{ width: `${area.accuracy}%` }}
-                        ></div>
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-light text-white text-base leading-relaxed mb-2">{area.concept}</p>
+                        <p className="text-sm text-gray-400 font-light italic">
+                          📹 Revisit this section in the video to strengthen your understanding
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -216,8 +211,8 @@ export default function CelebrationSection({
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Action Plan Section */}
         {actionItems.length > 0 && (
