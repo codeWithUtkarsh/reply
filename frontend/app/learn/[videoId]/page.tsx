@@ -595,16 +595,6 @@ export default function LearnPage() {
                   onSubmit={handleSubmitQuiz}
                   onSeekTo={handleSeekTo}
                 />
-                {generatingReport && (
-                  <div className="mt-6 bg-gradient-to-b from-gray-900 to-black border border-blue-500/30 rounded-2xl p-6">
-                    <div className="flex items-center justify-center gap-3">
-                      <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-                      <p className="text-blue-200 font-light">
-                        Generating your personalized learning report...
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : learningReport ? (
               <div className="mt-8" data-report-section>
@@ -1000,6 +990,58 @@ export default function LearnPage() {
               >
                 Got it
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Generation Loading Overlay */}
+      {generatingReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-500/30 rounded-2xl shadow-2xl max-w-2xl w-full p-12 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none rounded-2xl"></div>
+
+            <div className="relative z-10 flex flex-col items-center justify-center text-center">
+              {/* Animated Chart Icon */}
+              <div className="relative mb-8">
+                {/* Animated bars */}
+                <div className="flex items-end gap-2 justify-center">
+                  <div className="w-8 h-12 bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0s', animationDuration: '1.5s' }}></div>
+                  <div className="w-8 h-20 bg-gradient-to-t from-purple-500 to-purple-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0.3s', animationDuration: '1.5s' }}></div>
+                  <div className="w-8 h-16 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0.6s', animationDuration: '1.5s' }}></div>
+                  <div className="w-8 h-24 bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg animate-pulse" style={{ animationDelay: '0.9s', animationDuration: '1.5s' }}></div>
+                </div>
+                {/* Sparkle effect */}
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                  <span className="text-4xl animate-bounce">✨</span>
+                </div>
+              </div>
+
+              <h3 className="text-3xl font-light text-white mb-4">
+                Analyzing Your Performance...
+              </h3>
+
+              <p className="text-blue-300 font-light mb-2 text-lg">
+                Crafting your personalized learning report
+              </p>
+
+              <p className="text-gray-500 text-sm mb-8">
+                Hang tight! We're analyzing your responses and generating insights
+              </p>
+
+              {/* Animated progress indicator */}
+              <div className="w-full max-w-md">
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-full animate-pulse" style={{ width: '70%', animation: 'pulse 2s ease-in-out infinite' }}></div>
+                </div>
+              </div>
+
+              {/* Loading dots */}
+              <div className="flex gap-2 mt-8">
+                <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              </div>
             </div>
           </div>
         </div>
