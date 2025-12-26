@@ -775,13 +775,34 @@ export default function LearnPage() {
 
               {/* View Notes Button */}
               {videoNotes && (
-                <button
-                  onClick={() => setShowNotes(!showNotes)}
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
-                >
-                  <FileText className="w-4 h-4" />
-                  {showNotes ? 'Hide Notes' : 'View Notes'}
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setShowNotes(!showNotes)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
+                  >
+                    <FileText className="w-4 h-4" />
+                    {showNotes ? 'Hide Notes' : 'View Notes'}
+                  </button>
+
+                  {/* Regenerate Notes Button */}
+                  <button
+                    onClick={handleGenerateNotes}
+                    disabled={generatingNotes}
+                    className="w-full border border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10 disabled:border-gray-700 disabled:text-gray-600 disabled:cursor-not-allowed text-purple-300 font-light py-2 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    {generatingNotes ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Regenerating...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-4 h-4" />
+                        Regenerate Notes
+                      </>
+                    )}
+                  </button>
+                </div>
               )}
             </div>
           </div>
