@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from database import db
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import json
 
@@ -42,7 +42,7 @@ async def get_user_analytics(user_id: str):
 
         current_streak = 0
         if attempt_dates:
-            today = datetime.now().date()
+            today = datetime.now(timezone.utc).date()
             current_date = attempt_dates[0]
 
             # Check if user studied today or yesterday
@@ -55,7 +55,7 @@ async def get_user_analytics(user_id: str):
                         break
 
         # Learning progress over time (last 30 days)
-        thirty_days_ago = datetime.now() - timedelta(days=30)
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
         daily_stats = defaultdict(lambda: {'questions': 0, 'correct': 0})
 
         for attempt in all_attempts:
@@ -69,7 +69,7 @@ async def get_user_analytics(user_id: str):
 
         progress_data = []
         for i in range(30):
-            date = (datetime.now() - timedelta(days=29-i)).strftime('%Y-%m-%d')
+            date = (datetime.now(timezone.utc) - timedelta(days=29-i)).strftime('%Y-%m-%d')
             stats = daily_stats.get(date, {'questions': 0, 'correct': 0})
             accuracy = round((stats['correct'] / stats['questions'] * 100), 1) if stats['questions'] > 0 else 0
             progress_data.append({
@@ -102,7 +102,7 @@ async def get_user_analytics(user_id: str):
         ]
 
         # Study activity heatmap (last 90 days)
-        ninety_days_ago = datetime.now() - timedelta(days=90)
+        ninety_days_ago = datetime.now(timezone.utc) - timedelta(days=90)
         heatmap_data = defaultdict(int)
 
         for attempt in all_attempts:
@@ -114,7 +114,7 @@ async def get_user_analytics(user_id: str):
 
         heatmap = []
         for i in range(90):
-            date = datetime.now() - timedelta(days=89-i)
+            date = datetime.now(timezone.utc) - timedelta(days=89-i)
             date_key = date.strftime('%Y-%m-%d')
             heatmap.append({
                 'date': date_key,
@@ -236,7 +236,7 @@ async def get_user_analytics(user_id: str):
                 'message': f"You're on a {current_streak}-day streak. Study today to keep it going!",
                 'icon': '🔥'
             })
-        elif attempt_dates and (datetime.now().date() - attempt_dates[0]) > timedelta(days=3):
+        elif attempt_dates and (datetime.now(timezone.utc).date() - attempt_dates[0]) > timedelta(days=3):
             insights.append({
                 'type': 'motivation',
                 'title': 'Welcome Back!',
