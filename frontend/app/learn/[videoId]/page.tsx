@@ -959,23 +959,28 @@ export default function LearnPage() {
               {/* Quiz Actions - Show if quiz has been taken */}
               {learningReport && (
                 <div className="space-y-3 mt-4 pt-4 border-t border-gray-800">
-                  {/* View Quiz Report Button */}
+                  {/* View/Hide Quiz Report Button */}
                   <button
                     onClick={() => {
-                      // Show the report
-                      setShowReport(true);
-                      // Scroll to the learning report section after a brief delay to let it render
-                      setTimeout(() => {
-                        const reportElement = document.querySelector('[data-report-section]');
-                        if (reportElement) {
-                          reportElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
+                      if (showReport) {
+                        // Hide the report
+                        setShowReport(false);
+                      } else {
+                        // Show the report
+                        setShowReport(true);
+                        // Scroll to the learning report section after a brief delay to let it render
+                        setTimeout(() => {
+                          const reportElement = document.querySelector('[data-report-section]');
+                          if (reportElement) {
+                            reportElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }
                     }}
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-500/20"
                   >
                     <BarChart3 className="w-4 h-4" />
-                    View Quiz Report
+                    {showReport ? 'Hide Quiz Report' : 'View Quiz Report'}
                   </button>
 
                   {/* Retake Quiz Button */}
