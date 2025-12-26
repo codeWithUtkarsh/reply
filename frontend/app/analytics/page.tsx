@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
-import { Loader2, TrendingUp, Target, Award, Flame, BookOpen, Brain, Star, Trophy, Zap } from 'lucide-react';
+import { Loader2, TrendingUp, Target, Award, Flame, BookOpen, Brain, Star, Trophy, Zap, ExternalLink, FileText } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import {
   LineChart,
@@ -67,6 +68,20 @@ interface Insight {
   icon: string;
 }
 
+interface QuizReport {
+  report_id: string;
+  video_id: string;
+  video_title: string;
+  project_id: string | null;
+  project_name: string | null;
+  score: number;
+  total_questions: number;
+  correct_answers: number;
+  date_taken: string;
+  domain: string;
+  video_type: string;
+}
+
 interface AnalyticsData {
   hero_stats: HeroStats;
   progress_data: ProgressData[];
@@ -78,10 +93,12 @@ interface AnalyticsData {
   };
   achievements: Achievement[];
   insights: Insight[];
+  quiz_reports: QuizReport[];
 }
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [error, setError] = useState('');
@@ -127,7 +144,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  const { hero_stats, progress_data, proficiency_data, heatmap_data, performance_breakdown, achievements, insights } = analytics;
+  const { hero_stats, progress_data, proficiency_data, heatmap_data, performance_breakdown, achievements, insights, quiz_reports } = analytics;
 
   return (
     <AuthenticatedLayout>
@@ -398,6 +415,86 @@ export default function AnalyticsPage() {
                   <p className="text-gray-400 text-sm font-light">{achievement.description}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quiz Reports Table */}
+        {quiz_reports && quiz_reports.length > 0 && (
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 mt-8">
+            <div className="flex items-center gap-2 mb-6">
+              <FileText className="w-5 h-5 text-blue-400" />
+              <h2 className="text-xl font-light text-white">Quiz History</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-800">
+                    <th className="text-left py-3 px-4 text-sm font-light text-gray-400">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-light text-gray-400">Video</th>
+                    <th className="text-left py-3 px-4 text-sm font-light text-gray-400">Project</th>
+                    <th className="text-left py-3 px-4 text-sm font-light text-gray-400">Domain</th>
+                    <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Score</th>
+                    <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Questions</th>
+                    <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quiz_reports.map((report) => {
+                    const scoreColor = report.score >= 80
+                      ? 'text-emerald-400'
+                      : report.score >= 60
+                      ? 'text-blue-400'
+                      : 'text-amber-400';
+
+                    return (
+                      <tr
+                        key={report.report_id}
+                        className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-sm text-gray-300 font-light">
+                          {new Date(report.date_taken).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-white font-light">{report.video_title}</span>
+                            <span className="text-xs text-gray-500">{report.video_type}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-300 font-light">
+                          {report.project_name || 'No Project'}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-xs px-2 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full">
+                            {report.domain}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`text-lg font-light ${scoreColor}`}>
+                            {report.score}%
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center text-sm text-gray-300 font-light">
+                          {report.correct_answers}/{report.total_questions}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            onClick={() => router.push(`/learn/${report.video_id}`)}
+                            className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            <span>View</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

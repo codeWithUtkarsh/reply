@@ -244,6 +244,52 @@ async def get_user_analytics(user_id: str):
                 'icon': '👋'
             })
 
+        # Quiz reports table data
+        quiz_reports = []
+        for report in reports:
+            if report.get('quiz_id'):  # Only include quiz reports
+                # Get video info
+                video = await db.get_video(report['video_id'])
+
+                # Parse performance stats
+                if isinstance(report.get('performance_stats'), str):
+                    perf_stats = json.loads(report['performance_stats'])
+                else:
+                    perf_stats = report.get('performance_stats', {})
+
+                quiz_reports.append({
+                    'report_id': report['report_id'],
+                    'video_id': report['video_id'],
+                    'video_title': video.get('title', 'Unknown Video') if video else 'Unknown Video',
+                    'project_id': video.get('project_id') if video else None,
+                    'project_name': None,  # Will be filled below
+                    'score': perf_stats.get('accuracy_rate', 0),
+                    'total_questions': perf_stats.get('total_attempts', 0),
+                    'correct_answers': perf_stats.get('correct_count', 0),
+                    'date_taken': report.get('created_at'),
+                    'domain': report.get('domain', 'General'),
+                    'video_type': report.get('video_type', 'Unknown')
+                })
+
+        # Get project names for each report
+        project_ids = set(r['project_id'] for r in quiz_reports if r['project_id'])
+        project_names = {}
+        for project_id in project_ids:
+            try:
+                project = await db.get_project(project_id)
+                if project:
+                    project_names[project_id] = project.get('project_name', 'Unknown Project')
+            except:
+                project_names[project_id] = 'Unknown Project'
+
+        # Update quiz reports with project names
+        for report in quiz_reports:
+            if report['project_id']:
+                report['project_name'] = project_names.get(report['project_id'], 'Unknown Project')
+
+        # Sort by date (most recent first)
+        quiz_reports.sort(key=lambda x: x['date_taken'] or '', reverse=True)
+
         return {
             'user_id': user_id,
             'hero_stats': {
@@ -258,7 +304,8 @@ async def get_user_analytics(user_id: str):
             'heatmap_data': heatmap,
             'performance_breakdown': performance_breakdown,
             'achievements': achievements,
-            'insights': insights
+            'insights': insights,
+            'quiz_reports': quiz_reports
         }
 
     except Exception as e:
