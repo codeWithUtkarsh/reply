@@ -204,8 +204,12 @@ export default function CelebrationSection({
             </div>
           </div>
 
-          {/* Right Column - Placeholder for balance */}
-          <div className="hidden lg:block"></div>
+          {/* Right Column - Study Pattern Graph */}
+          <div className="hidden lg:block">
+            {attemptsData.length > 0 && (
+              <StudyPatternGraph attempts={attemptsData} />
+            )}
+          </div>
         </div>
 
         {/* Growth Opportunities - Full Width Section */}
@@ -357,13 +361,6 @@ export default function CelebrationSection({
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Study Pattern Graph */}
-        {attemptsData.length > 0 && (
-          <div className="mt-6">
-            <StudyPatternGraph attempts={attemptsData} />
           </div>
         )}
       </div>
