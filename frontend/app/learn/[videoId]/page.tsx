@@ -66,6 +66,7 @@ export default function LearnPage() {
   const [batchTotal, setBatchTotal] = useState(0);
   const [showFlashcardReview, setShowFlashcardReview] = useState(false);
   const [reviewFlashcards, setReviewFlashcards] = useState<any[]>([]);
+  const [showFlashcardWarning, setShowFlashcardWarning] = useState(false);
 
   useEffect(() => {
     loadVideo();
@@ -392,6 +393,12 @@ export default function LearnPage() {
   };
 
   const handleViewAllFlashcards = () => {
+    // Check if user has answered at least one flashcard
+    if (answeredFlashcards.size === 0) {
+      setShowFlashcardWarning(true);
+      return;
+    }
+
     // Transform FlashCard format to the format expected by FlashcardModal
     const transformedFlashcards = flashcards.map(fc => ({
       id: fc.question.id,
@@ -837,6 +844,37 @@ export default function LearnPage() {
         onClose={() => setShowFlashcardReview(false)}
         flashcards={reviewFlashcards}
       />
+
+      {/* Flashcard Warning Modal */}
+      {showFlashcardWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-yellow-500/30 rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 pointer-events-none rounded-2xl"></div>
+
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-full flex items-center justify-center">
+                <span className="text-3xl">⚠️</span>
+              </div>
+
+              <h3 className="text-xl font-light text-white mb-3">
+                Complete Flashcard Learning First
+              </h3>
+
+              <p className="text-gray-400 font-light mb-6 leading-relaxed">
+                You haven't taken the flashcard learning even once. Complete it to view all flashcards.
+              </p>
+
+              <button
+                onClick={() => setShowFlashcardWarning(false)}
+                className="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-white font-light py-3 px-6 rounded-xl transition-all shadow-lg shadow-yellow-500/20"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthenticatedLayout>
   );
 }
