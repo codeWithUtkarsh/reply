@@ -148,6 +148,26 @@ export default function LearnPage() {
       } else {
         setFlashcardsLoading(true);
       }
+
+      // Load user's previous attempts to restore answered flashcards
+      if (userId) {
+        try {
+          const attemptsData = await reportsApi.getUserAttempts(userId, videoId);
+          if (attemptsData && attemptsData.attempts) {
+            // Filter flashcard attempts and extract question IDs
+            const flashcardQuestionIds = attemptsData.attempts
+              .filter((attempt: any) => attempt.question_type === 'flashcard')
+              .map((attempt: any) => attempt.question_id);
+
+            // Restore answered flashcards state
+            setAnsweredFlashcards(new Set(flashcardQuestionIds));
+            console.log(`Restored ${flashcardQuestionIds.length} answered flashcards from previous session`);
+          }
+        } catch (err) {
+          console.log('No previous attempts found or error loading attempts:', err);
+          // This is okay - user might not have any attempts yet
+        }
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load video');
     } finally {
