@@ -417,15 +417,33 @@ IMPORTANT:
                 # Extract concept from question (handle both quiz and flashcard formats)
                 try:
                     full_concept = ""
+                    start_time = None
+                    end_time = None
+
                     # Try quiz question format first (has question_text directly)
                     if 'question_text' in question:
                         full_concept = question['question_text']
+                        # Try to get video_segment for timestamps
+                        if 'video_segment' in question:
+                            seg = question['video_segment']
+                            start_time = seg.get('start_time')
+                            end_time = seg.get('end_time')
                     # Try flashcard format (has question_data)
                     elif isinstance(question.get('question_data'), dict):
                         full_concept = question['question_data'].get('question', '')
+                        # Check for video_segment in question_data
+                        if 'video_segment' in question['question_data']:
+                            seg = question['question_data']['video_segment']
+                            start_time = seg.get('start_time')
+                            end_time = seg.get('end_time')
                     elif isinstance(question.get('question_data'), str):
                         parsed = json.loads(question['question_data'])
                         full_concept = parsed.get('question', '')
+                        # Check for video_segment in parsed data
+                        if 'video_segment' in parsed:
+                            seg = parsed['video_segment']
+                            start_time = seg.get('start_time')
+                            end_time = seg.get('end_time')
                     else:
                         full_concept = f"Knowledge area from question {q_id}"
 
@@ -436,13 +454,25 @@ IMPORTANT:
                         concept = full_concept
                 except:
                     concept = f"Knowledge area from question {q_id}"
+                    start_time = None
+                    end_time = None
+
+                item_data = {
+                    'concept': concept,
+                    'accuracy': round(accuracy * 100, 1)
+                }
+
+                # Add timestamp if available
+                if start_time is not None and end_time is not None:
+                    item_data['start_time'] = start_time
+                    item_data['end_time'] = end_time
 
                 if accuracy >= 0.8:  # 80%+ correct - Mastered
-                    mastered.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
+                    mastered.append(item_data)
                 elif accuracy >= 0.5:  # 50-79% correct - Learning
-                    learning.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
+                    learning.append(item_data)
                 else:  # < 50% correct - Needs Review (focus here!)
-                    needs_review.append({'concept': concept, 'accuracy': round(accuracy * 100, 1)})
+                    needs_review.append(item_data)
 
         return {
             'mastered': mastered[:10],  # Top 10 mastered knowledge areas

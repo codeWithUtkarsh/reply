@@ -186,22 +186,40 @@ export default function CelebrationSection({
                 </div>
               </div>
               <div className="p-4 space-y-3">
-                {growthAreas.map((area, index) => (
-                  <div
-                    key={index}
-                    className="bg-gray-800/50 border border-purple-700/50 rounded-lg p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <TrendingUp className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-light text-white text-base leading-relaxed mb-2">{area.concept}</p>
-                        <p className="text-sm text-gray-400 font-light italic">
-                          📹 Revisit this section in the video to strengthen your understanding
-                        </p>
+                {growthAreas.map((area, index) => {
+                  // Format timestamp helper function
+                  const formatTime = (seconds: number) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = Math.floor(seconds % 60);
+                    return `${mins}:${secs.toString().padStart(2, '0')}`;
+                  };
+
+                  const hasTimestamp = area.start_time !== undefined && area.end_time !== undefined;
+                  const timestampText = hasTimestamp
+                    ? `${formatTime(area.start_time)} - ${formatTime(area.end_time)}`
+                    : null;
+
+                  return (
+                    <div
+                      key={index}
+                      className="bg-gray-800/50 border border-purple-700/50 rounded-lg p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <TrendingUp className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-light text-white text-base leading-relaxed mb-2">{area.concept}</p>
+                          <p className="text-sm text-gray-400 font-light italic">
+                            {hasTimestamp ? (
+                              <>📹 Revisit video section <span className="text-purple-300 font-medium not-italic">{timestampText}</span> to strengthen your understanding</>
+                            ) : (
+                              <>📹 Revisit this section in the video to strengthen your understanding</>
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* Action Message */}
                 <div className="mt-4 bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">

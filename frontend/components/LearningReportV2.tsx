@@ -53,7 +53,9 @@ export default function LearningReportV2({ report }: LearningReportV2Props) {
     .map(item => ({
       concept: item.concept,
       accuracy: item.accuracy,
-      evidence: `Practice this to strengthen your foundation`
+      evidence: `Practice this to strengthen your foundation`,
+      start_time: item.start_time,
+      end_time: item.end_time
     }));
 
   // Prepare performance data for detailed section

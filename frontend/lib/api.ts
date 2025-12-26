@@ -69,6 +69,8 @@ export interface WeakConcept {
 export interface MasteryLevel {
   concept: string;
   accuracy: number;
+  start_time?: number;
+  end_time?: number;
 }
 
 export interface MasteryAnalysis {
