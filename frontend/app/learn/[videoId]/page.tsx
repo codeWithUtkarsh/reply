@@ -463,28 +463,46 @@ export default function LearnPage() {
               </div>
             </div>
 
-            {/* Flashcard Learning Toggle */}
-            <div className="flex items-center gap-3 bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl px-4 py-3">
-              <div>
-                <p className="text-sm font-light text-white">Flashcard Learning</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {flashcardLearningEnabled ? 'Auto-pause enabled' : 'Disabled'}
-                </p>
-              </div>
+            {/* Flashcard Controls */}
+            <div className="flex items-center gap-3">
+              {/* View All Flashcards Button */}
               <button
-                onClick={handleToggleFlashcardLearning}
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-black ${
-                  flashcardLearningEnabled ? 'bg-emerald-500' : 'bg-gray-700'
-                }`}
-                role="switch"
-                aria-checked={flashcardLearningEnabled}
+                onClick={handleViewAllFlashcards}
+                disabled={flashcards.length === 0}
+                className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 hover:border-purple-500/50 rounded-xl px-4 py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                    flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
+                <Layers className="w-5 h-5 text-purple-400" />
+                <div className="text-left">
+                  <p className="text-sm font-light text-white">View Flashcards</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {flashcards.length === 0 ? 'No cards yet' : `${flashcards.length} cards`}
+                  </p>
+                </div>
               </button>
+
+              {/* Flashcard Learning Toggle */}
+              <div className="flex items-center gap-3 bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl px-4 py-3">
+                <div>
+                  <p className="text-sm font-light text-white">Flashcard Learning</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {flashcardLearningEnabled ? 'Auto-pause enabled' : 'Disabled'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleFlashcardLearning}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-black ${
+                    flashcardLearningEnabled ? 'bg-emerald-500' : 'bg-gray-700'
+                  }`}
+                  role="switch"
+                  aria-checked={flashcardLearningEnabled}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      flashcardLearningEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -749,18 +767,6 @@ export default function LearnPage() {
                   {showNotes ? 'Hide Notes' : 'View Notes'}
                 </button>
               )}
-            </div>
-
-            {/* View All Flashcards Card */}
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-4 shadow-xl">
-              <button
-                onClick={handleViewAllFlashcards}
-                disabled={flashcards.length === 0}
-                className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-500 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-orange-500/20"
-              >
-                <Layers className="w-4 h-4" />
-                {flashcards.length === 0 ? 'No Flashcards Yet' : `View All Flashcards (${flashcards.length})`}
-              </button>
             </div>
           </div>
         </div>
