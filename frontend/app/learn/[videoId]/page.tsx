@@ -67,6 +67,7 @@ export default function LearnPage() {
   const [showFlashcardReview, setShowFlashcardReview] = useState(false);
   const [reviewFlashcards, setReviewFlashcards] = useState<any[]>([]);
   const [showFlashcardWarning, setShowFlashcardWarning] = useState(false);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
 
   useEffect(() => {
     loadVideo();
@@ -207,6 +208,7 @@ export default function LearnPage() {
 
   const handleStartQuiz = async () => {
     try {
+      setLoadingQuiz(true);
       const quiz = await quizApi.generateQuiz(videoId, userId);
       setQuizData(quiz);
       setShowQuiz(true);
@@ -226,6 +228,8 @@ export default function LearnPage() {
         alert('Failed to generate quiz. Please try again.');
       }
       console.error('Quiz generation error:', err);
+    } finally {
+      setLoadingQuiz(false);
     }
   };
 
@@ -527,8 +531,43 @@ export default function LearnPage() {
               />
             </div>
 
+            {/* Quiz Loading State */}
+            {loadingQuiz && (
+              <div className="mt-8 bg-gradient-to-b from-gray-900 to-black border border-purple-500/30 rounded-2xl p-12 shadow-2xl">
+                <div className="flex flex-col items-center justify-center text-center">
+                  {/* Animated Coffee Cup */}
+                  <div className="relative mb-6">
+                    <div className="text-7xl animate-bounce">☕</div>
+                    {/* Steam animation */}
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 flex gap-1">
+                      <div className="w-1 h-8 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse" style={{ animationDelay: '0s' }}></div>
+                      <div className="w-1 h-10 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                      <div className="w-1 h-8 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                    </div>
+                  </div>
+
+                  <h3 className="text-2xl font-light text-white mb-3">
+                    Brewing Your Quiz...
+                  </h3>
+                  <p className="text-purple-300 font-light mb-2">
+                    Enjoy your coffee ☕ while we craft personalized questions for you
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    This usually takes just a few seconds
+                  </p>
+
+                  {/* Loading dots */}
+                  <div className="flex gap-2 mt-6">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Quiz Section */}
-            {showQuiz && quizData && !learningReport ? (
+            {!loadingQuiz && showQuiz && quizData && !learningReport ? (
               <div className="mt-8">
                 <QuizComponent
                   questions={quizData.questions}
@@ -566,6 +605,7 @@ export default function LearnPage() {
               </div>
             ) : (
               !showQuiz &&
+              !loadingQuiz &&
               answeredFlashcards.size === flashcards.length &&
               flashcards.length > 0 && (
                 <div className="mt-8 bg-gradient-to-b from-gray-900 to-black border border-emerald-500/30 rounded-2xl p-8 text-center">
@@ -709,13 +749,23 @@ export default function LearnPage() {
               </div>
 
               {/* Quiz Button */}
-              {answeredFlashcards.size === flashcards.length && flashcards.length > 0 && (
+              {answeredFlashcards.size === flashcards.length && flashcards.length > 0 && !learningReport && (
                 <button
                   onClick={handleStartQuiz}
-                  className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-500/20"
+                  disabled={loadingQuiz}
+                  className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-light py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-500/20"
                 >
-                  <BookOpen className="w-4 h-4" />
-                  Take Quiz
+                  {loadingQuiz ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading Quiz...
+                    </>
+                  ) : (
+                    <>
+                      <BookOpen className="w-4 h-4" />
+                      Take Quiz
+                    </>
+                  )}
                 </button>
               )}
             </div>
