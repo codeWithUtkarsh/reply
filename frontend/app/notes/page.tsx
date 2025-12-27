@@ -6,6 +6,17 @@ import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { Loader2, FileText, ExternalLink, Eye, FolderOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import dynamic from 'next/dynamic';
+
+// Dynamically import VideoNotes component to avoid SSR issues with Mermaid
+const VideoNotesComponent = dynamic(() => import('@/components/VideoNotes'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+    </div>
+  ),
+});
 
 interface Note {
   notes_id: string;
@@ -25,12 +36,13 @@ interface NoteDetail {
   sections: Array<{
     heading: string;
     content: string;
-    diagrams?: Array<{
+    visualizations?: Array<{
       type: string;
       code: string;
-      description: string;
+      description?: string;
     }>;
   }>;
+  review_questions?: string[];
   created_at: string;
 }
 
@@ -197,13 +209,12 @@ export default function NotesPage() {
 
         {/* Preview Modal */}
         {selectedNote && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
               {/* Modal Header */}
-              <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
                 <div>
-                  <h2 className="text-2xl font-light text-white mb-1">{selectedNote.title}</h2>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Created: {new Date(selectedNote.created_at).toLocaleDateString('en-US', {
                       month: 'long',
                       day: 'numeric',
@@ -211,59 +222,30 @@ export default function NotesPage() {
                     })}
                   </p>
                 </div>
-                <button
-                  onClick={closePreview}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="prose prose-invert max-w-none">
-                  {selectedNote.sections.map((section, index) => (
-                    <div key={index} className="mb-8">
-                      <h3 className="text-xl font-light text-emerald-400 mb-4">{section.heading}</h3>
-                      <div className="text-gray-300 whitespace-pre-wrap font-light leading-relaxed">
-                        {section.content}
-                      </div>
-                      {section.diagrams && section.diagrams.length > 0 && (
-                        <div className="mt-4 space-y-4">
-                          {section.diagrams.map((diagram, dIndex) => (
-                            <div key={dIndex} className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                              <p className="text-sm text-gray-400 mb-2">{diagram.description}</p>
-                              <pre className="text-xs text-gray-300 overflow-x-auto">
-                                <code>{diagram.code}</code>
-                              </pre>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      closePreview();
+                      router.push(`/learn/${selectedNote.video_id}`);
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-colors"
+                  >
+                    Open Video
+                  </button>
+                  <button
+                    onClick={closePreview}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="p-6 border-t border-gray-800 flex justify-end gap-3">
-                <button
-                  onClick={closePreview}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    closePreview();
-                    router.push(`/learn/${selectedNote.video_id}`);
-                  }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
-                >
-                  Open Video
-                </button>
+              {/* Modal Content with VideoNotes Component */}
+              <div className="flex-1 overflow-y-auto">
+                <VideoNotesComponent notes={selectedNote} />
               </div>
             </div>
           </div>
