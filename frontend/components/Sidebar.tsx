@@ -199,7 +199,14 @@ export default function Sidebar() {
             <span className="font-light">Analytics</span>
           </button>
 
-          <button className="w-full px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all">
+          <button
+            onClick={() => router.push('/notes')}
+            className={`w-full px-4 py-3 flex items-center gap-3 text-sm transition-all ${
+              pathname === '/notes'
+                ? 'text-emerald-400 bg-emerald-500/10'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+            }`}
+          >
             <FileText className="w-4 h-4" />
             <span className="font-light">Notes</span>
           </button>
