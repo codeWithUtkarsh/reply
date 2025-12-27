@@ -136,6 +136,106 @@ async def generate_notes(request: GenerateNotesRequest):
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 
+@router.get("/user/{user_id}/all")
+async def get_user_notes(user_id: str):
+    """Get all notes for a user across all videos in their projects"""
+    try:
+        from starlette.concurrency import run_in_threadpool
+
+        # Get user's projects
+        user_projects = await run_in_threadpool(
+            lambda: db.client.table("projects")
+            .select("id")
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        if not user_projects.data:
+            return {"notes": []}
+
+        project_ids = [p['id'] for p in user_projects.data]
+        video_ids = []
+
+        # Get videos from user's projects
+        for project_id in project_ids:
+            project_videos = await run_in_threadpool(
+                lambda pid=project_id: db.client.table("project_videos")
+                .select("video_id")
+                .eq("project_id", pid)
+                .execute()
+            )
+            if project_videos.data:
+                video_ids.extend([pv['video_id'] for pv in project_videos.data])
+
+        # Remove duplicates
+        video_ids = list(set(video_ids))
+
+        if not video_ids:
+            return {"notes": []}
+
+        # Get all notes for these videos
+        notes_result = await run_in_threadpool(
+            lambda: db.client.table("video_notes")
+            .select("notes_id, video_id, title, created_at")
+            .in_("video_id", video_ids)
+            .execute()
+        )
+
+        if not notes_result.data:
+            return {"notes": []}
+
+        # Get video information for each note
+        user_notes = []
+        for note in notes_result.data:
+            video = await db.get_video(note['video_id'])
+            if video:
+                # Get project info if video is in a project
+                project_name = None
+                try:
+                    project_link = await run_in_threadpool(
+                        lambda: db.client.table("project_videos")
+                        .select("project_id")
+                        .eq("video_id", note['video_id'])
+                        .execute()
+                    )
+
+                    if project_link.data and len(project_link.data) > 0:
+                        project_id = project_link.data[0].get('project_id')
+                        if project_id:
+                            project_result = await run_in_threadpool(
+                                lambda: db.client.table("projects")
+                                .select("project_name")
+                                .eq("id", project_id)
+                                .execute()
+                            )
+                            if project_result.data and len(project_result.data) > 0:
+                                project_name = project_result.data[0].get('project_name')
+                except:
+                    pass
+
+                user_notes.append({
+                    'notes_id': note['notes_id'],
+                    'video_id': note['video_id'],
+                    'video_title': video.get('title', 'Unknown Video'),
+                    'video_type': video.get('video_type', 'Unknown'),
+                    'domain': video.get('domain', 'General'),
+                    'project_name': project_name,
+                    'notes_title': note.get('title', 'Untitled Notes'),
+                    'created_at': note.get('created_at')
+                })
+
+        # Sort by created_at (most recent first)
+        user_notes.sort(key=lambda x: x['created_at'] or '', reverse=True)
+
+        return {"notes": user_notes}
+
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"Error fetching user notes: {error_detail}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{video_id}")
 async def get_notes(video_id: str):
     """Get notes for a video"""
