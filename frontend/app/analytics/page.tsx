@@ -365,7 +365,7 @@ export default function AnalyticsPage() {
             <TrendingUp className="w-5 h-5 text-orange-400" />
             <h2 className="text-xl font-light text-white">Study Activity (Last 90 Days)</h2>
           </div>
-          <div className="grid grid-cols-10 gap-1">
+          <div className="grid grid-cols-18 gap-0.5">
             {heatmap_data.map((day, index) => {
               const intensity = day.count === 0 ? 0 : Math.min(day.count / 10, 1);
               const color = day.count === 0
@@ -379,7 +379,7 @@ export default function AnalyticsPage() {
               return (
                 <div
                   key={index}
-                  className={`aspect-square ${color} rounded-sm transition-all hover:scale-110 cursor-pointer`}
+                  className={`w-3 h-3 ${color} rounded-sm transition-all hover:scale-110 cursor-pointer`}
                   title={`${day.date}: ${day.count} questions`}
                 ></div>
               );
