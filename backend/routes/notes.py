@@ -145,7 +145,7 @@ async def get_user_notes(user_id: str):
         # Get all notes
         notes_result = await run_in_threadpool(
             lambda: db.client.table("video_notes")
-            .select("notes_id, video_id, title, created_at, updated_at")
+            .select("notes_id, video_id, title, created_at")
             .execute()
         )
 
@@ -192,12 +192,11 @@ async def get_user_notes(user_id: str):
                     'domain': video.get('domain', 'General'),
                     'project_name': project_name,
                     'notes_title': note.get('title', 'Untitled Notes'),
-                    'created_at': note.get('created_at'),
-                    'updated_at': note.get('updated_at')
+                    'created_at': note.get('created_at')
                 })
 
-        # Sort by updated_at (most recent first)
-        user_notes.sort(key=lambda x: x['updated_at'] or x['created_at'] or '', reverse=True)
+        # Sort by created_at (most recent first)
+        user_notes.sort(key=lambda x: x['created_at'] or '', reverse=True)
 
         return {"notes": user_notes}
 

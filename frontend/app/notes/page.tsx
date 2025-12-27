@@ -16,7 +16,6 @@ interface Note {
   project_name: string | null;
   notes_title: string;
   created_at: string;
-  updated_at: string;
 }
 
 interface NoteDetail {
@@ -33,7 +32,6 @@ interface NoteDetail {
     }>;
   }>;
   created_at: string;
-  updated_at: string;
 }
 
 export default function NotesPage() {
@@ -140,7 +138,7 @@ export default function NotesPage() {
                       className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
                     >
                       <td className="py-3 px-4 text-sm text-gray-300 font-light">
-                        {new Date(note.updated_at || note.created_at).toLocaleDateString('en-US', {
+                        {new Date(note.created_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric'
@@ -206,7 +204,7 @@ export default function NotesPage() {
                 <div>
                   <h2 className="text-2xl font-light text-white mb-1">{selectedNote.title}</h2>
                   <p className="text-sm text-gray-400">
-                    Last updated: {new Date(selectedNote.updated_at).toLocaleDateString('en-US', {
+                    Created: {new Date(selectedNote.created_at).toLocaleDateString('en-US', {
                       month: 'long',
                       day: 'numeric',
                       year: 'numeric'
