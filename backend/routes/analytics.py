@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from database import db
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
+from starlette.concurrency import run_in_threadpool
 import json
 
 router = APIRouter()
@@ -271,17 +272,27 @@ async def get_user_analytics(user_id: str):
             # Get video info
             video = await db.get_video(video_id)
 
-            # Get project info if video has project_id
+            # Get project info by querying project_videos junction table
             project_name = None
             project_id = None
-            if video and video.get('project_id'):
-                project_id = video.get('project_id')
-                try:
-                    project = await db.get_project(project_id)
-                    if project:
-                        project_name = project.get('project_name', 'Unknown Project')
-                except:
-                    project_name = 'Unknown Project'
+            try:
+                # Query project_videos table to find associated project
+                project_link = await run_in_threadpool(
+                    lambda: db.client.table("project_videos")
+                    .select("project_id")
+                    .eq("video_id", video_id)
+                    .execute()
+                )
+
+                if project_link.data and len(project_link.data) > 0:
+                    project_id = project_link.data[0].get('project_id')
+                    if project_id:
+                        project = await db.get_project(project_id)
+                        if project:
+                            project_name = project.get('project_name', 'Unknown Project')
+            except Exception as e:
+                print(f"Error fetching project for video {video_id}: {str(e)}")
+                pass
 
             # Calculate mean score across all attempts
             mean_score = round(sum(a['score'] for a in attempts) / len(attempts), 2)
