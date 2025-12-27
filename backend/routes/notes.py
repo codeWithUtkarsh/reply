@@ -138,20 +138,9 @@ async def generate_notes(request: GenerateNotesRequest):
 
 @router.get("/user/{user_id}/all")
 async def get_user_notes(user_id: str):
-    """Get all notes for a user across all videos"""
+    """Get all notes for a user across all videos in their projects"""
     try:
         from starlette.concurrency import run_in_threadpool
-
-        # Get all videos owned by the user (including videos in their projects)
-        # First, get user's direct videos
-        user_videos = await run_in_threadpool(
-            lambda: db.client.table("videos")
-            .select("id")
-            .eq("user_id", user_id)
-            .execute()
-        )
-
-        video_ids = [v['id'] for v in user_videos.data] if user_videos.data else []
 
         # Get user's projects
         user_projects = await run_in_threadpool(
@@ -161,19 +150,22 @@ async def get_user_notes(user_id: str):
             .execute()
         )
 
-        if user_projects.data:
-            project_ids = [p['id'] for p in user_projects.data]
+        if not user_projects.data:
+            return {"notes": []}
 
-            # Get videos from user's projects
-            for project_id in project_ids:
-                project_videos = await run_in_threadpool(
-                    lambda pid=project_id: db.client.table("project_videos")
-                    .select("video_id")
-                    .eq("project_id", pid)
-                    .execute()
-                )
-                if project_videos.data:
-                    video_ids.extend([pv['video_id'] for pv in project_videos.data])
+        project_ids = [p['id'] for p in user_projects.data]
+        video_ids = []
+
+        # Get videos from user's projects
+        for project_id in project_ids:
+            project_videos = await run_in_threadpool(
+                lambda pid=project_id: db.client.table("project_videos")
+                .select("video_id")
+                .eq("project_id", pid)
+                .execute()
+            )
+            if project_videos.data:
+                video_ids.extend([pv['video_id'] for pv in project_videos.data])
 
         # Remove duplicates
         video_ids = list(set(video_ids))
