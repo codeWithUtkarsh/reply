@@ -359,72 +359,9 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Study Activity Heatmap */}
-        <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-orange-400" />
-            <h2 className="text-xl font-light text-white">Study Activity (Last 90 Days)</h2>
-          </div>
-          <div
-            className="grid gap-0.5"
-            style={{ gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' }}
-          >
-            {heatmap_data.map((day, index) => {
-              const intensity = day.count === 0 ? 0 : Math.min(day.count / 10, 1);
-              const color = day.count === 0
-                ? 'bg-gray-800'
-                : intensity > 0.7
-                ? 'bg-emerald-500'
-                : intensity > 0.4
-                ? 'bg-emerald-600'
-                : 'bg-emerald-800';
-
-              return (
-                <div
-                  key={index}
-                  className={`aspect-square ${color} rounded-sm transition-all hover:scale-110 cursor-pointer`}
-                  title={`${day.date}: ${day.count} questions`}
-                ></div>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-2 mt-4 text-xs text-gray-400">
-            <span>Less</span>
-            <div className="flex gap-1">
-              <div className="w-3 h-3 bg-gray-800 rounded-sm"></div>
-              <div className="w-3 h-3 bg-emerald-800 rounded-sm"></div>
-              <div className="w-3 h-3 bg-emerald-600 rounded-sm"></div>
-              <div className="w-3 h-3 bg-emerald-500 rounded-sm"></div>
-            </div>
-            <span>More</span>
-          </div>
-        </div>
-
-        {/* Achievements */}
-        {achievements.length > 0 && (
-          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Award className="w-5 h-5 text-amber-400" />
-              <h2 className="text-xl font-light text-white">Achievements Unlocked</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {achievements.map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className="bg-gradient-to-b from-amber-900/30 to-black border border-amber-500/30 rounded-xl p-5 text-center"
-                >
-                  <span className="text-5xl mb-3 block">{achievement.icon}</span>
-                  <h3 className="text-white font-light mb-1">{achievement.title}</h3>
-                  <p className="text-gray-400 text-sm font-light">{achievement.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Quiz Reports Table */}
         {quiz_reports && quiz_reports.length > 0 && (
-          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 mt-8">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 mb-8">
             <div className="flex items-center gap-2 mb-6">
               <FileText className="w-5 h-5 text-blue-400" />
               <h2 className="text-xl font-light text-white">Quiz History</h2>
@@ -498,6 +435,69 @@ export default function AnalyticsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Study Activity Heatmap */}
+        <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-orange-400" />
+            <h2 className="text-xl font-light text-white">Study Activity (Last 90 Days)</h2>
+          </div>
+          <div
+            className="grid gap-0.5"
+            style={{ gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' }}
+          >
+            {heatmap_data.map((day, index) => {
+              const intensity = day.count === 0 ? 0 : Math.min(day.count / 10, 1);
+              const color = day.count === 0
+                ? 'bg-gray-800'
+                : intensity > 0.7
+                ? 'bg-emerald-500'
+                : intensity > 0.4
+                ? 'bg-emerald-600'
+                : 'bg-emerald-800';
+
+              return (
+                <div
+                  key={index}
+                  className={`aspect-square ${color} rounded-sm transition-all hover:scale-110 cursor-pointer`}
+                  title={`${day.date}: ${day.count} questions`}
+                ></div>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-2 mt-4 text-xs text-gray-400">
+            <span>Less</span>
+            <div className="flex gap-1">
+              <div className="w-3 h-3 bg-gray-800 rounded-sm"></div>
+              <div className="w-3 h-3 bg-emerald-800 rounded-sm"></div>
+              <div className="w-3 h-3 bg-emerald-600 rounded-sm"></div>
+              <div className="w-3 h-3 bg-emerald-500 rounded-sm"></div>
+            </div>
+            <span>More</span>
+          </div>
+        </div>
+
+        {/* Achievements */}
+        {achievements.length > 0 && (
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Award className="w-5 h-5 text-amber-400" />
+              <h2 className="text-xl font-light text-white">Achievements Unlocked</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {achievements.map((achievement) => (
+                <div
+                  key={achievement.id}
+                  className="bg-gradient-to-b from-amber-900/30 to-black border border-amber-500/30 rounded-xl p-5 text-center"
+                >
+                  <span className="text-5xl mb-3 block">{achievement.icon}</span>
+                  <h3 className="text-white font-light mb-1">{achievement.title}</h3>
+                  <p className="text-gray-400 text-sm font-light">{achievement.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
