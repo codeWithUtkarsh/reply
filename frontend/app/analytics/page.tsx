@@ -69,15 +69,13 @@ interface Insight {
 }
 
 interface QuizReport {
-  report_id: string;
   video_id: string;
   video_title: string;
   project_id: string | null;
   project_name: string | null;
-  score: number;
-  total_questions: number;
-  correct_answers: number;
-  date_taken: string;
+  attempts_count: number;
+  mean_score: number;
+  latest_date: string;
   domain: string;
   video_type: string;
 }
@@ -374,26 +372,26 @@ export default function AnalyticsPage() {
                     <th className="text-left py-3 px-4 text-sm font-light text-gray-400">Video</th>
                     <th className="text-left py-3 px-4 text-sm font-light text-gray-400">Project</th>
                     <th className="text-left py-3 px-4 text-sm font-light text-gray-400">Domain</th>
-                    <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Score</th>
-                    <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Questions</th>
+                    <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Attempts</th>
+                    <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Avg Score</th>
                     <th className="text-center py-3 px-4 text-sm font-light text-gray-400">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {quiz_reports.map((report) => {
-                    const scoreColor = report.score >= 80
+                    const scoreColor = report.mean_score >= 80
                       ? 'text-emerald-400'
-                      : report.score >= 60
+                      : report.mean_score >= 60
                       ? 'text-blue-400'
                       : 'text-amber-400';
 
                     return (
                       <tr
-                        key={report.report_id}
+                        key={report.video_id}
                         className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
                       >
                         <td className="py-3 px-4 text-sm text-gray-300 font-light">
-                          {new Date(report.date_taken).toLocaleDateString('en-US', {
+                          {new Date(report.latest_date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric'
@@ -414,12 +412,14 @@ export default function AnalyticsPage() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className={`text-lg font-light ${scoreColor}`}>
-                            {report.score}%
+                          <span className="text-sm text-gray-300 font-light">
+                            {report.attempts_count}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center text-sm text-gray-300 font-light">
-                          {report.correct_answers}/{report.total_questions}
+                        <td className="py-3 px-4 text-center">
+                          <span className={`text-lg font-light ${scoreColor}`}>
+                            {report.mean_score}%
+                          </span>
                         </td>
                         <td className="py-3 px-4 text-center">
                           <button

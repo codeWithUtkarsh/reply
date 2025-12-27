@@ -244,25 +244,20 @@ async def get_user_analytics(user_id: str):
                 'icon': '👋'
             })
 
-        # Quiz reports table data
-        quiz_reports = []
+        # Quiz reports table data - group by video
+        from collections import defaultdict
+        video_attempts = defaultdict(list)
+
         for report in reports:
             if report.get('quiz_id'):  # Only include quiz reports
-                # Get video info
-                video = await db.get_video(report['video_id'])
-
                 # Parse performance stats
                 if isinstance(report.get('performance_stats'), str):
                     perf_stats = json.loads(report['performance_stats'])
                 else:
                     perf_stats = report.get('performance_stats', {})
 
-                quiz_reports.append({
+                video_attempts[report['video_id']].append({
                     'report_id': report['report_id'],
-                    'video_id': report['video_id'],
-                    'video_title': video.get('title', 'Unknown Video') if video else 'Unknown Video',
-                    'project_id': video.get('project_id') if video else None,
-                    'project_name': None,  # Will be filled below
                     'score': perf_stats.get('accuracy_rate', 0),
                     'total_questions': perf_stats.get('total_attempts', 0),
                     'correct_answers': perf_stats.get('correct_count', 0),
@@ -271,24 +266,47 @@ async def get_user_analytics(user_id: str):
                     'video_type': report.get('video_type', 'Unknown')
                 })
 
-        # Get project names for each report
-        project_ids = set(r['project_id'] for r in quiz_reports if r['project_id'])
-        project_names = {}
-        for project_id in project_ids:
-            try:
-                project = await db.get_project(project_id)
-                if project:
-                    project_names[project_id] = project.get('project_name', 'Unknown Project')
-            except:
-                project_names[project_id] = 'Unknown Project'
+        # Create grouped quiz reports
+        quiz_reports = []
+        for video_id, attempts in video_attempts.items():
+            # Get video info
+            video = await db.get_video(video_id)
 
-        # Update quiz reports with project names
-        for report in quiz_reports:
-            if report['project_id']:
-                report['project_name'] = project_names.get(report['project_id'], 'Unknown Project')
+            # Get project info if video has project_id
+            project_name = None
+            project_id = None
+            if video and video.get('project_id'):
+                project_id = video.get('project_id')
+                try:
+                    project = await db.get_project(project_id)
+                    if project:
+                        project_name = project.get('project_name', 'Unknown Project')
+                except:
+                    project_name = 'Unknown Project'
 
-        # Sort by date (most recent first)
-        quiz_reports.sort(key=lambda x: x['date_taken'] or '', reverse=True)
+            # Calculate mean score across all attempts
+            mean_score = round(sum(a['score'] for a in attempts) / len(attempts), 2)
+
+            # Get most recent attempt date
+            latest_date = max(a['date_taken'] for a in attempts if a['date_taken'])
+
+            # Use data from first attempt for domain and video_type (should be same for all)
+            first_attempt = attempts[0]
+
+            quiz_reports.append({
+                'video_id': video_id,
+                'video_title': video.get('title', 'Unknown Video') if video else 'Unknown Video',
+                'project_id': project_id,
+                'project_name': project_name,
+                'attempts_count': len(attempts),
+                'mean_score': mean_score,
+                'latest_date': latest_date,
+                'domain': first_attempt['domain'],
+                'video_type': first_attempt['video_type']
+            })
+
+        # Sort by latest date (most recent first)
+        quiz_reports.sort(key=lambda x: x['latest_date'] or '', reverse=True)
 
         return {
             'user_id': user_id,
