@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
-import { Loader2, TrendingUp, Target, Award, Flame, BookOpen, Brain, Star, Trophy, Zap, ExternalLink, FileText } from 'lucide-react';
+import { Loader2, TrendingUp, Target, Flame, BookOpen, Brain, Star, Trophy, ExternalLink, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import {
@@ -302,61 +302,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Performance Breakdown */}
-        <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 mb-8">
-          <div className="flex items-center gap-2 mb-6">
-            <Zap className="w-5 h-5 text-blue-400" />
-            <h2 className="text-xl font-light text-white">Performance Breakdown</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Flashcards */}
-            <div className="border border-purple-500/30 rounded-xl p-6 bg-purple-500/10">
-              <h3 className="text-lg font-light text-white mb-4">Flashcards</h3>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-400">Accuracy</span>
-                    <span className="text-purple-400">{performance_breakdown.flashcards.accuracy}%</span>
-                  </div>
-                  <div className="w-full bg-gray-800 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-purple-600 to-purple-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${performance_breakdown.flashcards.accuracy}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Total Attempts</span>
-                  <span className="text-white font-light">{performance_breakdown.flashcards.total}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quizzes */}
-            <div className="border border-emerald-500/30 rounded-xl p-6 bg-emerald-500/10">
-              <h3 className="text-lg font-light text-white mb-4">Quizzes</h3>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-400">Accuracy</span>
-                    <span className="text-emerald-400">{performance_breakdown.quizzes.accuracy}%</span>
-                  </div>
-                  <div className="w-full bg-gray-800 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${performance_breakdown.quizzes.accuracy}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Total Attempts</span>
-                  <span className="text-white font-light">{performance_breakdown.quizzes.total}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Quiz Reports Table */}
         {quiz_reports && quiz_reports.length > 0 && (
           <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6 mb-8">
@@ -479,28 +424,6 @@ export default function AnalyticsPage() {
             <span>More</span>
           </div>
         </div>
-
-        {/* Achievements */}
-        {achievements.length > 0 && (
-          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Award className="w-5 h-5 text-amber-400" />
-              <h2 className="text-xl font-light text-white">Achievements Unlocked</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {achievements.map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className="bg-gradient-to-b from-amber-900/30 to-black border border-amber-500/30 rounded-xl p-5 text-center"
-                >
-                  <span className="text-5xl mb-3 block">{achievement.icon}</span>
-                  <h3 className="text-white font-light mb-1">{achievement.title}</h3>
-                  <p className="text-gray-400 text-sm font-light">{achievement.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </AuthenticatedLayout>
   );
