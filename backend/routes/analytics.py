@@ -215,7 +215,7 @@ async def get_user_analytics(user_id: str):
                 'type': 'strength',
                 'title': 'Your Strongest Domain',
                 'message': f"You excel in {best_domain['domain']} with {best_domain['proficiency']}% accuracy!",
-                'icon': '💪'
+                'icon': 'trophy'
             })
 
             # Weakest domain (if exists)
@@ -226,7 +226,7 @@ async def get_user_analytics(user_id: str):
                         'type': 'improvement',
                         'title': 'Growth Opportunity',
                         'message': f"Focus on {weak_domain['domain']} to improve your {weak_domain['proficiency']}% accuracy.",
-                        'icon': '📈'
+                        'icon': 'target'
                     })
 
         # Streak motivation
@@ -235,14 +235,14 @@ async def get_user_analytics(user_id: str):
                 'type': 'motivation',
                 'title': 'Keep It Up!',
                 'message': f"You're on a {current_streak}-day streak. Study today to keep it going!",
-                'icon': '🔥'
+                'icon': 'flame'
             })
         elif attempt_dates and (datetime.now(timezone.utc).date() - attempt_dates[0]) > timedelta(days=3):
             insights.append({
                 'type': 'motivation',
                 'title': 'Welcome Back!',
                 'message': "It's been a while. Ready to continue your learning journey?",
-                'icon': '👋'
+                'icon': 'sparkles'
             })
 
         # Quiz reports table data - group by video

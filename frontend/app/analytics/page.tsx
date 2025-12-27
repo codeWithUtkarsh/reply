@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
-import { Loader2, TrendingUp, Target, Flame, BookOpen, Brain, Star, Trophy, ExternalLink, FileText } from 'lucide-react';
+import { Loader2, TrendingUp, Target, Flame, BookOpen, Brain, Star, Trophy, ExternalLink, FileText, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import {
@@ -144,6 +144,17 @@ export default function AnalyticsPage() {
 
   const { hero_stats, progress_data, proficiency_data, heatmap_data, performance_breakdown, achievements, insights, quiz_reports } = analytics;
 
+  // Map icon names to Lucide icon components
+  const getInsightIcon = (iconName: string) => {
+    const iconMap: { [key: string]: JSX.Element } = {
+      trophy: <Trophy className="w-8 h-8" />,
+      target: <Target className="w-8 h-8" />,
+      flame: <Flame className="w-8 h-8" />,
+      sparkles: <Sparkles className="w-8 h-8" />
+    };
+    return iconMap[iconName] || <Star className="w-8 h-8" />;
+  };
+
   return (
     <AuthenticatedLayout>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -216,7 +227,15 @@ export default function AnalyticsPage() {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-3xl">{insight.icon}</span>
+                  <div className={
+                    insight.type === 'strength'
+                      ? 'text-emerald-400'
+                      : insight.type === 'improvement'
+                      ? 'text-blue-400'
+                      : 'text-purple-400'
+                  }>
+                    {getInsightIcon(insight.icon)}
+                  </div>
                   <div>
                     <h3 className="text-white font-light mb-1">{insight.title}</h3>
                     <p className="text-gray-400 text-sm font-light">{insight.message}</p>
