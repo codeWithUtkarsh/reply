@@ -287,9 +287,15 @@ async def get_user_analytics(user_id: str):
                 if project_link.data and len(project_link.data) > 0:
                     project_id = project_link.data[0].get('project_id')
                     if project_id:
-                        project = await db.get_project(project_id)
-                        if project:
-                            project_name = project.get('project_name', 'Unknown Project')
+                        # Query projects table directly
+                        project_result = await run_in_threadpool(
+                            lambda: db.client.table("projects")
+                            .select("project_name")
+                            .eq("id", project_id)
+                            .execute()
+                        )
+                        if project_result.data and len(project_result.data) > 0:
+                            project_name = project_result.data[0].get('project_name', 'Unknown Project')
             except Exception as e:
                 print(f"Error fetching project for video {video_id}: {str(e)}")
                 pass
