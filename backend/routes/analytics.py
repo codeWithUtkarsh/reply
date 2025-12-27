@@ -245,7 +245,6 @@ async def get_user_analytics(user_id: str):
             })
 
         # Quiz reports table data - group by video
-        from collections import defaultdict
         video_attempts = defaultdict(list)
 
         for report in reports:
