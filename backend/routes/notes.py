@@ -142,10 +142,50 @@ async def get_user_notes(user_id: str):
     try:
         from starlette.concurrency import run_in_threadpool
 
-        # Get all notes
+        # Get all videos owned by the user (including videos in their projects)
+        # First, get user's direct videos
+        user_videos = await run_in_threadpool(
+            lambda: db.client.table("videos")
+            .select("id")
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        video_ids = [v['id'] for v in user_videos.data] if user_videos.data else []
+
+        # Get user's projects
+        user_projects = await run_in_threadpool(
+            lambda: db.client.table("projects")
+            .select("id")
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        if user_projects.data:
+            project_ids = [p['id'] for p in user_projects.data]
+
+            # Get videos from user's projects
+            for project_id in project_ids:
+                project_videos = await run_in_threadpool(
+                    lambda pid=project_id: db.client.table("project_videos")
+                    .select("video_id")
+                    .eq("project_id", pid)
+                    .execute()
+                )
+                if project_videos.data:
+                    video_ids.extend([pv['video_id'] for pv in project_videos.data])
+
+        # Remove duplicates
+        video_ids = list(set(video_ids))
+
+        if not video_ids:
+            return {"notes": []}
+
+        # Get all notes for these videos
         notes_result = await run_in_threadpool(
             lambda: db.client.table("video_notes")
             .select("notes_id, video_id, title, created_at")
+            .in_("video_id", video_ids)
             .execute()
         )
 
@@ -157,9 +197,6 @@ async def get_user_notes(user_id: str):
         for note in notes_result.data:
             video = await db.get_video(note['video_id'])
             if video:
-                # Check if this video is accessible to the user (either standalone or in a project)
-                # For now, we'll include all videos - you can add project filtering if needed
-
                 # Get project info if video is in a project
                 project_name = None
                 try:
