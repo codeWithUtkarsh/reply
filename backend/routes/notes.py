@@ -144,7 +144,7 @@ async def get_user_notes(user_id: str):
 
         # Get all notes
         notes_result = await run_in_threadpool(
-            lambda: db.client.table("notes")
+            lambda: db.client.table("video_notes")
             .select("notes_id, video_id, title, created_at, updated_at")
             .execute()
         )
