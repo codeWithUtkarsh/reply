@@ -717,14 +717,14 @@ export default function LearnPage() {
                     Great job!
                   </h2>
                   <p className="text-gray-400 font-light mb-6 max-w-md mx-auto">
-                    You've completed all flashcards. Ready to test your knowledge with a final quiz?
+                    You've completed all flashcards. Ready to test your knowledge with a{learningReport ? '' : ' final'} quiz?
                   </p>
                   <button
-                    onClick={handleStartQuiz}
+                    onClick={learningReport ? handleRetakeQuiz : handleStartQuiz}
                     className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-light py-3 px-8 rounded-xl transition-all inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20"
                   >
                     <BookOpen className="w-5 h-5" />
-                    Start Final Quiz
+                    {learningReport ? 'Retake Quiz' : 'Take Quiz'}
                   </button>
                 </div>
               )
