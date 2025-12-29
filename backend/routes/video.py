@@ -68,7 +68,16 @@ async def process_video_standard(video_id: str, video_url: str, title: str, dura
     # Transcribe video
     logger.info(f"Starting transcription for video: {video_id}")
     transcript = await whisper_service.transcribe_video(video_url, duration)
-    logger.info(f"Transcription completed. Segments: {len(transcript.segments)}")
+    logger.info(f"Transcription completed. Segments: {len(transcript.segments)}, Language: {transcript.detected_language}")
+
+    # Verify language after transcription
+    if transcript.detected_language and not transcript.detected_language.startswith('en'):
+        error_msg = f"Video language ({transcript.detected_language}) is not English. Only English videos are supported."
+        logger.warning(f"Language verification failed for video {video_id}: {error_msg}")
+        await db.update_video_status(video_id, "failed", error_message=error_msg)
+        raise HTTPException(status_code=400, detail=error_msg)
+
+    logger.info(f"✅ Language verification passed for video {video_id}")
 
     # Store transcript
     await db.update_video_transcript(video_id, transcript.dict())
@@ -136,7 +145,17 @@ async def process_video_in_batches(video_id: str, video_url: str, title: str, du
             start_time=batch_start,
             end_time=batch_end
         )
-        logger.info(f"Batch {batch_num} transcription completed. Segments: {len(batch_transcript.segments)}")
+        logger.info(f"Batch {batch_num} transcription completed. Segments: {len(batch_transcript.segments)}, Language: {batch_transcript.detected_language}")
+
+        # Verify language after first batch to fail early
+        if batch_num == 1 and batch_transcript.detected_language and not batch_transcript.detected_language.startswith('en'):
+            error_msg = f"Video language ({batch_transcript.detected_language}) is not English. Only English videos are supported."
+            logger.warning(f"Language verification failed for video {video_id} after first batch: {error_msg}")
+            await db.update_video_status(video_id, "failed", error_message=error_msg)
+            raise HTTPException(status_code=400, detail=error_msg)
+
+        if batch_num == 1:
+            logger.info(f"✅ Language verification passed for video {video_id}")
 
         # Accumulate transcript segments for final storage
         all_transcript_segments.extend(batch_transcript.segments)

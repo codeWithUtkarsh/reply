@@ -93,7 +93,47 @@ class WhisperService:
         """
         # Get transcript with timestamps
         ytt_api = YouTubeTranscriptApi()
-        fetched_transcript = ytt_api.fetch(video_id)
+
+        # Get list of available transcripts to detect language
+        transcript_list_obj = ytt_api.list_transcripts(video_id)
+
+        # Try to get English transcript first, then auto-generated English
+        detected_language = None
+        fetched_transcript = None
+
+        try:
+            # Try manual English transcript first
+            fetched_transcript = transcript_list_obj.find_transcript(['en'])
+            detected_language = 'en'
+            logger.info(f"Found English transcript for video {video_id}")
+        except:
+            try:
+                # Try auto-generated English
+                fetched_transcript = transcript_list_obj.find_generated_transcript(['en'])
+                detected_language = 'en'
+                logger.info(f"Found auto-generated English transcript for video {video_id}")
+            except:
+                # Get any available transcript and translate if needed
+                try:
+                    # Get first available transcript
+                    available = list(transcript_list_obj)
+                    if available:
+                        fetched_transcript = available[0]
+                        detected_language = available[0].language_code
+                        logger.info(f"Found transcript in language: {detected_language}")
+
+                        # If not English, try to translate
+                        if not detected_language.startswith('en'):
+                            logger.info(f"Attempting to translate from {detected_language} to English")
+                            try:
+                                fetched_transcript = fetched_transcript.translate('en')
+                                # Keep original detected language for verification
+                                logger.info(f"Translated transcript from {detected_language} to English")
+                            except Exception as e:
+                                logger.warning(f"Translation failed: {e}")
+                except Exception as e:
+                    logger.error(f"Could not find any transcript: {e}")
+                    raise NoTranscriptFound(video_id)
 
         # Convert to our VideoSegment format and create meaningful chunks
         transcript_list = fetched_transcript.to_raw_data()
@@ -125,7 +165,8 @@ class WhisperService:
         return VideoTranscript(
             segments=segments,
             full_text=full_text,
-            duration=segment_duration
+            duration=segment_duration,
+            detected_language=detected_language
         )
 
     def _create_segments_from_youtube_transcript(
@@ -246,6 +287,10 @@ class WhisperService:
                     timestamp_granularities=["segment"]
                 )
 
+            # Extract detected language from Whisper response
+            detected_language = getattr(transcript_response, 'language', None)
+            logger.info(f"Whisper detected language: {detected_language}")
+
             # Determine the actual duration for this segment
             if start_time is not None and end_time is not None:
                 segment_duration = end_time - start_time
@@ -266,7 +311,8 @@ class WhisperService:
             return VideoTranscript(
                 segments=segments,
                 full_text=full_text,
-                duration=segment_duration
+                duration=segment_duration,
+                detected_language=detected_language
             )
 
         finally:
