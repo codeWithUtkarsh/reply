@@ -23,7 +23,12 @@ def validate(video_info: Dict, video_id: str) -> bool:
             detail=f"Video duration exceeds maximum allowed ({settings.max_video_duration} seconds)",
         )
 
-    if not language.lower().startswith("en"):
+    # Validate language - if language is None or empty, assume English
+    if language is None or language == "":
+        logger.warning(
+            f"Video ID: {video_id} - Language metadata not available, assuming English"
+        )
+    elif not language.lower().startswith("en"):
         logger.warning(
             f"Video language ({language}) not supported, contact support"
         )
