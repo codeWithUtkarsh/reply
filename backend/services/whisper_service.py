@@ -18,72 +18,60 @@ class WhisperService:
 
     async def quick_language_detection(self, video_url: str) -> str:
         """
-        Quick language detection using first 10 seconds of video with Whisper API.
-        This is called early in the pipeline to fail-fast for non-English videos.
+        Quick language detection to fail-fast for non-English videos.
+
+        Strategy:
+        1. Try YouTube Transcript API (instant, free, most reliable)
+        2. If that fails, skip detection and rely on post-transcription verification
 
         Args:
             video_url: URL of the video to check
 
         Returns:
-            Detected language code (e.g., 'en', 'es', 'fr')
-
-        Raises:
-            Exception: If language detection fails
+            Detected language code (e.g., 'en', 'es', 'fr') or None if detection fails
         """
-        logger.info("🔍 Quick language detection: Sampling first 10 seconds...")
+        logger.info("🔍 Quick language detection using YouTube Transcript API...")
 
-        audio_path = None
         try:
-            # Create temporary file for audio
-            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp_file:
-                audio_path = tmp_file.name
+            # Extract video ID
+            video_id = self._extract_video_id(video_url)
 
-            # Download only first 10 seconds
-            ydl_opts = {
-                'format': 'bestaudio/best',
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }],
-                'outtmpl': audio_path.replace('.mp3', ''),
-                'quiet': True,
-                'no_warnings': True,
-                'download_ranges': lambda info_dict, *args: [{
-                    'start_time': 0,
-                    'end_time': 10,  # Only first 10 seconds
-                }]
-            }
+            # Try to get available transcripts (very fast, no download needed)
+            ytt_api = YouTubeTranscriptApi()
+            transcript_list = ytt_api.list_transcripts(video_id)
 
-            logger.info("Downloading first 10 seconds of audio...")
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([video_url])
+            # Check available transcript languages
+            available_transcripts = list(transcript_list)
 
-            # Transcribe with Whisper to detect language
-            logger.info("Sending 10-second sample to Whisper for language detection...")
-            with open(audio_path, 'rb') as audio_file:
-                transcript_response = self.client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file,
-                    response_format="verbose_json"
-                )
+            if not available_transcripts:
+                logger.info("No transcripts available for language detection")
+                return None
 
-            detected_language = getattr(transcript_response, 'language', None)
-            logger.info(f"✅ Language detected from 10-second sample: {detected_language}")
+            # Get the first available transcript's language
+            first_transcript = available_transcripts[0]
+            detected_language = first_transcript.language_code
 
-            return detected_language
+            logger.info(f"Available transcript languages: {[t.language_code for t in available_transcripts]}")
+            logger.info(f"✅ Language detected from YouTube transcript: {detected_language}")
 
+            # Check if English transcript is available
+            has_english = any(t.language_code.startswith('en') for t in available_transcripts)
+            if has_english:
+                logger.info("English transcript available - video is in English or has English captions")
+                return 'en'
+            else:
+                logger.info(f"No English transcript found. Primary language: {detected_language}")
+                return detected_language
+
+        except (TranscriptsDisabled, NoTranscriptFound) as e:
+            logger.info(f"YouTube transcripts not available: {str(e)}")
+            logger.info("Will rely on post-transcription verification")
+            return None
         except Exception as e:
             logger.error(f"Quick language detection failed: {str(e)}")
+            logger.error(f"Error type: {type(e).__name__}")
             # If detection fails, return None to allow processing to continue
-            # (will be caught later in full transcription)
             return None
-
-        finally:
-            # Clean up temporary audio file
-            if audio_path and os.path.exists(audio_path):
-                os.remove(audio_path)
-                logger.info("Cleaned up language detection sample file")
 
     async def transcribe_video(
         self,
