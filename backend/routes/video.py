@@ -220,6 +220,23 @@ async def process_video_async(request: VideoProcessRequest, background_tasks: Ba
     logger.info(f"User ID: {request.user_id}")
 
     try:
+        # Quick language detection using first 10 seconds (fail-fast approach)
+        logger.info("🔍 Performing quick language detection on first 10 seconds...")
+        detected_language = await whisper_service.quick_language_detection(request.video_url)
+
+        if detected_language and not detected_language.startswith('en'):
+            error_msg = f"Video language ({detected_language}) is not English. Only English videos are supported."
+            logger.warning(f"❌ Language detection failed: {error_msg}")
+            raise HTTPException(
+                status_code=400,
+                detail=error_msg
+            )
+
+        if detected_language:
+            logger.info(f"✅ Language verification passed: {detected_language}")
+        else:
+            logger.info("⚠️ Language detection inconclusive, will verify after full transcription")
+
         # Extract video metadata (fast operation)
         logger.info("Extracting video information...")
         video_info = video_processor.extract_video_info(request.video_url)

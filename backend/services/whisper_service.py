@@ -16,6 +16,75 @@ class WhisperService:
     def __init__(self):
         self.client = OpenAI(api_key=settings.openai_api_key)
 
+    async def quick_language_detection(self, video_url: str) -> str:
+        """
+        Quick language detection using first 10 seconds of video with Whisper API.
+        This is called early in the pipeline to fail-fast for non-English videos.
+
+        Args:
+            video_url: URL of the video to check
+
+        Returns:
+            Detected language code (e.g., 'en', 'es', 'fr')
+
+        Raises:
+            Exception: If language detection fails
+        """
+        logger.info("🔍 Quick language detection: Sampling first 10 seconds...")
+
+        audio_path = None
+        try:
+            # Create temporary file for audio
+            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp_file:
+                audio_path = tmp_file.name
+
+            # Download only first 10 seconds
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }],
+                'outtmpl': audio_path.replace('.mp3', ''),
+                'quiet': True,
+                'no_warnings': True,
+                'download_ranges': lambda info_dict, *args: [{
+                    'start_time': 0,
+                    'end_time': 10,  # Only first 10 seconds
+                }]
+            }
+
+            logger.info("Downloading first 10 seconds of audio...")
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([video_url])
+
+            # Transcribe with Whisper to detect language
+            logger.info("Sending 10-second sample to Whisper for language detection...")
+            with open(audio_path, 'rb') as audio_file:
+                transcript_response = self.client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    response_format="verbose_json"
+                )
+
+            detected_language = getattr(transcript_response, 'language', None)
+            logger.info(f"✅ Language detected from 10-second sample: {detected_language}")
+
+            return detected_language
+
+        except Exception as e:
+            logger.error(f"Quick language detection failed: {str(e)}")
+            # If detection fails, return None to allow processing to continue
+            # (will be caught later in full transcription)
+            return None
+
+        finally:
+            # Clean up temporary audio file
+            if audio_path and os.path.exists(audio_path):
+                os.remove(audio_path)
+                logger.info("Cleaned up language detection sample file")
+
     async def transcribe_video(
         self,
         video_url: str,
