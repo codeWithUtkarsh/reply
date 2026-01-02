@@ -20,7 +20,6 @@ class WhisperService:
         self,
         video_url: str,
         duration: float,
-        language: str,
         start_time: Optional[float] = None,
         end_time: Optional[float] = None
     ) -> VideoTranscript:
