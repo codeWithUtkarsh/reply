@@ -68,16 +68,7 @@ async def process_video_standard(video_id: str, video_url: str, title: str, dura
     # Transcribe video
     logger.info(f"Starting transcription for video: {video_id}")
     transcript = await whisper_service.transcribe_video(video_url, duration)
-    logger.info(f"Transcription completed. Segments: {len(transcript.segments)}, Language: {transcript.detected_language}")
-
-    # Verify language after transcription
-    if transcript.detected_language and not transcript.detected_language.startswith('en'):
-        error_msg = f"Video language ({transcript.detected_language}) is not English. Only English videos are supported."
-        logger.warning(f"Language verification failed for video {video_id}: {error_msg}")
-        await db.update_video_status(video_id, "failed", error_message=error_msg)
-        raise HTTPException(status_code=400, detail=error_msg)
-
-    logger.info(f"✅ Language verification passed for video {video_id}")
+    logger.info(f"Transcription completed. Segments: {len(transcript.segments)}")
 
     # Store transcript
     await db.update_video_transcript(video_id, transcript.dict())
@@ -145,17 +136,7 @@ async def process_video_in_batches(video_id: str, video_url: str, title: str, du
             start_time=batch_start,
             end_time=batch_end
         )
-        logger.info(f"Batch {batch_num} transcription completed. Segments: {len(batch_transcript.segments)}, Language: {batch_transcript.detected_language}")
-
-        # Verify language after first batch to fail early
-        if batch_num == 1 and batch_transcript.detected_language and not batch_transcript.detected_language.startswith('en'):
-            error_msg = f"Video language ({batch_transcript.detected_language}) is not English. Only English videos are supported."
-            logger.warning(f"Language verification failed for video {video_id} after first batch: {error_msg}")
-            await db.update_video_status(video_id, "failed", error_message=error_msg)
-            raise HTTPException(status_code=400, detail=error_msg)
-
-        if batch_num == 1:
-            logger.info(f"✅ Language verification passed for video {video_id}")
+        logger.info(f"Batch {batch_num} transcription completed. Segments: {len(batch_transcript.segments)}")
 
         # Accumulate transcript segments for final storage
         all_transcript_segments.extend(batch_transcript.segments)
@@ -220,30 +201,15 @@ async def process_video_async(request: VideoProcessRequest, background_tasks: Ba
     logger.info(f"User ID: {request.user_id}")
 
     try:
-        # Quick language detection using first 10 seconds (fail-fast approach)
-        logger.info("🔍 Performing quick language detection on first 10 seconds...")
-        detected_language = await whisper_service.quick_language_detection(request.video_url)
-
-        if detected_language and not detected_language.startswith('en'):
-            error_msg = f"Video language ({detected_language}) is not English. Only English videos are supported."
-            logger.warning(f"❌ Language detection failed: {error_msg}")
-            raise HTTPException(
-                status_code=400,
-                detail=error_msg
-            )
-
-        if detected_language:
-            logger.info(f"✅ Language verification passed: {detected_language}")
-        else:
-            logger.info("⚠️ Language detection inconclusive, will verify after full transcription")
+        video_id = video_processor.get_video_id(request.video_url)
+        await validation.validate_video_language(video_id)
 
         # Extract video metadata (fast operation)
         logger.info("Extracting video information...")
-        video_info = video_processor.extract_video_info(request.video_url)
-        video_id = video_processor.generate_video_id(request.video_url)
+        video_info = await video_processor.extract_video_info_async(request.video_url)
 
         duration = video_info.get("duration")
-        validation.validate(video_info, video_id)
+        validation.validate_video_info(video_info, video_id)
 
 
         # Check transcription credits before processing (only for new videos)
@@ -418,7 +384,7 @@ async def get_video_direct_url(video_id: str):
         if not video:
             raise HTTPException(status_code=404, detail="Video not found")
 
-        direct_url = video_processor.get_video_url(video["url"])
+        direct_url = video_processor.get_video_url(video_id)
 
         return {
             "video_id": video_id,

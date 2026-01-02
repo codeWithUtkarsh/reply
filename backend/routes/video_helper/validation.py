@@ -2,10 +2,13 @@ from typing import Dict
 from logging_config import get_logger
 from fastapi import HTTPException
 from config import settings
+from youtube_transcript_api import YouTubeTranscriptApi
+
+from services.whisper_service import whisper_service
 
 logger = get_logger(__name__)
 
-def validate(video_info: Dict, video_id: str) -> bool:
+def validate_video_info(video_info: Dict, video_id: str) -> bool:
     duration = video_info.get("duration")
     language = video_info.get("language")
     if duration is None:
@@ -29,7 +32,7 @@ def validate(video_info: Dict, video_id: str) -> bool:
     # 3. Post-transcription verification (after full transcription)
     if language is None or language == "":
         logger.info(
-            f"Video ID: {video_id} - Language metadata not available. Relying on quick detection and post-transcription verification."
+            f"Video ID: {video_id} - Unsupported video/language detected, We only support english language for now."
         )
     elif not language.lower().startswith("en"):
         logger.warning(
@@ -40,4 +43,18 @@ def validate(video_info: Dict, video_id: str) -> bool:
             detail=f"Video language ({language}) not supported",
         )
 
+    return True
+
+
+async def validate_video_language(video_id: str) -> bool:
+    ytt_api = YouTubeTranscriptApi()
+    try:
+        transcript_list = ytt_api.list(video_id)
+        transcript_list.find_transcript(['en'])
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported video/language detected, We only support english language for now.")
+
+    logger.info(f"Video language validation for ID: {video_id} ✅")
     return True

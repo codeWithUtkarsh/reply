@@ -194,11 +194,6 @@ export default function VideoPlayer({
             <span>{formatTime(duration)}</span>
           </div>
         </div>
-        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>YouTube video detected.</strong> Flashcards will automatically appear at the designated times as you watch. When you answer incorrectly, the video will jump to the relevant section.
-          </p>
-        </div>
       </div>
     );
   }
