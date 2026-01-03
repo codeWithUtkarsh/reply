@@ -247,6 +247,7 @@ async def get_user_analytics(user_id: str):
 
         # Quiz reports table data - group by video
         video_attempts = defaultdict(list)
+        video_question_counts = defaultdict(lambda: {'flashcard': 0, 'quiz': 0})
 
         for report in reports:
             if report.get('quiz_id'):  # Only include quiz reports
@@ -265,6 +266,24 @@ async def get_user_analytics(user_id: str):
                     'domain': report.get('domain', 'General'),
                     'video_type': report.get('video_type', 'Unknown')
                 })
+
+        # Count unique flashcard and quiz questions per video from attempts
+        video_unique_questions = defaultdict(lambda: {'flashcard': set(), 'quiz': set()})
+        for attempt in all_attempts:
+            video_id = attempt.get('video_id')
+            question_type = attempt.get('question_type')
+            question_id = attempt.get('question_id')
+            if video_id and question_type and question_id:
+                # Track unique questions by question_id
+                if question_type == 'flashcard':
+                    video_unique_questions[video_id]['flashcard'].add(question_id)
+                elif question_type == 'quiz':
+                    video_unique_questions[video_id]['quiz'].add(question_id)
+
+        # Convert sets to counts
+        for video_id, questions in video_unique_questions.items():
+            video_question_counts[video_id]['flashcard'] = len(questions['flashcard'])
+            video_question_counts[video_id]['quiz'] = len(questions['quiz'])
 
         # Create grouped quiz reports
         quiz_reports = []
@@ -309,6 +328,9 @@ async def get_user_analytics(user_id: str):
             # Use data from first attempt for domain and video_type (should be same for all)
             first_attempt = attempts[0]
 
+            # Get question counts for this video
+            question_counts = video_question_counts.get(video_id, {'flashcard': 0, 'quiz': 0})
+
             quiz_reports.append({
                 'video_id': video_id,
                 'video_title': video.get('title', 'Unknown Video') if video else 'Unknown Video',
@@ -318,7 +340,9 @@ async def get_user_analytics(user_id: str):
                 'mean_score': mean_score,
                 'latest_date': latest_date,
                 'domain': first_attempt['domain'],
-                'video_type': first_attempt['video_type']
+                'video_type': first_attempt['video_type'],
+                'flashcard_count': question_counts['flashcard'],
+                'quiz_question_count': question_counts['quiz']
             })
 
         # Sort by latest date (most recent first)

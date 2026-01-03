@@ -78,6 +78,8 @@ interface QuizReport {
   latest_date: string;
   domain: string;
   video_type: string;
+  flashcard_count: number;
+  quiz_question_count: number;
 }
 
 interface AnalyticsData {
@@ -561,14 +563,12 @@ export default function AnalyticsPage() {
                                     </td>
                                     <td className="py-3 px-4 text-center">
                                       <span className="text-sm text-purple-300 font-light">
-                                        {/* This would need actual flashcard count per video from backend */}
-                                        -
+                                        {report.flashcard_count || 0}
                                       </span>
                                     </td>
                                     <td className="py-3 px-4 text-center">
                                       <span className="text-sm text-amber-300 font-light">
-                                        {/* This would need actual quiz question count per video from backend */}
-                                        -
+                                        {report.quiz_question_count || 0}
                                       </span>
                                     </td>
                                     <td className="py-3 px-4 text-center">
