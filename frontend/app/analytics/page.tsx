@@ -100,6 +100,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [error, setError] = useState('');
+  const [activeBreakdown, setActiveBreakdown] = useState<string | null>(null);
 
   useEffect(() => {
     loadAnalytics();
@@ -164,52 +165,72 @@ export default function AnalyticsPage() {
           <p className="text-gray-400 font-light">Track your progress and celebrate your achievements</p>
         </div>
 
-        {/* Hero Stats */}
+        {/* Hero Stats - Now Clickable */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-gradient-to-b from-purple-900/50 to-black border border-purple-500/30 rounded-xl p-6 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent"></div>
+          <button
+            onClick={() => setActiveBreakdown('questions')}
+            className="bg-gradient-to-b from-purple-900/50 to-black border border-purple-500/30 hover:border-purple-400/50 rounded-xl p-6 relative overflow-hidden transition-all hover:scale-105 cursor-pointer group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent group-hover:from-purple-500/20"></div>
             <div className="relative z-10">
               <BookOpen className="w-8 h-8 text-purple-400 mb-2" />
               <p className="text-3xl font-light text-white mb-1">{hero_stats.total_questions}</p>
               <p className="text-gray-400 text-sm font-light">Questions Answered</p>
+              <p className="text-purple-400 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click for breakdown →</p>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-gradient-to-b from-emerald-900/50 to-black border border-emerald-500/30 rounded-xl p-6 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
+          <button
+            onClick={() => setActiveBreakdown('accuracy')}
+            className="bg-gradient-to-b from-emerald-900/50 to-black border border-emerald-500/30 hover:border-emerald-400/50 rounded-xl p-6 relative overflow-hidden transition-all hover:scale-105 cursor-pointer group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent group-hover:from-emerald-500/20"></div>
             <div className="relative z-10">
               <Target className="w-8 h-8 text-emerald-400 mb-2" />
               <p className="text-3xl font-light text-white mb-1">{hero_stats.overall_accuracy}%</p>
               <p className="text-gray-400 text-sm font-light">Overall Accuracy</p>
+              <p className="text-emerald-400 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click for breakdown →</p>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-gradient-to-b from-blue-900/50 to-black border border-blue-500/30 rounded-xl p-6 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
+          <button
+            onClick={() => setActiveBreakdown('videos')}
+            className="bg-gradient-to-b from-blue-900/50 to-black border border-blue-500/30 hover:border-blue-400/50 rounded-xl p-6 relative overflow-hidden transition-all hover:scale-105 cursor-pointer group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent group-hover:from-blue-500/20"></div>
             <div className="relative z-10">
               <Brain className="w-8 h-8 text-blue-400 mb-2" />
               <p className="text-3xl font-light text-white mb-1">{hero_stats.total_videos}</p>
               <p className="text-gray-400 text-sm font-light">Videos Studied</p>
+              <p className="text-blue-400 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click for breakdown →</p>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-gradient-to-b from-amber-900/50 to-black border border-amber-500/30 rounded-xl p-6 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent"></div>
+          <button
+            onClick={() => setActiveBreakdown('quizzes')}
+            className="bg-gradient-to-b from-amber-900/50 to-black border border-amber-500/30 hover:border-amber-400/50 rounded-xl p-6 relative overflow-hidden transition-all hover:scale-105 cursor-pointer group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent group-hover:from-amber-500/20"></div>
             <div className="relative z-10">
               <Trophy className="w-8 h-8 text-amber-400 mb-2" />
               <p className="text-3xl font-light text-white mb-1">{hero_stats.total_quizzes}</p>
               <p className="text-gray-400 text-sm font-light">Quizzes Completed</p>
+              <p className="text-amber-400 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click for breakdown →</p>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-gradient-to-b from-orange-900/50 to-black border border-orange-500/30 rounded-xl p-6 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent"></div>
+          <button
+            onClick={() => setActiveBreakdown('streak')}
+            className="bg-gradient-to-b from-orange-900/50 to-black border border-orange-500/30 hover:border-orange-400/50 rounded-xl p-6 relative overflow-hidden transition-all hover:scale-105 cursor-pointer group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent group-hover:from-orange-500/20"></div>
             <div className="relative z-10">
               <Flame className="w-8 h-8 text-orange-400 mb-2" />
               <p className="text-3xl font-light text-white mb-1">{hero_stats.current_streak}</p>
               <p className="text-gray-400 text-sm font-light">Day Streak</p>
+              <p className="text-orange-400 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click for breakdown →</p>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Insights */}
@@ -443,6 +464,308 @@ export default function AnalyticsPage() {
             <span>More</span>
           </div>
         </div>
+
+        {/* Breakdown Modal */}
+        {activeBreakdown && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setActiveBreakdown(null)}>
+            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 p-6 flex items-center justify-between">
+                <h2 className="text-2xl font-light text-white">
+                  {activeBreakdown === 'questions' && '📚 Questions Answered Breakdown'}
+                  {activeBreakdown === 'accuracy' && '🎯 Accuracy Breakdown'}
+                  {activeBreakdown === 'videos' && '🎬 Videos Studied Breakdown'}
+                  {activeBreakdown === 'quizzes' && '🏆 Quizzes Completed Breakdown'}
+                  {activeBreakdown === 'streak' && '🔥 Streak Details'}
+                </h2>
+                <button
+                  onClick={() => setActiveBreakdown(null)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <span className="text-2xl">×</span>
+                </button>
+              </div>
+
+              <div className="p-6">
+                {/* Questions Breakdown */}
+                {activeBreakdown === 'questions' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <BookOpen className="w-8 h-8 text-purple-400" />
+                          <div>
+                            <p className="text-3xl font-light text-white">{performance_breakdown.flashcards.total}</p>
+                            <p className="text-gray-400 text-sm font-light">Flashcard Questions</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-purple-500/20">
+                          <p className="text-purple-300 text-sm font-light">Accuracy: {performance_breakdown.flashcards.accuracy}%</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <Trophy className="w-8 h-8 text-amber-400" />
+                          <div>
+                            <p className="text-3xl font-light text-white">{performance_breakdown.quizzes.total}</p>
+                            <p className="text-gray-400 text-sm font-light">Quiz Questions</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-amber-500/20">
+                          <p className="text-amber-300 text-sm font-light">Accuracy: {performance_breakdown.quizzes.accuracy}%</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                      <h3 className="text-lg font-light text-white mb-4">By Video</h3>
+                      {quiz_reports.length > 0 ? (
+                        <div className="space-y-2">
+                          {quiz_reports.map((report) => (
+                            <div key={report.video_id} className="flex items-center justify-between py-2 border-b border-gray-800/50 last:border-0">
+                              <div className="flex-1">
+                                <p className="text-white text-sm font-light">{report.video_title}</p>
+                                {report.project_name && (
+                                  <p className="text-gray-500 text-xs">{report.project_name}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => router.push(`/learn/${report.video_id}`)}
+                                className="text-purple-400 hover:text-purple-300 text-sm transition-colors"
+                              >
+                                View →
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 text-sm">No videos studied yet</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Accuracy Breakdown */}
+                {activeBreakdown === 'accuracy' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 text-center">
+                        <Target className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                        <p className="text-4xl font-light text-white mb-2">{performance_breakdown.flashcards.accuracy}%</p>
+                        <p className="text-gray-400 text-sm font-light">Flashcard Accuracy</p>
+                        <p className="text-gray-500 text-xs mt-2">{performance_breakdown.flashcards.total} questions</p>
+                      </div>
+
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 text-center">
+                        <Trophy className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                        <p className="text-4xl font-light text-white mb-2">{performance_breakdown.quizzes.accuracy}%</p>
+                        <p className="text-gray-400 text-sm font-light">Quiz Accuracy</p>
+                        <p className="text-gray-500 text-xs mt-2">{performance_breakdown.quizzes.total} questions</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                      <h3 className="text-lg font-light text-white mb-4">By Domain</h3>
+                      <div className="space-y-3">
+                        {proficiency_data.map((domain) => (
+                          <div key={domain.domain} className="flex items-center justify-between">
+                            <span className="text-white text-sm font-light">{domain.domain}</span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-emerald-500 rounded-full transition-all"
+                                  style={{ width: `${domain.proficiency}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-emerald-400 text-sm font-light w-12 text-right">{domain.proficiency}%</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Videos Breakdown */}
+                {activeBreakdown === 'videos' && (
+                  <div className="space-y-4">
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 text-center mb-6">
+                      <Brain className="w-16 h-16 text-blue-400 mx-auto mb-3" />
+                      <p className="text-5xl font-light text-white mb-2">{hero_stats.total_videos}</p>
+                      <p className="text-gray-400 font-light">Total Videos Studied</p>
+                    </div>
+
+                    {quiz_reports.length > 0 ? (
+                      <div className="space-y-3">
+                        {quiz_reports.map((report) => (
+                          <div key={report.video_id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-blue-500/30 transition-all">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="text-white font-light mb-1">{report.video_title}</h4>
+                                <div className="flex items-center gap-3 text-xs text-gray-400">
+                                  {report.project_name && (
+                                    <span className="flex items-center gap-1">
+                                      📁 {report.project_name}
+                                    </span>
+                                  )}
+                                  <span className="flex items-center gap-1">
+                                    🏷️ {report.domain}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    🎬 {report.video_type}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 mt-2 text-sm">
+                                  <span className="text-gray-400">{report.attempts_count} attempts</span>
+                                  <span className={`${report.mean_score >= 80 ? 'text-emerald-400' : report.mean_score >= 60 ? 'text-blue-400' : 'text-amber-400'}`}>
+                                    {report.mean_score}% avg score
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => router.push(`/learn/${report.video_id}`)}
+                                className="text-blue-400 hover:text-blue-300 transition-colors text-sm flex items-center gap-1"
+                              >
+                                View
+                                <ExternalLink className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400 font-light">No videos studied yet. Start learning now!</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Quizzes Breakdown */}
+                {activeBreakdown === 'quizzes' && (
+                  <div className="space-y-4">
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 text-center mb-6">
+                      <Trophy className="w-16 h-16 text-amber-400 mx-auto mb-3" />
+                      <p className="text-5xl font-light text-white mb-2">{hero_stats.total_quizzes}</p>
+                      <p className="text-gray-400 font-light">Total Quizzes Completed</p>
+                    </div>
+
+                    {quiz_reports.length > 0 ? (
+                      <div className="space-y-3">
+                        {quiz_reports.map((report) => (
+                          <div key={report.video_id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-amber-500/30 transition-all">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="text-white font-light mb-1">{report.video_title}</h4>
+                                <div className="flex items-center gap-3 text-xs text-gray-400 mb-2">
+                                  <span>📅 {new Date(report.latest_date).toLocaleDateString()}</span>
+                                  {report.project_name && <span>📁 {report.project_name}</span>}
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-400 text-sm">{report.attempts_count}</span>
+                                    <span className="text-gray-500 text-xs">attempts</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-lg font-light ${report.mean_score >= 80 ? 'text-emerald-400' : report.mean_score >= 60 ? 'text-blue-400' : 'text-amber-400'}`}>
+                                      {report.mean_score}%
+                                    </span>
+                                    <span className="text-gray-500 text-xs">avg score</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => router.push(`/learn/${report.video_id}`)}
+                                className="text-amber-400 hover:text-amber-300 transition-colors text-sm flex items-center gap-1"
+                              >
+                                Retake
+                                <ExternalLink className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400 font-light">No quizzes completed yet. Complete some flashcards to unlock quizzes!</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Streak Breakdown */}
+                {activeBreakdown === 'streak' && (
+                  <div className="space-y-6">
+                    <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6 text-center">
+                      <Flame className="w-16 h-16 text-orange-400 mx-auto mb-3" />
+                      <p className="text-5xl font-light text-white mb-2">{hero_stats.current_streak}</p>
+                      <p className="text-gray-400 font-light">Day{hero_stats.current_streak !== 1 ? 's' : ''} Streak</p>
+                      {hero_stats.current_streak > 0 && (
+                        <p className="text-orange-300 text-sm mt-3">Keep it up! Study today to maintain your streak 🔥</p>
+                      )}
+                    </div>
+
+                    <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                      <h3 className="text-lg font-light text-white mb-4">Recent Activity</h3>
+                      <div className="grid grid-cols-7 gap-2">
+                        {heatmap_data.slice(-14).map((day, index) => {
+                          const intensity = day.count === 0 ? 0 : Math.min(day.count / 10, 1);
+                          const color = day.count === 0
+                            ? 'bg-gray-800'
+                            : intensity > 0.7
+                            ? 'bg-orange-500'
+                            : intensity > 0.4
+                            ? 'bg-orange-600'
+                            : 'bg-orange-800';
+
+                          return (
+                            <div key={index} className="text-center">
+                              <div className={`aspect-square ${color} rounded-lg mb-1`} title={`${day.count} questions`}></div>
+                              <span className="text-xs text-gray-500">{day.day}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center gap-2 mt-4 text-xs text-gray-400">
+                        <span>Less</span>
+                        <div className="flex gap-1">
+                          <div className="w-3 h-3 bg-gray-800 rounded-sm"></div>
+                          <div className="w-3 h-3 bg-orange-800 rounded-sm"></div>
+                          <div className="w-3 h-3 bg-orange-600 rounded-sm"></div>
+                          <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>
+                        </div>
+                        <span>More</span>
+                      </div>
+                    </div>
+
+                    {progress_data.filter(d => d.questions > 0).length > 0 && (
+                      <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                        <h3 className="text-lg font-light text-white mb-4">Last 7 Days</h3>
+                        <div className="space-y-2">
+                          {progress_data.slice(-7).reverse().map((day) => (
+                            <div key={day.date} className="flex items-center justify-between py-2 border-b border-gray-800/50 last:border-0">
+                              <span className="text-gray-300 text-sm">
+                                {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-gray-400 text-sm">{day.questions} questions</span>
+                                {day.questions > 0 && (
+                                  <span className={`text-sm ${day.accuracy >= 80 ? 'text-emerald-400' : day.accuracy >= 60 ? 'text-blue-400' : 'text-amber-400'}`}>
+                                    {day.accuracy}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AuthenticatedLayout>
   );
