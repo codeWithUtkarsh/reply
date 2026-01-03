@@ -44,6 +44,13 @@ interface ProficiencyData {
   domain: string;
   proficiency: number;
   questions: number;
+  correct: number;
+  flashcard_accuracy: number;
+  flashcard_questions: number;
+  flashcard_correct: number;
+  quiz_accuracy: number;
+  quiz_questions: number;
+  quiz_correct: number;
 }
 
 interface HeatmapData {
@@ -648,18 +655,57 @@ export default function AnalyticsPage() {
 
                     <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
                       <h3 className="text-lg font-light text-white mb-4">By Domain</h3>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {proficiency_data.map((domain) => (
-                          <div key={domain.domain} className="flex items-center justify-between">
-                            <span className="text-white text-sm font-light">{domain.domain}</span>
-                            <div className="flex items-center gap-3">
-                              <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-emerald-500 rounded-full transition-all"
-                                  style={{ width: `${domain.proficiency}%` }}
-                                ></div>
+                          <div key={domain.domain} className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-white text-sm font-medium">{domain.domain}</span>
+                              <div className="flex items-center gap-3">
+                                <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-emerald-500 rounded-full transition-all"
+                                    style={{ width: `${domain.proficiency}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-emerald-400 text-sm font-semibold w-12 text-right">{domain.proficiency}%</span>
                               </div>
-                              <span className="text-emerald-400 text-sm font-light w-12 text-right">{domain.proficiency}%</span>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <span className="text-emerald-400 font-medium">{domain.correct}</span>
+                                <span>/</span>
+                                <span>{domain.questions}</span>
+                                <span className="ml-1">correct</span>
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-700/50">
+                              <div className="bg-purple-500/5 border border-purple-500/20 rounded p-2">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <BookOpen className="w-3 h-3 text-purple-400" />
+                                  <span className="text-xs text-gray-400">Flashcards</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-purple-400 text-sm font-semibold">{domain.flashcard_accuracy}%</span>
+                                  <span className="text-xs text-gray-500">
+                                    {domain.flashcard_correct}/{domain.flashcard_questions}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="bg-amber-500/5 border border-amber-500/20 rounded p-2">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Trophy className="w-3 h-3 text-amber-400" />
+                                  <span className="text-xs text-gray-400">Quizzes</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-amber-400 text-sm font-semibold">{domain.quiz_accuracy}%</span>
+                                  <span className="text-xs text-gray-500">
+                                    {domain.quiz_correct}/{domain.quiz_questions}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}

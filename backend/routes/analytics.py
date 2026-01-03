@@ -79,25 +79,47 @@ async def get_user_analytics(user_id: str):
                 'accuracy': accuracy
             })
 
-        # Knowledge proficiency by domain
-        domain_stats = defaultdict(lambda: {'correct': 0, 'total': 0})
+        # Knowledge proficiency by domain with detailed breakdown
+        domain_stats = defaultdict(lambda: {
+            'correct': 0,
+            'total': 0,
+            'flashcard_correct': 0,
+            'flashcard_total': 0,
+            'quiz_correct': 0,
+            'quiz_total': 0
+        })
 
-        for report in reports:
-            domain = report.get('domain', 'General')
-            # Parse performance stats
-            if isinstance(report.get('performance_stats'), str):
-                perf_stats = json.loads(report['performance_stats'])
-            else:
-                perf_stats = report.get('performance_stats', {})
+        # Calculate domain stats from all attempts for more granular data
+        for attempt in all_attempts:
+            domain = attempt.get('domain', 'General')
+            question_type = attempt.get('question_type', 'quiz')
+            is_correct = attempt.get('is_correct', False)
 
-            domain_stats[domain]['correct'] += perf_stats.get('correct_count', 0)
-            domain_stats[domain]['total'] += perf_stats.get('total_attempts', 0)
+            domain_stats[domain]['total'] += 1
+            if is_correct:
+                domain_stats[domain]['correct'] += 1
+
+            if question_type == 'flashcard':
+                domain_stats[domain]['flashcard_total'] += 1
+                if is_correct:
+                    domain_stats[domain]['flashcard_correct'] += 1
+            else:  # quiz
+                domain_stats[domain]['quiz_total'] += 1
+                if is_correct:
+                    domain_stats[domain]['quiz_correct'] += 1
 
         proficiency_data = [
             {
                 'domain': domain,
                 'proficiency': round((stats['correct'] / stats['total'] * 100), 1) if stats['total'] > 0 else 0,
-                'questions': stats['total']
+                'questions': stats['total'],
+                'correct': stats['correct'],
+                'flashcard_accuracy': round((stats['flashcard_correct'] / stats['flashcard_total'] * 100), 1) if stats['flashcard_total'] > 0 else 0,
+                'flashcard_questions': stats['flashcard_total'],
+                'flashcard_correct': stats['flashcard_correct'],
+                'quiz_accuracy': round((stats['quiz_correct'] / stats['quiz_total'] * 100), 1) if stats['quiz_total'] > 0 else 0,
+                'quiz_questions': stats['quiz_total'],
+                'quiz_correct': stats['quiz_correct']
             }
             for domain, stats in domain_stats.items()
         ]
