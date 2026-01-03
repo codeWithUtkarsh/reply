@@ -499,7 +499,30 @@ export default function AnalyticsPage() {
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t border-purple-500/20">
-                          <p className="text-purple-300 text-sm font-light">Accuracy: {performance_breakdown.flashcards.accuracy}%</p>
+                          <p className="text-purple-300 text-sm font-light mb-3">Accuracy: {performance_breakdown.flashcards.accuracy}%</p>
+
+                          {/* Project Breakdown for Flashcards */}
+                          <div className="space-y-2">
+                            <p className="text-xs text-gray-500 font-light mb-2">By Project:</p>
+                            {(() => {
+                              const projectMap = new Map<string, number>();
+                              quiz_reports.forEach(report => {
+                                const projectName = report.project_name || 'No Project';
+                                projectMap.set(projectName, (projectMap.get(projectName) || 0) + 1);
+                              });
+
+                              if (projectMap.size === 0) {
+                                return <p className="text-xs text-gray-500">No data available</p>;
+                              }
+
+                              return Array.from(projectMap.entries()).map(([project, count]) => (
+                                <div key={project} className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-400">{project}</span>
+                                  <span className="text-purple-300">{count} {count === 1 ? 'video' : 'videos'}</span>
+                                </div>
+                              ));
+                            })()}
+                          </div>
                         </div>
                       </div>
 
@@ -512,35 +535,32 @@ export default function AnalyticsPage() {
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t border-amber-500/20">
-                          <p className="text-amber-300 text-sm font-light">Accuracy: {performance_breakdown.quizzes.accuracy}%</p>
+                          <p className="text-amber-300 text-sm font-light mb-3">Accuracy: {performance_breakdown.quizzes.accuracy}%</p>
+
+                          {/* Project Breakdown for Quizzes */}
+                          <div className="space-y-2">
+                            <p className="text-xs text-gray-500 font-light mb-2">By Project:</p>
+                            {(() => {
+                              const projectMap = new Map<string, number>();
+                              quiz_reports.forEach(report => {
+                                const projectName = report.project_name || 'No Project';
+                                projectMap.set(projectName, (projectMap.get(projectName) || 0) + 1);
+                              });
+
+                              if (projectMap.size === 0) {
+                                return <p className="text-xs text-gray-500">No quizzes taken yet</p>;
+                              }
+
+                              return Array.from(projectMap.entries()).map(([project, count]) => (
+                                <div key={project} className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-400">{project}</span>
+                                  <span className="text-amber-300">{count} {count === 1 ? 'quiz' : 'quizzes'}</span>
+                                </div>
+                              ));
+                            })()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
-                      <h3 className="text-lg font-light text-white mb-4">By Video</h3>
-                      {quiz_reports.length > 0 ? (
-                        <div className="space-y-2">
-                          {quiz_reports.map((report) => (
-                            <div key={report.video_id} className="flex items-center justify-between py-2 border-b border-gray-800/50 last:border-0">
-                              <div className="flex-1">
-                                <p className="text-white text-sm font-light">{report.video_title}</p>
-                                {report.project_name && (
-                                  <p className="text-gray-500 text-xs">{report.project_name}</p>
-                                )}
-                              </div>
-                              <button
-                                onClick={() => router.push(`/learn/${report.video_id}`)}
-                                className="text-purple-400 hover:text-purple-300 text-sm transition-colors"
-                              >
-                                View →
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-400 text-sm">No videos studied yet</p>
-                      )}
                     </div>
                   </div>
                 )}
