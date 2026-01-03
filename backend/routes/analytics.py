@@ -79,25 +79,47 @@ async def get_user_analytics(user_id: str):
                 'accuracy': accuracy
             })
 
-        # Knowledge proficiency by domain
-        domain_stats = defaultdict(lambda: {'correct': 0, 'total': 0})
+        # Knowledge proficiency by domain with detailed breakdown
+        domain_stats = defaultdict(lambda: {
+            'correct': 0,
+            'total': 0,
+            'flashcard_correct': 0,
+            'flashcard_total': 0,
+            'quiz_correct': 0,
+            'quiz_total': 0
+        })
 
-        for report in reports:
-            domain = report.get('domain', 'General')
-            # Parse performance stats
-            if isinstance(report.get('performance_stats'), str):
-                perf_stats = json.loads(report['performance_stats'])
-            else:
-                perf_stats = report.get('performance_stats', {})
+        # Calculate domain stats from all attempts for more granular data
+        for attempt in all_attempts:
+            domain = attempt.get('domain', 'General')
+            question_type = attempt.get('question_type', 'quiz')
+            is_correct = attempt.get('is_correct', False)
 
-            domain_stats[domain]['correct'] += perf_stats.get('correct_count', 0)
-            domain_stats[domain]['total'] += perf_stats.get('total_attempts', 0)
+            domain_stats[domain]['total'] += 1
+            if is_correct:
+                domain_stats[domain]['correct'] += 1
+
+            if question_type == 'flashcard':
+                domain_stats[domain]['flashcard_total'] += 1
+                if is_correct:
+                    domain_stats[domain]['flashcard_correct'] += 1
+            else:  # quiz
+                domain_stats[domain]['quiz_total'] += 1
+                if is_correct:
+                    domain_stats[domain]['quiz_correct'] += 1
 
         proficiency_data = [
             {
                 'domain': domain,
                 'proficiency': round((stats['correct'] / stats['total'] * 100), 1) if stats['total'] > 0 else 0,
-                'questions': stats['total']
+                'questions': stats['total'],
+                'correct': stats['correct'],
+                'flashcard_accuracy': round((stats['flashcard_correct'] / stats['flashcard_total'] * 100), 1) if stats['flashcard_total'] > 0 else 0,
+                'flashcard_questions': stats['flashcard_total'],
+                'flashcard_correct': stats['flashcard_correct'],
+                'quiz_accuracy': round((stats['quiz_correct'] / stats['quiz_total'] * 100), 1) if stats['quiz_total'] > 0 else 0,
+                'quiz_questions': stats['quiz_total'],
+                'quiz_correct': stats['quiz_correct']
             }
             for domain, stats in domain_stats.items()
         ]
@@ -247,6 +269,7 @@ async def get_user_analytics(user_id: str):
 
         # Quiz reports table data - group by video
         video_attempts = defaultdict(list)
+        video_question_counts = defaultdict(lambda: {'flashcard': 0, 'quiz': 0})
 
         for report in reports:
             if report.get('quiz_id'):  # Only include quiz reports
@@ -265,6 +288,24 @@ async def get_user_analytics(user_id: str):
                     'domain': report.get('domain', 'General'),
                     'video_type': report.get('video_type', 'Unknown')
                 })
+
+        # Count unique flashcard and quiz questions per video from attempts
+        video_unique_questions = defaultdict(lambda: {'flashcard': set(), 'quiz': set()})
+        for attempt in all_attempts:
+            video_id = attempt.get('video_id')
+            question_type = attempt.get('question_type')
+            question_id = attempt.get('question_id')
+            if video_id and question_type and question_id:
+                # Track unique questions by question_id
+                if question_type == 'flashcard':
+                    video_unique_questions[video_id]['flashcard'].add(question_id)
+                elif question_type == 'quiz':
+                    video_unique_questions[video_id]['quiz'].add(question_id)
+
+        # Convert sets to counts
+        for video_id, questions in video_unique_questions.items():
+            video_question_counts[video_id]['flashcard'] = len(questions['flashcard'])
+            video_question_counts[video_id]['quiz'] = len(questions['quiz'])
 
         # Create grouped quiz reports
         quiz_reports = []
@@ -309,6 +350,9 @@ async def get_user_analytics(user_id: str):
             # Use data from first attempt for domain and video_type (should be same for all)
             first_attempt = attempts[0]
 
+            # Get question counts for this video
+            question_counts = video_question_counts.get(video_id, {'flashcard': 0, 'quiz': 0})
+
             quiz_reports.append({
                 'video_id': video_id,
                 'video_title': video.get('title', 'Unknown Video') if video else 'Unknown Video',
@@ -318,7 +362,9 @@ async def get_user_analytics(user_id: str):
                 'mean_score': mean_score,
                 'latest_date': latest_date,
                 'domain': first_attempt['domain'],
-                'video_type': first_attempt['video_type']
+                'video_type': first_attempt['video_type'],
+                'flashcard_count': question_counts['flashcard'],
+                'quiz_question_count': question_counts['quiz']
             })
 
         # Sort by latest date (most recent first)

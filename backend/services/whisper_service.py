@@ -125,7 +125,8 @@ class WhisperService:
         return VideoTranscript(
             segments=segments,
             full_text=full_text,
-            duration=segment_duration
+            duration=segment_duration,
+            detected_language="en"
         )
 
     def _create_segments_from_youtube_transcript(
@@ -266,7 +267,8 @@ class WhisperService:
             return VideoTranscript(
                 segments=segments,
                 full_text=full_text,
-                duration=segment_duration
+                duration=segment_duration,
+                detected_language="en"
             )
 
         finally:

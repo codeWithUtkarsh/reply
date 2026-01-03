@@ -13,6 +13,7 @@ class VideoTranscript(BaseModel):
     segments: List[VideoSegment]
     full_text: str
     duration: float
+    detected_language: Optional[str] = None  # Language detected from transcript
 
 
 class Question(BaseModel):

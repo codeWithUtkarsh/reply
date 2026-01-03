@@ -201,13 +201,15 @@ async def process_video_async(request: VideoProcessRequest, background_tasks: Ba
     logger.info(f"User ID: {request.user_id}")
 
     try:
+        video_id = video_processor.get_video_id(request.video_url)
+        await validation.validate_video_language(video_id)
+
         # Extract video metadata (fast operation)
         logger.info("Extracting video information...")
-        video_info = video_processor.extract_video_info(request.video_url)
-        video_id = video_processor.generate_video_id(request.video_url)
+        video_info = await video_processor.extract_video_info_async(request.video_url)
 
         duration = video_info.get("duration")
-        validation.validate(video_info, video_id)
+        validation.validate_video_info(video_info, video_id)
 
 
         # Check transcription credits before processing (only for new videos)
@@ -382,7 +384,7 @@ async def get_video_direct_url(video_id: str):
         if not video:
             raise HTTPException(status_code=404, detail="Video not found")
 
-        direct_url = video_processor.get_video_url(video["url"])
+        direct_url = video_processor.get_video_url(video_id)
 
         return {
             "video_id": video_id,
