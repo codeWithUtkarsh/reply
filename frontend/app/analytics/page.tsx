@@ -528,7 +528,7 @@ export default function AnalyticsPage() {
                               <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Flashcards</th>
                               <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Quiz Questions</th>
                               <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Quiz Attempts</th>
-                              <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Action</th>
+                              <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Total</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -577,13 +577,9 @@ export default function AnalyticsPage() {
                                       </span>
                                     </td>
                                     <td className="py-3 px-4 text-center">
-                                      <button
-                                        onClick={() => router.push(`/learn/${report.video_id}`)}
-                                        className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                                      >
-                                        <span>View</span>
-                                        <ExternalLink className="w-3 h-3" />
-                                      </button>
+                                      <span className="text-sm text-white font-semibold">
+                                        {(report.flashcard_count || 0) + (report.quiz_question_count || 0)}
+                                      </span>
                                     </td>
                                   </tr>
                                 ));
