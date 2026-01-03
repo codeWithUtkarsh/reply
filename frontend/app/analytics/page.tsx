@@ -101,6 +101,8 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [error, setError] = useState('');
   const [activeBreakdown, setActiveBreakdown] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadAnalytics();
@@ -467,7 +469,7 @@ export default function AnalyticsPage() {
 
         {/* Breakdown Modal */}
         {activeBreakdown && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setActiveBreakdown(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { setActiveBreakdown(null); setCurrentPage(1); }}>
             <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 p-6 flex items-center justify-between">
                 <h2 className="text-2xl font-light text-white">
@@ -478,7 +480,7 @@ export default function AnalyticsPage() {
                   {activeBreakdown === 'streak' && '🔥 Streak Details'}
                 </h2>
                 <button
-                  onClick={() => setActiveBreakdown(null)}
+                  onClick={() => { setActiveBreakdown(null); setCurrentPage(1); }}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <span className="text-2xl">×</span>
@@ -489,78 +491,142 @@ export default function AnalyticsPage() {
                 {/* Questions Breakdown */}
                 {activeBreakdown === 'questions' && (
                   <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-3">
-                          <BookOpen className="w-8 h-8 text-purple-400" />
-                          <div>
-                            <p className="text-3xl font-light text-white">{performance_breakdown.flashcards.total}</p>
-                            <p className="text-gray-400 text-sm font-light">Flashcard Questions</p>
-                          </div>
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-purple-500/20">
-                          <p className="text-purple-300 text-sm font-light mb-3">Accuracy: {performance_breakdown.flashcards.accuracy}%</p>
-
-                          {/* Project Breakdown for Flashcards */}
-                          <div className="space-y-2">
-                            <p className="text-xs text-gray-500 font-light mb-2">By Project:</p>
-                            {(() => {
-                              const projectMap = new Map<string, number>();
-                              quiz_reports.forEach(report => {
-                                const projectName = report.project_name || 'No Project';
-                                projectMap.set(projectName, (projectMap.get(projectName) || 0) + 1);
-                              });
-
-                              if (projectMap.size === 0) {
-                                return <p className="text-xs text-gray-500">No data available</p>;
-                              }
-
-                              return Array.from(projectMap.entries()).map(([project, count]) => (
-                                <div key={project} className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-400">{project}</span>
-                                  <span className="text-purple-300">{count} {count === 1 ? 'video' : 'videos'}</span>
-                                </div>
-                              ));
-                            })()}
-                          </div>
-                        </div>
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 text-center">
+                        <BookOpen className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                        <p className="text-3xl font-light text-white mb-1">{performance_breakdown.flashcards.total}</p>
+                        <p className="text-gray-400 text-xs font-light">Flashcard Questions</p>
+                        <p className="text-purple-300 text-xs mt-1">{performance_breakdown.flashcards.accuracy}% accuracy</p>
                       </div>
 
-                      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Trophy className="w-8 h-8 text-amber-400" />
-                          <div>
-                            <p className="text-3xl font-light text-white">{performance_breakdown.quizzes.total}</p>
-                            <p className="text-gray-400 text-sm font-light">Quiz Questions</p>
-                          </div>
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-amber-500/20">
-                          <p className="text-amber-300 text-sm font-light mb-3">Accuracy: {performance_breakdown.quizzes.accuracy}%</p>
-
-                          {/* Project Breakdown for Quizzes */}
-                          <div className="space-y-2">
-                            <p className="text-xs text-gray-500 font-light mb-2">By Project:</p>
-                            {(() => {
-                              const projectMap = new Map<string, number>();
-                              quiz_reports.forEach(report => {
-                                const projectName = report.project_name || 'No Project';
-                                projectMap.set(projectName, (projectMap.get(projectName) || 0) + 1);
-                              });
-
-                              if (projectMap.size === 0) {
-                                return <p className="text-xs text-gray-500">No quizzes taken yet</p>;
-                              }
-
-                              return Array.from(projectMap.entries()).map(([project, count]) => (
-                                <div key={project} className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-400">{project}</span>
-                                  <span className="text-amber-300">{count} {count === 1 ? 'quiz' : 'quizzes'}</span>
-                                </div>
-                              ));
-                            })()}
-                          </div>
-                        </div>
+                      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-center">
+                        <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                        <p className="text-3xl font-light text-white mb-1">{performance_breakdown.quizzes.total}</p>
+                        <p className="text-gray-400 text-xs font-light">Quiz Questions</p>
+                        <p className="text-amber-300 text-xs mt-1">{performance_breakdown.quizzes.accuracy}% accuracy</p>
                       </div>
+
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-center">
+                        <Target className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                        <p className="text-3xl font-light text-white mb-1">{hero_stats.overall_accuracy}%</p>
+                        <p className="text-gray-400 text-xs font-light">Overall Accuracy</p>
+                        <p className="text-emerald-300 text-xs mt-1">{hero_stats.total_questions} total questions</p>
+                      </div>
+                    </div>
+
+                    {/* Detailed Table */}
+                    <div className="bg-gray-800/30 border border-gray-700 rounded-xl overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-800/50">
+                            <tr className="border-b border-gray-700">
+                              <th className="text-left py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Project</th>
+                              <th className="text-left py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Video</th>
+                              <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Flashcards</th>
+                              <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Quiz Questions</th>
+                              <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Quiz Attempts</th>
+                              <th className="text-center py-3 px-4 text-xs font-light text-gray-400 uppercase tracking-wider">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {quiz_reports.length > 0 ? (
+                              (() => {
+                                const startIndex = (currentPage - 1) * itemsPerPage;
+                                const endIndex = startIndex + itemsPerPage;
+                                const paginatedReports = quiz_reports.slice(startIndex, endIndex);
+
+                                return paginatedReports.map((report, index) => (
+                                  <tr
+                                    key={report.video_id}
+                                    className={`border-b border-gray-800/50 hover:bg-gray-700/30 transition-colors ${
+                                      index === paginatedReports.length - 1 ? 'border-0' : ''
+                                    }`}
+                                  >
+                                    <td className="py-3 px-4">
+                                      <span className="text-sm text-gray-300 font-light">
+                                        {report.project_name || <span className="text-gray-500">No Project</span>}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <div className="flex flex-col">
+                                        <span className="text-sm text-white font-light">{report.video_title}</span>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <span className="text-xs px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full">
+                                            {report.domain}
+                                          </span>
+                                          <span className="text-xs text-gray-500">{report.video_type}</span>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <span className="text-sm text-purple-300 font-light">
+                                        {/* This would need actual flashcard count per video from backend */}
+                                        -
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <span className="text-sm text-amber-300 font-light">
+                                        {/* This would need actual quiz question count per video from backend */}
+                                        -
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <span className="text-sm text-gray-300 font-light">
+                                        {report.attempts_count}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <button
+                                        onClick={() => router.push(`/learn/${report.video_id}`)}
+                                        className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                                      >
+                                        <span>View</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ));
+                              })()
+                            ) : (
+                              <tr>
+                                <td colSpan={6} className="py-12 text-center">
+                                  <p className="text-gray-400 font-light">No videos studied yet</p>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Pagination */}
+                      {quiz_reports.length > itemsPerPage && (
+                        <div className="border-t border-gray-700 bg-gray-800/30 px-4 py-3 flex items-center justify-between">
+                          <div className="text-sm text-gray-400 font-light">
+                            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, quiz_reports.length)} to{' '}
+                            {Math.min(currentPage * itemsPerPage, quiz_reports.length)} of {quiz_reports.length} videos
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                              disabled={currentPage === 1}
+                              className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors disabled:cursor-not-allowed"
+                            >
+                              Previous
+                            </button>
+                            <span className="text-sm text-gray-400 font-light">
+                              Page {currentPage} of {Math.ceil(quiz_reports.length / itemsPerPage)}
+                            </span>
+                            <button
+                              onClick={() => setCurrentPage(Math.min(Math.ceil(quiz_reports.length / itemsPerPage), currentPage + 1))}
+                              disabled={currentPage === Math.ceil(quiz_reports.length / itemsPerPage)}
+                              className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors disabled:cursor-not-allowed"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
