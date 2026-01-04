@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Play, LogIn, UserPlus, Lock, CheckCircle2, BarChart3, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, LogIn, UserPlus, Lock, CheckCircle2, BarChart3, Zap, ChevronLeft, ChevronRight, Crown, Gift } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 
 export default function Home() {
@@ -86,6 +86,13 @@ export default function Home() {
 
   const scrollToWeekOne = () => {
     const element = document.getElementById('week-1');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const scrollToPricing = () => {
+    const element = document.getElementById('pricing');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -217,6 +224,12 @@ export default function Home() {
               className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
             >
               What Happens in Week 1
+            </button>
+            <button
+              onClick={scrollToPricing}
+              className="px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-full transition-all"
+            >
+              Pricing
             </button>
           </div>
         </nav>
@@ -654,6 +667,151 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Pricing Section */}
+        <section id="pricing" className="container mx-auto px-6 py-20 border-t border-gray-900 relative overflow-hidden">
+          {/* Background accent */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl"></div>
+
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-block mb-6">
+                <div className="flex items-center gap-3 px-4 py-2 border border-emerald-500/30 rounded-full bg-emerald-950/20">
+                  <Crown className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm text-emerald-400 font-light uppercase tracking-wider">Pricing Plans</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-light mb-6 leading-tight">
+                Choose Your <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent font-normal">Learning Plan</span>
+              </h2>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">
+                Start free or unlock unlimited learning with our flexible plans
+              </p>
+            </div>
+
+            {/* Pricing Cards */}
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {/* Free Plan */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gray-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-gray-800 group-hover:border-gray-700 rounded-2xl p-8 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-gray-500/10 border border-gray-500/30 rounded-xl flex items-center justify-center">
+                      <Gift className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <h3 className="text-2xl font-light text-white">Free</h3>
+                  </div>
+
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold text-white">£0</span>
+                      <span className="text-gray-500">/month</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-4 mb-8">
+                    <PricingFeature text="75 mins video learning" />
+                    <PricingFeature text="300 mins notes generation" />
+                    <PricingFeature text="10% referral commission" />
+                    <PricingFeature text="Basic features" />
+                  </ul>
+
+                  <button
+                    onClick={openSignUp}
+                    className="w-full py-3 px-6 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-800/50 transition-all"
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+
+              {/* Student Plan */}
+              <div className="relative group md:scale-105">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <div className="bg-emerald-500 text-black px-4 py-1 rounded-full text-sm font-medium">
+                    Most Popular
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-emerald-950 to-black border-2 border-emerald-500/40 rounded-2xl p-8 shadow-2xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                      <Zap className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <h3 className="text-2xl font-light text-white">Student</h3>
+                  </div>
+
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold text-white">£9</span>
+                      <span className="text-gray-400">/month</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-4 mb-8">
+                    <PricingFeature text="180 mins video learning" />
+                    <PricingFeature text="900 mins notes generation" />
+                    <PricingFeature text="20% streak credit savings" />
+                    <PricingFeature text="15% referral commission" />
+                    <PricingFeature text="Priority support" />
+                  </ul>
+
+                  <button
+                    onClick={openSignUp}
+                    className="w-full py-3 px-6 bg-emerald-500 text-black font-medium rounded-xl hover:bg-emerald-400 transition-all shadow-lg"
+                  >
+                    Start Learning
+                  </button>
+                </div>
+              </div>
+
+              {/* Professional Plan */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-purple-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-purple-950 to-black border border-purple-700 group-hover:border-purple-600 rounded-2xl p-8 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center">
+                      <Crown className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <h3 className="text-2xl font-light text-white">Professional</h3>
+                  </div>
+
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold text-white">£59</span>
+                      <span className="text-gray-400">/month</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-4 mb-8">
+                    <PricingFeature text="900 mins video learning" />
+                    <PricingFeature text="5,000 mins notes generation" />
+                    <PricingFeature text="50% streak credit savings" />
+                    <PricingFeature text="Priority processing" />
+                    <PricingFeature text="Bulk export features" />
+                    <PricingFeature text="15% referral commission" />
+                  </ul>
+
+                  <button
+                    onClick={openSignUp}
+                    className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-500 hover:to-purple-400 transition-all shadow-lg"
+                  >
+                    Go Pro
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Features comparison note */}
+            <div className="mt-16 text-center">
+              <p className="text-gray-500 text-sm">
+                All plans include AI-powered learning, progress tracking, and mobile access.
+                <br />
+                Credits reset monthly. Upgrade or downgrade anytime.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section className="container mx-auto px-6 py-20 border-t border-gray-900">
           <div className="max-w-3xl mx-auto text-center">
@@ -876,5 +1034,18 @@ function ProblemCard({ icon, iconColor, glowColor, stat, title, description, del
         </div>
       </div>
     </div>
+  );
+}
+
+interface PricingFeatureProps {
+  text: string;
+}
+
+function PricingFeature({ text }: PricingFeatureProps) {
+  return (
+    <li className="flex items-center gap-3">
+      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+      <span className="text-gray-300 text-sm">{text}</span>
+    </li>
   );
 }
