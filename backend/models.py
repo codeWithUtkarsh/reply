@@ -102,3 +102,103 @@ class CreditInfo(BaseModel):
     notes_credits: int
     role: str
     has_unlimited: bool
+
+
+# Pricing and Subscription Models
+
+class PricingPlanFeatures(BaseModel):
+    sessions_estimate: Optional[str] = None
+    priority_processing: bool = False
+    bulk_export: bool = False
+
+
+class PricingPlan(BaseModel):
+    id: str
+    name: str  # free, student, professional
+    display_name: str
+    price_gbp: float
+    billing_period: str = "monthly"
+
+    # Credit allocations
+    video_learning_credits: int
+    notes_generation_credits: int
+
+    # Streak savings
+    streak_credit_save_percentage: int
+
+    # Referral program
+    referral_percentage: float
+    min_withdrawal_gbp: float
+
+    # Features
+    features: PricingPlanFeatures
+
+    # Metadata
+    is_active: bool = True
+    sort_order: int = 0
+    description: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class Subscription(BaseModel):
+    id: str
+    user_id: str
+    plan_id: str
+    plan: Optional[PricingPlan] = None
+
+    # Status
+    status: str  # active, cancelled, expired, past_due
+
+    # Dates
+    start_date: str
+    current_period_start: str
+    current_period_end: Optional[str] = None
+    cancelled_at: Optional[str] = None
+
+    # Payment integration
+    stripe_subscription_id: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+
+    # Credits tracking
+    video_learning_credits_remaining: int
+    notes_generation_credits_remaining: int
+    credits_reset_at: Optional[str] = None
+
+    # Metadata
+    metadata: Optional[Dict] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class SubscriptionCreate(BaseModel):
+    plan_id: str
+    stripe_payment_method_id: Optional[str] = None
+    referral_code: Optional[str] = None
+
+
+class SubscriptionUpdate(BaseModel):
+    plan_id: Optional[str] = None
+    status: Optional[str] = None
+
+
+class Referral(BaseModel):
+    id: str
+    referrer_user_id: str
+    referred_user_id: str
+    referral_code: Optional[str] = None
+    commission_percentage: float
+    commission_amount_gbp: float
+    payment_status: str  # pending, paid, withdrawn
+    paid_at: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class ReferralStats(BaseModel):
+    total_referrals: int
+    total_commission_earned: float
+    total_commission_pending: float
+    total_commission_withdrawn: float
+    min_withdrawal_amount: float
+    can_withdraw: bool
+    referrals: List[Referral]

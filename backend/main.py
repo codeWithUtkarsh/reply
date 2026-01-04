@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routes import video, questions, quiz, reports, notes, projects, users, analytics
+from routes import video, questions, quiz, reports, notes, projects, users, analytics, subscriptions
 from logging_config import setup_logging, get_logger
 import time
 
@@ -50,6 +50,7 @@ app.include_router(notes.router, prefix="/api/notes", tags=["notes"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
 
 
 @app.on_event("startup")

@@ -470,4 +470,138 @@ export const usersApi = {
   },
 };
 
+// Pricing and Subscription Types
+export interface PricingPlanFeatures {
+  sessions_estimate?: string;
+  priority_processing: boolean;
+  bulk_export: boolean;
+}
+
+export interface PricingPlan {
+  id: string;
+  name: string; // free, student, professional
+  display_name: string;
+  price_gbp: number;
+  billing_period: string;
+  video_learning_credits: number;
+  notes_generation_credits: number;
+  streak_credit_save_percentage: number;
+  referral_percentage: number;
+  min_withdrawal_gbp: number;
+  features: PricingPlanFeatures;
+  is_active: boolean;
+  sort_order: number;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  plan?: PricingPlan;
+  status: string; // active, cancelled, expired, past_due
+  start_date: string;
+  current_period_start: string;
+  current_period_end?: string;
+  cancelled_at?: string;
+  stripe_subscription_id?: string;
+  stripe_customer_id?: string;
+  video_learning_credits_remaining: number;
+  notes_generation_credits_remaining: number;
+  credits_reset_at?: string;
+  metadata?: any;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SubscriptionCreate {
+  plan_id: string;
+  stripe_payment_method_id?: string;
+  referral_code?: string;
+}
+
+export interface Referral {
+  id: string;
+  referrer_user_id: string;
+  referred_user_id: string;
+  referral_code?: string;
+  commission_percentage: number;
+  commission_amount_gbp: number;
+  payment_status: string; // pending, paid, withdrawn
+  paid_at?: string;
+  created_at?: string;
+}
+
+export interface ReferralStats {
+  total_referrals: number;
+  total_commission_earned: number;
+  total_commission_pending: number;
+  total_commission_withdrawn: number;
+  min_withdrawal_amount: number;
+  can_withdraw: boolean;
+  referrals: Referral[];
+}
+
+export const subscriptionsApi = {
+  getPricingPlans: async (): Promise<PricingPlan[]> => {
+    const response = await api.get('/api/subscriptions/plans');
+    return response.data;
+  },
+
+  getPricingPlan: async (planId: string): Promise<PricingPlan> => {
+    const response = await api.get(`/api/subscriptions/plans/${planId}`);
+    return response.data;
+  },
+
+  getUserSubscription: async (userId: string): Promise<Subscription> => {
+    const response = await api.get(`/api/subscriptions/subscription/${userId}`);
+    return response.data;
+  },
+
+  createSubscription: async (userId: string, subscriptionData: SubscriptionCreate): Promise<Subscription> => {
+    const response = await api.post(`/api/subscriptions/subscription/${userId}`, subscriptionData);
+    return response.data;
+  },
+
+  updateSubscription: async (subscriptionId: string, updateData: { plan_id?: string; status?: string }): Promise<Subscription> => {
+    const response = await api.patch(`/api/subscriptions/subscription/${subscriptionId}`, updateData);
+    return response.data;
+  },
+
+  cancelSubscription: async (subscriptionId: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/api/subscriptions/subscription/${subscriptionId}`);
+    return response.data;
+  },
+
+  getReferralStats: async (userId: string): Promise<ReferralStats> => {
+    const response = await api.get(`/api/subscriptions/referrals/${userId}`);
+    return response.data;
+  },
+
+  checkSubscriptionCredits: async (userId: string, creditType: 'video' | 'notes', amount: number): Promise<{
+    has_credits: boolean;
+    remaining: number;
+    required: number;
+    message: string;
+  }> => {
+    const response = await api.post(`/api/subscriptions/credits/check/${userId}`, null, {
+      params: { credit_type: creditType, amount }
+    });
+    return response.data;
+  },
+
+  deductSubscriptionCredits: async (userId: string, creditType: 'video' | 'notes', amount: number): Promise<{
+    success: boolean;
+    remaining: number;
+    deducted: number;
+  }> => {
+    const response = await api.post(`/api/subscriptions/credits/deduct/${userId}`, null, {
+      params: { credit_type: creditType, amount }
+    });
+    return response.data;
+  },
+};
+
 export default api;
