@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Project } from '@/lib/supabase';
-import { Plus, FolderOpen, BarChart3, FileText, Settings, User, Trash2, Loader2, Coins } from 'lucide-react';
+import { Plus, FolderOpen, BarChart3, FileText, Settings, User, Trash2, Loader2, Coins, Crown } from 'lucide-react';
 import NewProjectModal from '@/components/NewProjectModal';
 import { projectsApi } from '@/lib/api';
 
@@ -221,6 +221,18 @@ export default function Sidebar() {
           >
             <Coins className="w-4 h-4" />
             <span className="font-light">Credits</span>
+          </button>
+
+          <button
+            onClick={() => router.push('/pricing')}
+            className={`w-full px-4 py-3 flex items-center gap-3 text-sm transition-all ${
+              pathname === '/pricing'
+                ? 'text-emerald-400 bg-emerald-500/10'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+            }`}
+          >
+            <Crown className="w-4 h-4" />
+            <span className="font-light">Pricing</span>
           </button>
         </nav>
 
