@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from typing import List, Optional
 from datetime import datetime, timedelta
 import json
 
-from ..database import get_supabase
-from ..models import (
+from database import get_supabase
+from models import (
     PricingPlan,
     PricingPlanFeatures,
     Subscription,
