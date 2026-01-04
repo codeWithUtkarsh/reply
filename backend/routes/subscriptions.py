@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import json
 
-from database import get_supabase
+from database import db
 from models import (
     PricingPlan,
     PricingPlanFeatures,
@@ -13,6 +13,7 @@ from models import (
     Referral,
     ReferralStats
 )
+from fastapi.concurrency import run_in_threadpool
 
 router = APIRouter()
 
@@ -79,13 +80,13 @@ async def get_pricing_plans():
     """
     Get all active pricing plans
     """
-    supabase = get_supabase()
-
-    response = supabase.table('pricing_plans')\
-        .select('*')\
-        .eq('is_active', True)\
-        .order('sort_order')\
+    response = await run_in_threadpool(
+        lambda: db.client.table('pricing_plans')
+        .select('*')
+        .eq('is_active', True)
+        .order('sort_order')
         .execute()
+    )
 
     if not response.data:
         return []
@@ -99,13 +100,13 @@ async def get_pricing_plan(plan_id: str):
     """
     Get a specific pricing plan by ID
     """
-    supabase = get_supabase()
-
-    response = supabase.table('pricing_plans')\
-        .select('*')\
-        .eq('id', plan_id)\
-        .single()\
+    response = await run_in_threadpool(
+        lambda: db.client.table('pricing_plans')
+        .select('*')
+        .eq('id', plan_id)
+        .single()
         .execute()
+    )
 
     if not response.data:
         raise HTTPException(status_code=404, detail="Pricing plan not found")
@@ -118,15 +119,15 @@ async def get_user_subscription(user_id: str):
     """
     Get current active subscription for a user
     """
-    supabase = get_supabase()
-
     # Get active subscription
-    sub_response = supabase.table('subscriptions')\
-        .select('*')\
-        .eq('user_id', user_id)\
-        .eq('status', 'active')\
-        .single()\
+    sub_response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .single()
         .execute()
+    )
 
     if not sub_response.data:
         raise HTTPException(status_code=404, detail="No active subscription found")
@@ -134,11 +135,13 @@ async def get_user_subscription(user_id: str):
     subscription_data = sub_response.data
 
     # Get plan details
-    plan_response = supabase.table('pricing_plans')\
-        .select('*')\
-        .eq('id', subscription_data['plan_id'])\
-        .single()\
+    plan_response = await run_in_threadpool(
+        lambda: db.client.table('pricing_plans')
+        .select('*')
+        .eq('id', subscription_data['plan_id'])
+        .single()
         .execute()
+    )
 
     plan = row_to_pricing_plan(plan_response.data) if plan_response.data else None
 
@@ -150,14 +153,14 @@ async def create_subscription(user_id: str, subscription: SubscriptionCreate):
     """
     Create or upgrade a subscription for a user
     """
-    supabase = get_supabase()
-
     # Get the plan details
-    plan_response = supabase.table('pricing_plans')\
-        .select('*')\
-        .eq('id', subscription.plan_id)\
-        .single()\
+    plan_response = await run_in_threadpool(
+        lambda: db.client.table('pricing_plans')
+        .select('*')
+        .eq('id', subscription.plan_id)
+        .single()
         .execute()
+    )
 
     if not plan_response.data:
         raise HTTPException(status_code=404, detail="Pricing plan not found")
@@ -165,22 +168,26 @@ async def create_subscription(user_id: str, subscription: SubscriptionCreate):
     plan = row_to_pricing_plan(plan_response.data)
 
     # Check if user already has an active subscription
-    existing_sub = supabase.table('subscriptions')\
-        .select('*')\
-        .eq('user_id', user_id)\
-        .eq('status', 'active')\
+    existing_sub = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
         .execute()
+    )
 
     if existing_sub.data:
         # Cancel existing subscription
-        supabase.table('subscriptions')\
+        await run_in_threadpool(
+            lambda: db.client.table('subscriptions')
             .update({
                 'status': 'cancelled',
                 'cancelled_at': datetime.now().isoformat(),
                 'updated_at': datetime.now().isoformat()
-            })\
-            .eq('id', existing_sub.data[0]['id'])\
+            })
+            .eq('id', existing_sub.data[0]['id'])
             .execute()
+        )
 
     # Calculate subscription period
     current_period_end = datetime.now() + timedelta(days=30 if plan.billing_period == 'monthly' else 365)
@@ -201,9 +208,11 @@ async def create_subscription(user_id: str, subscription: SubscriptionCreate):
         'metadata': {}
     }
 
-    response = supabase.table('subscriptions')\
-        .insert(new_subscription)\
+    response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .insert(new_subscription)
         .execute()
+    )
 
     if not response.data:
         raise HTTPException(status_code=500, detail="Failed to create subscription")
@@ -222,14 +231,14 @@ async def update_subscription(subscription_id: str, update: SubscriptionUpdate):
     """
     Update a subscription (change plan, cancel, etc.)
     """
-    supabase = get_supabase()
-
     # Get existing subscription
-    existing_sub = supabase.table('subscriptions')\
-        .select('*')\
-        .eq('id', subscription_id)\
-        .single()\
+    existing_sub = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .select('*')
+        .eq('id', subscription_id)
+        .single()
         .execute()
+    )
 
     if not existing_sub.data:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -238,11 +247,13 @@ async def update_subscription(subscription_id: str, update: SubscriptionUpdate):
 
     # Handle plan change
     if update.plan_id:
-        plan_response = supabase.table('pricing_plans')\
-            .select('*')\
-            .eq('id', update.plan_id)\
-            .single()\
+        plan_response = await run_in_threadpool(
+            lambda: db.client.table('pricing_plans')
+            .select('*')
+            .eq('id', update.plan_id)
+            .single()
             .execute()
+        )
 
         if not plan_response.data:
             raise HTTPException(status_code=404, detail="Pricing plan not found")
@@ -259,21 +270,25 @@ async def update_subscription(subscription_id: str, update: SubscriptionUpdate):
             update_data['cancelled_at'] = datetime.now().isoformat()
 
     # Update subscription
-    response = supabase.table('subscriptions')\
-        .update(update_data)\
-        .eq('id', subscription_id)\
+    response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .update(update_data)
+        .eq('id', subscription_id)
         .execute()
+    )
 
     if not response.data:
         raise HTTPException(status_code=500, detail="Failed to update subscription")
 
     # Get updated subscription with plan
     updated_sub = response.data[0]
-    plan_response = supabase.table('pricing_plans')\
-        .select('*')\
-        .eq('id', updated_sub['plan_id'])\
-        .single()\
+    plan_response = await run_in_threadpool(
+        lambda: db.client.table('pricing_plans')
+        .select('*')
+        .eq('id', updated_sub['plan_id'])
+        .single()
         .execute()
+    )
 
     plan = row_to_pricing_plan(plan_response.data) if plan_response.data else None
 
@@ -285,16 +300,16 @@ async def cancel_subscription(subscription_id: str):
     """
     Cancel a subscription
     """
-    supabase = get_supabase()
-
-    response = supabase.table('subscriptions')\
+    response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
         .update({
             'status': 'cancelled',
             'cancelled_at': datetime.now().isoformat(),
             'updated_at': datetime.now().isoformat()
-        })\
-        .eq('id', subscription_id)\
+        })
+        .eq('id', subscription_id)
         .execute()
+    )
 
     if not response.data:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -307,13 +322,13 @@ async def get_referral_stats(user_id: str):
     """
     Get referral statistics for a user
     """
-    supabase = get_supabase()
-
     # Get all referrals where user is the referrer
-    response = supabase.table('referrals')\
-        .select('*')\
-        .eq('referrer_user_id', user_id)\
+    response = await run_in_threadpool(
+        lambda: db.client.table('referrals')
+        .select('*')
+        .eq('referrer_user_id', user_id)
         .execute()
+    )
 
     referrals_data = response.data or []
 
@@ -332,20 +347,24 @@ async def get_referral_stats(user_id: str):
     )
 
     # Get user's current plan to determine min withdrawal
-    sub_response = supabase.table('subscriptions')\
-        .select('plan_id')\
-        .eq('user_id', user_id)\
-        .eq('status', 'active')\
-        .single()\
+    sub_response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .select('plan_id')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .single()
         .execute()
+    )
 
     min_withdrawal_amount = 0.0
     if sub_response.data:
-        plan_response = supabase.table('pricing_plans')\
-            .select('min_withdrawal_gbp')\
-            .eq('id', sub_response.data['plan_id'])\
-            .single()\
+        plan_response = await run_in_threadpool(
+            lambda: db.client.table('pricing_plans')
+            .select('min_withdrawal_gbp')
+            .eq('id', sub_response.data['plan_id'])
+            .single()
             .execute()
+        )
 
         if plan_response.data:
             min_withdrawal_amount = float(plan_response.data.get('min_withdrawal_gbp', 0))
@@ -385,15 +404,15 @@ async def check_subscription_credits(user_id: str, credit_type: str, amount: int
     Check if user has enough credits in their subscription
     credit_type: 'video' or 'notes'
     """
-    supabase = get_supabase()
-
     # Get active subscription
-    response = supabase.table('subscriptions')\
-        .select('*')\
-        .eq('user_id', user_id)\
-        .eq('status', 'active')\
-        .single()\
+    response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .single()
         .execute()
+    )
 
     if not response.data:
         return {
@@ -428,15 +447,15 @@ async def deduct_subscription_credits(user_id: str, credit_type: str, amount: in
     Deduct credits from user's subscription
     credit_type: 'video' or 'notes'
     """
-    supabase = get_supabase()
-
     # Get active subscription
-    response = supabase.table('subscriptions')\
-        .select('*')\
-        .eq('user_id', user_id)\
-        .eq('status', 'active')\
-        .single()\
+    response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .single()
         .execute()
+    )
 
     if not response.data:
         raise HTTPException(status_code=404, detail="No active subscription")
@@ -457,13 +476,15 @@ async def deduct_subscription_credits(user_id: str, credit_type: str, amount: in
 
     # Deduct credits
     new_remaining = remaining - amount
-    update_response = supabase.table('subscriptions')\
+    update_response = await run_in_threadpool(
+        lambda: db.client.table('subscriptions')
         .update({
             field_name: new_remaining,
             'updated_at': datetime.now().isoformat()
-        })\
-        .eq('id', subscription['id'])\
+        })
+        .eq('id', subscription['id'])
         .execute()
+    )
 
     if not update_response.data:
         raise HTTPException(status_code=500, detail="Failed to deduct credits")
