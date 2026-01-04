@@ -20,6 +20,15 @@ class Settings(BaseSettings):
     questions_per_segment: int = 1
     final_quiz_questions: int = 10
 
+    # Polar Payment Configuration
+    polar_access_token: str = ""
+    polar_webhook_secret: str = ""
+    polar_organization_id: str = ""
+
+    # Product IDs for Polar (these will be created in Polar dashboard)
+    polar_student_product_id: str = ""
+    polar_professional_product_id: str = ""
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.cors_origins.split(",")]

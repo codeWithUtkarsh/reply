@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Header
 from typing import List, Optional
 from datetime import datetime, timedelta
 import json
@@ -14,6 +14,8 @@ from models import (
     ReferralStats
 )
 from fastapi.concurrency import run_in_threadpool
+from polar_service import polar_service
+from config import settings
 
 router = APIRouter()
 
@@ -494,3 +496,283 @@ async def deduct_subscription_credits(user_id: str, credit_type: str, amount: in
         "remaining": new_remaining,
         "deducted": amount
     }
+
+
+# ============================================================================
+# Polar Payment Integration Endpoints
+# ============================================================================
+
+@router.post("/checkout/create")
+async def create_polar_checkout(
+    plan_id: str,
+    user_id: str,
+    user_email: Optional[str] = None,
+    user_name: Optional[str] = None,
+):
+    """
+    Create a Polar checkout session for a subscription plan
+    
+    Args:
+        plan_id: The pricing plan ID from our database
+        user_id: The user's ID
+        user_email: User's email (optional)
+        user_name: User's name (optional)
+        
+    Returns:
+        Dict with checkout_url and checkout_id
+    """
+    try:
+        # Get the plan details
+        plan_response = await run_in_threadpool(
+            lambda: db.client.table('pricing_plans')
+            .select('*')
+            .eq('id', plan_id)
+            .single()
+            .execute()
+        )
+        
+        if not plan_response.data:
+            raise HTTPException(status_code=404, detail="Pricing plan not found")
+        
+        plan = row_to_pricing_plan(plan_response.data)
+        
+        # Free plan doesn't need checkout
+        if plan.name.lower() == 'free':
+            raise HTTPException(status_code=400, detail="Free plan doesn't require checkout")
+        
+        # Get Polar product ID for this plan
+        polar_product_id = polar_service.get_product_id_for_plan(plan.name)
+        
+        if not polar_product_id:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Polar product ID not configured for {plan.name} plan"
+            )
+        
+        # Create success URL
+        frontend_url = settings.cors_origins.split(',')[0]  # Get first origin
+        success_url = f"{frontend_url}/pricing/success?session_id={{CHECKOUT_ID}}"
+        
+        # Create checkout session
+        checkout_session = await polar_service.create_checkout_session(
+            product_id=polar_product_id,
+            customer_email=user_email,
+            customer_name=user_name,
+            success_url=success_url,
+            metadata={
+                "user_id": user_id,
+                "plan_id": plan_id,
+                "plan_name": plan.name,
+            }
+        )
+        
+        return {
+            "checkout_url": checkout_session.get("url"),
+            "checkout_id": checkout_session.get("id"),
+            "plan_name": plan.display_name,
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create checkout: {str(e)}")
+
+
+@router.post("/webhook/polar")
+async def handle_polar_webhook(request: Request, polar_signature: str = Header(None)):
+    """
+    Handle Polar webhook events
+    
+    Polar sends webhooks for events like:
+    - checkout.completed
+    - subscription.created
+    - subscription.updated
+    - subscription.cancelled
+    """
+    try:
+        # Get raw payload
+        payload = await request.body()
+        
+        # Verify webhook signature
+        if polar_signature:
+            is_valid = await polar_service.verify_webhook_signature(payload, polar_signature)
+            if not is_valid:
+                raise HTTPException(status_code=401, detail="Invalid webhook signature")
+        
+        # Parse event data
+        event_data = json.loads(payload)
+        event_type = event_data.get("type")
+        
+        # Handle checkout completion
+        if event_type == "checkout.completed":
+            await handle_checkout_completed(event_data)
+        elif event_type == "subscription.created":
+            await handle_subscription_event(event_data, "created")
+        elif event_type == "subscription.updated":
+            await handle_subscription_event(event_data, "updated")
+        elif event_type == "subscription.cancelled":
+            await handle_subscription_event(event_data, "cancelled")
+        
+        return {"status": "success"}
+        
+    except Exception as e:
+        # Log error but return 200 to prevent Polar from retrying
+        print(f"Webhook error: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+
+async def handle_checkout_completed(event_data: Dict):
+    """
+    Handle successful checkout completion
+    Create or update subscription in database
+    """
+    try:
+        checkout_data = event_data.get("data", {})
+        metadata = checkout_data.get("metadata", {})
+        
+        user_id = metadata.get("user_id")
+        plan_id = metadata.get("plan_id")
+        
+        if not user_id or not plan_id:
+            print(f"Missing metadata in checkout: {metadata}")
+            return
+        
+        # Get plan details
+        plan_response = await run_in_threadpool(
+            lambda: db.client.table('pricing_plans')
+            .select('*')
+            .eq('id', plan_id)
+            .single()
+            .execute()
+        )
+        
+        if not plan_response.data:
+            print(f"Plan not found: {plan_id}")
+            return
+        
+        plan = row_to_pricing_plan(plan_response.data)
+        
+        # Check if user already has an active subscription
+        existing_sub = await run_in_threadpool(
+            lambda: db.client.table('subscriptions')
+            .select('*')
+            .eq('user_id', user_id)
+            .eq('status', 'active')
+            .execute()
+        )
+        
+        if existing_sub.data:
+            # Cancel existing subscription
+            await run_in_threadpool(
+                lambda: db.client.table('subscriptions')
+                .update({
+                    'status': 'cancelled',
+                    'cancelled_at': datetime.now().isoformat(),
+                    'updated_at': datetime.now().isoformat()
+                })
+                .eq('id', existing_sub.data[0]['id'])
+                .execute()
+            )
+        
+        # Calculate subscription period
+        current_period_end = datetime.now() + timedelta(days=30 if plan.billing_period == 'monthly' else 365)
+        credits_reset_at = current_period_end
+        
+        # Create new subscription
+        new_subscription = {
+            'user_id': user_id,
+            'plan_id': plan_id,
+            'status': 'active',
+            'start_date': datetime.now().isoformat(),
+            'current_period_start': datetime.now().isoformat(),
+            'current_period_end': current_period_end.isoformat(),
+            'video_learning_credits_remaining': plan.video_learning_credits,
+            'notes_generation_credits_remaining': plan.notes_generation_credits,
+            'credits_reset_at': credits_reset_at.isoformat(),
+            'metadata': {
+                'polar_checkout_id': checkout_data.get('id'),
+                'polar_customer_id': checkout_data.get('customer_id'),
+            }
+        }
+        
+        await run_in_threadpool(
+            lambda: db.client.table('subscriptions')
+            .insert(new_subscription)
+            .execute()
+        )
+        
+        print(f"Subscription created for user {user_id}, plan {plan.display_name}")
+        
+    except Exception as e:
+        print(f"Error handling checkout completed: {str(e)}")
+        raise
+
+
+async def handle_subscription_event(event_data: Dict, event_action: str):
+    """
+    Handle subscription lifecycle events
+    """
+    try:
+        subscription_data = event_data.get("data", {})
+        # Implementation depends on Polar's subscription event structure
+        print(f"Subscription {event_action}: {subscription_data}")
+        
+    except Exception as e:
+        print(f"Error handling subscription {event_action}: {str(e)}")
+
+
+@router.get("/checkout/success")
+async def checkout_success(session_id: str):
+    """
+    Handle successful checkout redirect
+    Verify the checkout session and return subscription details
+    """
+    try:
+        # Get checkout session from Polar
+        checkout_session = await polar_service.get_checkout_session(session_id)
+        
+        metadata = checkout_session.get("metadata", {})
+        user_id = metadata.get("user_id")
+        
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Invalid checkout session")
+        
+        # Get user's active subscription
+        sub_response = await run_in_threadpool(
+            lambda: db.client.table('subscriptions')
+            .select('*')
+            .eq('user_id', user_id)
+            .eq('status', 'active')
+            .single()
+            .execute()
+        )
+        
+        if not sub_response.data:
+            # Subscription might not be created yet (webhook processing)
+            return {
+                "status": "processing",
+                "message": "Your payment is being processed. Please check back in a moment."
+            }
+        
+        subscription_data = sub_response.data
+        
+        # Get plan details
+        plan_response = await run_in_threadpool(
+            lambda: db.client.table('pricing_plans')
+            .select('*')
+            .eq('id', subscription_data['plan_id'])
+            .single()
+            .execute()
+        )
+        
+        plan = row_to_pricing_plan(plan_response.data) if plan_response.data else None
+        
+        return {
+            "status": "success",
+            "subscription": row_to_subscription(subscription_data, plan)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to verify checkout: {str(e)}")

@@ -78,7 +78,7 @@ export default function PricingPage() {
     }
   };
 
-  const handleSubscribe = async (planId: string) => {
+  const handleSubscribe = async (planId: string, planName: string) => {
     if (!user) {
       alert('Please sign in to subscribe');
       return;
@@ -86,27 +86,54 @@ export default function PricingPage() {
 
     setSubscribing(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/subscription/${user.id}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            plan_id: planId,
-          }),
-        }
-      );
+      // For free plan, create subscription directly
+      if (planName.toLowerCase() === 'free') {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/subscription/${user.id}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              plan_id: planId,
+            }),
+          }
+        );
 
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentSubscription(data);
-        alert('Subscription successful! Your credits have been updated.');
-        fetchCurrentSubscription();
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentSubscription(data);
+          alert('Subscription successful! Your credits have been updated.');
+          fetchCurrentSubscription();
+        } else {
+          const errorData = await response.json();
+          alert(`Subscription failed: ${errorData.detail || 'Unknown error'}`);
+        }
       } else {
-        const errorData = await response.json();
-        alert(`Subscription failed: ${errorData.detail || 'Unknown error'}`);
+        // For paid plans, redirect to Polar checkout
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/checkout/create?plan_id=${planId}&user_id=${user.id}&user_email=${user.email || ''}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          // Redirect to Polar checkout
+          if (data.checkout_url) {
+            window.location.href = data.checkout_url;
+          } else {
+            alert('Failed to create checkout session');
+          }
+        } else {
+          const errorData = await response.json();
+          alert(`Failed to create checkout: ${errorData.detail || 'Unknown error'}`);
+        }
       }
     } catch (err) {
       console.error('Failed to subscribe:', err);
@@ -317,7 +344,7 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <button
-                  onClick={() => handleSubscribe(plan.id)}
+                  onClick={() => handleSubscribe(plan.id, plan.name)}
                   disabled={subscribing || isCurrent}
                   className={`w-full py-3 px-6 rounded-xl font-medium text-white transition-all ${
                     isCurrent
