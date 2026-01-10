@@ -25,6 +25,8 @@ export default function BuyCreditsPage() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState('');
+  const [customAmount, setCustomAmount] = useState('');
+  const [customPurchasing, setCustomPurchasing] = useState(false);
 
   useEffect(() => {
     fetchPackages();
@@ -80,6 +82,55 @@ export default function BuyCreditsPage() {
       alert('Failed to start purchase. Please try again.');
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  const handleCustomPurchase = async () => {
+    if (!user) {
+      alert('Please sign in to purchase credits');
+      return;
+    }
+
+    const amount = parseFloat(customAmount);
+    if (!amount || amount < 1) {
+      alert('Please enter a valid amount (minimum £1)');
+      return;
+    }
+
+    if (amount > 1000) {
+      alert('Maximum amount is £1,000 per transaction');
+      return;
+    }
+
+    setCustomPurchasing(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/credits/purchase/custom?amount_gbp=${amount}&user_id=${user.id}&user_email=${user.email || ''}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to Polar checkout
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+        } else {
+          alert('Failed to create checkout session');
+        }
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to create checkout: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Failed to purchase:', err);
+      alert('Failed to start purchase. Please try again.');
+    } finally {
+      setCustomPurchasing(false);
     }
   };
 
