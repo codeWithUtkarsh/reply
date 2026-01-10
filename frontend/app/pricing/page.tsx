@@ -207,29 +207,53 @@ export default function PricingPage() {
     <AuthenticatedLayout>
       <div className="container mx-auto px-8 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-light text-white mb-4">Choose Your Plan</h1>
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-light text-white mb-4">Upgrade Your Plan</h1>
           <p className="text-gray-400 text-lg font-light max-w-2xl mx-auto">
-            Unlock powerful learning features with flexible pricing plans designed for students and
-            professionals
+            Unlock more credits and premium features to accelerate your learning
           </p>
         </div>
 
         {/* Current Subscription Info */}
         {currentSubscription && (
-          <div className="mb-8 bg-gradient-to-r from-emerald-950/50 to-purple-950/50 border border-emerald-700/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-white text-lg font-medium mb-1">Current Plan: {currentSubscription.plan?.display_name}</h3>
-                <p className="text-gray-400 text-sm">
-                  Video Credits: {currentSubscription.video_learning_credits_remaining} mins |
-                  Notes Credits: {currentSubscription.notes_generation_credits_remaining} mins
-                </p>
+          <div className="mb-12 max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-emerald-950/50 to-teal-950/50 border-2 border-emerald-500/40 rounded-2xl p-8 shadow-xl">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-emerald-500/20 border-2 border-emerald-500/40 rounded-xl flex items-center justify-center">
+                    <Crown className="w-7 h-7 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-emerald-400 text-sm font-medium mb-1">YOUR CURRENT PLAN</p>
+                    <h3 className="text-white text-3xl font-light">{currentSubscription.plan?.display_name}</h3>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-emerald-400 font-medium text-sm">Active</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-emerald-400">
-                <TrendingUp className="w-5 h-5" />
-                <span className="font-medium">Active</span>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-black/30 border border-emerald-500/20 rounded-xl p-5">
+                  <p className="text-gray-400 text-sm mb-2">Video Learning Credits</p>
+                  <p className="text-white text-3xl font-light">{currentSubscription.video_learning_credits_remaining} <span className="text-gray-500 text-lg">mins</span></p>
+                </div>
+                <div className="bg-black/30 border border-emerald-500/20 rounded-xl p-5">
+                  <p className="text-gray-400 text-sm mb-2">Notes Generation Credits</p>
+                  <p className="text-white text-3xl font-light">{currentSubscription.notes_generation_credits_remaining} <span className="text-gray-500 text-lg">mins</span></p>
+                </div>
               </div>
+
+              {currentSubscription.current_period_end && (
+                <div className="mt-6 pt-6 border-t border-emerald-500/20">
+                  <p className="text-gray-400 text-sm">
+                    Next renewal: {new Date(currentSubscription.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -240,6 +264,12 @@ export default function PricingPage() {
             <p className="text-red-300">{error}</p>
           </div>
         )}
+
+        {/* Available Plans Section Header */}
+        <div className="text-center mb-10 max-w-3xl mx-auto">
+          <h2 className="text-3xl font-light text-white mb-3">Compare All Plans</h2>
+          <p className="text-gray-400">Choose the plan that best fits your learning goals. Upgrade or downgrade anytime.</p>
+        </div>
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">

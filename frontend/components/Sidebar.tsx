@@ -232,7 +232,7 @@ export default function Sidebar() {
             }`}
           >
             <Crown className="w-4 h-4" />
-            <span className="font-light">Pricing</span>
+            <span className="font-light">Upgrade</span>
           </button>
         </nav>
 
