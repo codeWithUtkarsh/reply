@@ -608,7 +608,7 @@ export default function PricingPage() {
       {/* Custom Amount Modal */}
       {showCustomAmountModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-gray-900 to-black border border-cyan-700/50 rounded-2xl p-8 max-w-md w-full relative">
+          <div className="bg-gradient-to-br from-gray-900 to-black border border-cyan-700/50 rounded-2xl p-8 max-w-lg w-full relative">
             <button
               onClick={() => {
                 setShowCustomAmountModal(false);
@@ -627,11 +627,29 @@ export default function PricingPage() {
             </div>
 
             <p className="text-gray-300 mb-6">
-              Enter the amount you'd like to spend. You'll receive <span className="text-cyan-400 font-medium">20 credits per £1</span> for both video learning and notes generation.
+              Select an amount or enter a custom value. You'll receive <span className="text-cyan-400 font-medium">20 credits per £1</span> for both video learning and notes generation.
             </p>
 
+            {/* Quick Amount Buttons */}
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              {[5, 10, 20, 50].map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => setCustomAmount(amount.toString())}
+                  className={`py-3 px-4 rounded-xl font-medium transition-all ${
+                    customAmount === amount.toString()
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
+                  }`}
+                >
+                  £{amount}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Amount Input */}
             <div className="mb-6">
-              <label className="block text-gray-400 text-sm mb-2">Amount (£)</label>
+              <label className="block text-gray-400 text-sm mb-2">Or enter custom amount (£)</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">£</span>
                 <input
