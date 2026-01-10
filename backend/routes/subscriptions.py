@@ -908,16 +908,21 @@ async def create_credit_purchase(
             raise HTTPException(status_code=500, detail="Failed to create purchase record")
         
         purchase = purchase_response.data[0]
-        
-        # Get Polar product ID (this should be configured for each package)
-        # For now, we'll use a generic product ID from config
-        # In production, each package should have its own Polar product
-        polar_product_id = settings.polar_student_product_id  # Placeholder
-        
+
+        # Map credit package to Polar product ID
+        package_product_map = {
+            'starter': settings.polar_credit_starter_product_id,
+            'popular': settings.polar_credit_popular_product_id,
+            'power': settings.polar_credit_power_product_id,
+            'mega': settings.polar_credit_mega_product_id,
+        }
+
+        polar_product_id = package_product_map.get(package.name)
+
         if not polar_product_id:
             raise HTTPException(
                 status_code=500,
-                detail="Polar product not configured for credit purchases"
+                detail=f"Polar product not configured for {package.display_name}"
             )
         
         # Create success URL

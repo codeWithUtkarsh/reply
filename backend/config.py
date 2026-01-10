@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     polar_student_product_id: str = ""
     polar_professional_product_id: str = ""
 
+    # Pay as You Go Credit Package Product IDs
+    polar_credit_starter_product_id: str = ""
+    polar_credit_popular_product_id: str = ""
+    polar_credit_power_product_id: str = ""
+    polar_credit_mega_product_id: str = ""
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.cors_origins.split(",")]
