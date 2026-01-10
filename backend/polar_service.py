@@ -66,7 +66,7 @@ class PolarService:
             if not is_subscription:
                 payload["is_subscription"] = False
 
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(follow_redirects=True) as client:
                 response = await client.post(
                     f"{self.base_url}/checkouts",
                     json=payload,
@@ -92,7 +92,7 @@ class PolarService:
             Dict containing checkout session data
         """
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(follow_redirects=True) as client:
                 response = await client.get(
                     f"{self.base_url}/checkouts/{checkout_id}",
                     headers=self.headers,
