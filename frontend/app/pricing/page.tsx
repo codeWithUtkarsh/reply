@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { Check, Zap, Crown, Gift, Loader2, TrendingUp } from 'lucide-react';
@@ -36,6 +37,7 @@ interface Subscription {
 }
 
 export default function PricingPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
@@ -271,133 +273,273 @@ export default function PricingPage() {
           <p className="text-gray-400">Choose the plan that best fits your learning goals. Upgrade or downgrade anytime.</p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-          {plans.map((plan) => {
-            const colors = getPlanColor(plan.name);
-            const icon = getPlanIcon(plan.name);
-            const isCurrent = isCurrentPlan(plan.id);
+        {/* Pricing Cards - 4 Column Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          {/* Free/Starter Plan */}
+          <div className="relative group h-full">
+            {isCurrentPlan(plans.find(p => p.name === 'free')?.id || '') && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <div className="bg-gray-600 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                  Current Plan
+                </div>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gray-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className={`relative bg-gradient-to-br from-gray-900 to-black border ${isCurrentPlan(plans.find(p => p.name === 'free')?.id || '') ? 'border-2 border-gray-500' : 'border-gray-700'} group-hover:border-gray-600 rounded-2xl p-8 transition-all duration-300 h-full flex flex-col`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gray-500/10 border border-gray-500/30 rounded-xl flex items-center justify-center">
+                  <Gift className="w-6 h-6 text-gray-400" />
+                </div>
+                <h3 className="text-2xl font-light text-white">Starter</h3>
+              </div>
 
-            return (
-              <div
-                key={plan.id}
-                className={`${colors.bg} ${colors.border} border-2 rounded-3xl p-8 relative transition-all hover:scale-105 ${
-                  plan.name === 'professional' ? 'md:scale-105 shadow-2xl shadow-purple-500/20' : ''
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-white">£0</span>
+                  <span className="text-gray-500">/month</span>
+                </div>
+              </div>
+
+              <ul className="space-y-3 mb-8 min-h-[240px]">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-300 text-sm font-medium">75 mins video learning</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-gray-300 text-sm font-medium">300 mins AI notes</div>
+                    <div className="text-gray-500 text-xs">Automated summaries</div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-300 text-sm">10% referral rewards</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-300 text-sm">Core features</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => handleSubscribe(plans.find(p => p.name === 'free')?.id || '', 'free')}
+                disabled={subscribing || isCurrentPlan(plans.find(p => p.name === 'free')?.id || '')}
+                className={`w-full py-3 px-6 rounded-xl font-medium transition-all mt-auto ${
+                  isCurrentPlan(plans.find(p => p.name === 'free')?.id || '')
+                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                    : 'border border-gray-700 text-gray-300 hover:bg-gray-800/50 hover:border-gray-600'
                 }`}
               >
-                {/* Popular Badge */}
-                {plan.name === 'professional' && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </div>
-                  </div>
-                )}
+                {isCurrentPlan(plans.find(p => p.name === 'free')?.id || '') ? 'Current Plan' : 'Start Free'}
+              </button>
+            </div>
+          </div>
 
-                {/* Icon */}
-                <div className={`${colors.accent} mb-4`}>
-                  {icon}
+          {/* Student Plan */}
+          <div className="relative group h-full">
+            {!isCurrentPlan(plans.find(p => p.name === 'student')?.id || '') &&
+             currentSubscription?.plan?.name === 'free' && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-black px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                  Recommended
                 </div>
-
-                {/* Plan Name */}
-                <h3 className="text-2xl font-semibold text-white mb-2">{plan.display_name}</h3>
-
-                {/* Price */}
-                <div className="mb-6">
-                  {plan.price_gbp === 0 ? (
-                    <div className="flex items-baseline">
-                      <span className="text-4xl font-bold text-white">Free</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-baseline">
-                      <span className="text-4xl font-bold text-white">£{plan.price_gbp}</span>
-                      <span className="text-gray-400 ml-2">/month</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Description */}
-                <p className="text-gray-400 text-sm mb-6 min-h-[40px]">{plan.description}</p>
-
-                {/* Features */}
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className={`w-5 h-5 ${colors.accent} mt-0.5 flex-shrink-0`} />
-                    <span className="text-gray-300 text-sm">
-                      {plan.video_learning_credits} mins video learning credits
-                      {plan.features.sessions_estimate && (
-                        <span className="text-gray-500"> ({plan.features.sessions_estimate})</span>
-                      )}
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className={`w-5 h-5 ${colors.accent} mt-0.5 flex-shrink-0`} />
-                    <span className="text-gray-300 text-sm">
-                      {plan.notes_generation_credits} mins notes generation
-                    </span>
-                  </li>
-                  {plan.streak_credit_save_percentage > 0 && (
-                    <li className="flex items-start gap-3">
-                      <Check className={`w-5 h-5 ${colors.accent} mt-0.5 flex-shrink-0`} />
-                      <span className="text-gray-300 text-sm">
-                        Save {plan.streak_credit_save_percentage}% of credits for maintaining streak
-                      </span>
-                    </li>
-                  )}
-                  {plan.features.priority_processing && (
-                    <li className="flex items-start gap-3">
-                      <Check className={`w-5 h-5 ${colors.accent} mt-0.5 flex-shrink-0`} />
-                      <span className="text-gray-300 text-sm">Priority processing</span>
-                    </li>
-                  )}
-                  {plan.features.bulk_export && (
-                    <li className="flex items-start gap-3">
-                      <Check className={`w-5 h-5 ${colors.accent} mt-0.5 flex-shrink-0`} />
-                      <span className="text-gray-300 text-sm">Bulk export features</span>
-                    </li>
-                  )}
-                  <li className="flex items-start gap-3">
-                    <Check className={`w-5 h-5 ${colors.accent} mt-0.5 flex-shrink-0`} />
-                    <span className="text-gray-300 text-sm">
-                      Referral program: {plan.referral_percentage}% commission
-                    </span>
-                  </li>
-                  {plan.min_withdrawal_gbp > 0 && (
-                    <li className="flex items-start gap-3">
-                      <Check className={`w-5 h-5 ${colors.accent} mt-0.5 flex-shrink-0`} />
-                      <span className="text-gray-300 text-sm">
-                        Min withdrawal: £{plan.min_withdrawal_gbp}
-                      </span>
-                    </li>
-                  )}
-                </ul>
-
-                {/* CTA Button */}
-                <button
-                  onClick={() => handleSubscribe(plan.id, plan.name)}
-                  disabled={subscribing || isCurrent}
-                  className={`w-full py-3 px-6 rounded-xl font-medium text-white transition-all ${
-                    isCurrent
-                      ? 'bg-gray-700 cursor-not-allowed opacity-50'
-                      : `${colors.button} shadow-lg`
-                  }`}
-                >
-                  {subscribing ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Processing...
-                    </span>
-                  ) : isCurrent ? (
-                    'Current Plan'
-                  ) : plan.price_gbp === 0 ? (
-                    'Get Started'
-                  ) : (
-                    'Subscribe Now'
-                  )}
-                </button>
               </div>
-            );
-          })}
+            )}
+            {isCurrentPlan(plans.find(p => p.name === 'student')?.id || '') && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <div className="bg-emerald-600 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                  Current Plan
+                </div>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl"></div>
+            <div className={`relative bg-gradient-to-br from-emerald-950/80 to-black border-2 ${isCurrentPlan(plans.find(p => p.name === 'student')?.id || '') ? 'border-emerald-400' : 'border-emerald-500/40'} rounded-2xl p-8 shadow-2xl h-full flex flex-col`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-emerald-400" />
+                </div>
+                <h3 className="text-2xl font-light text-white">Student</h3>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">£9</span>
+                  <span className="text-gray-400">/month</span>
+                </div>
+              </div>
+
+              <ul className="space-y-3 mb-8 min-h-[240px]">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-white text-sm font-medium">2.4x more video learning</div>
+                    <div className="text-emerald-400/70 text-xs">180 mins</div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-white text-sm font-medium">3x more AI notes</div>
+                    <div className="text-emerald-400/70 text-xs">900 mins generation</div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">20% streak bonus saves</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">15% referral rewards</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">Priority support</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => handleSubscribe(plans.find(p => p.name === 'student')?.id || '', 'student')}
+                disabled={subscribing || isCurrentPlan(plans.find(p => p.name === 'student')?.id || '')}
+                className={`w-full py-3 px-6 rounded-xl font-medium transition-all shadow-lg mt-auto ${
+                  isCurrentPlan(plans.find(p => p.name === 'student')?.id || '')
+                    ? 'bg-emerald-700 text-emerald-200 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-black hover:from-emerald-400 hover:to-teal-400'
+                }`}
+              >
+                {isCurrentPlan(plans.find(p => p.name === 'student')?.id || '') ? 'Current Plan' : 'Start Learning'}
+              </button>
+            </div>
+          </div>
+
+          {/* Professional Plan */}
+          <div className="relative group h-full">
+            {!isCurrentPlan(plans.find(p => p.name === 'professional')?.id || '') &&
+             currentSubscription?.plan?.name === 'student' && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                  Recommended
+                </div>
+              </div>
+            )}
+            {isCurrentPlan(plans.find(p => p.name === 'professional')?.id || '') && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <div className="bg-amber-600 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                  Current Plan
+                </div>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-amber-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className={`relative bg-gradient-to-br from-amber-950/50 to-black border ${isCurrentPlan(plans.find(p => p.name === 'professional')?.id || '') ? 'border-2 border-amber-400' : 'border-amber-700/50'} group-hover:border-amber-600/70 rounded-2xl p-8 transition-all duration-300 h-full flex flex-col`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30 rounded-xl flex items-center justify-center">
+                  <Crown className="w-6 h-6 text-amber-400" />
+                </div>
+                <h3 className="text-2xl font-light text-white">Pro</h3>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">£59</span>
+                  <span className="text-gray-400">/month</span>
+                </div>
+              </div>
+
+              <ul className="space-y-3 mb-8 min-h-[240px]">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-white text-sm font-medium">12x more video learning</div>
+                    <div className="text-amber-400/70 text-xs">900 mins</div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-white text-sm font-medium">16x more AI notes</div>
+                    <div className="text-amber-400/70 text-xs">5,000 mins generation</div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">50% streak bonus saves</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">Priority processing queue</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">Bulk export tools</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">15% referral rewards</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => handleSubscribe(plans.find(p => p.name === 'professional')?.id || '', 'professional')}
+                disabled={subscribing || isCurrentPlan(plans.find(p => p.name === 'professional')?.id || '')}
+                className={`w-full py-3 px-6 rounded-xl font-medium transition-all shadow-lg mt-auto ${
+                  isCurrentPlan(plans.find(p => p.name === 'professional')?.id || '')
+                    ? 'bg-amber-700 text-amber-200 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-400 hover:to-yellow-400'
+                }`}
+              >
+                {isCurrentPlan(plans.find(p => p.name === 'professional')?.id || '') ? 'Current Plan' : 'Go Pro'}
+              </button>
+            </div>
+          </div>
+
+          {/* Pay as You Go / Flex */}
+          <div className="relative group h-full">
+            <div className="absolute inset-0 bg-cyan-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="relative bg-gradient-to-br from-cyan-950/50 to-black border border-cyan-700/50 group-hover:border-cyan-600/70 rounded-2xl p-8 transition-all duration-300 h-full flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-2xl font-light text-white">Flex</h3>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">From £5</span>
+                </div>
+                <p className="text-sm text-cyan-400/70 mt-1">One-time • No subscription</p>
+              </div>
+
+              <ul className="space-y-3 mb-8 min-h-[240px]">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">Pay only for what you use</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-white text-sm font-medium">Credits never expire</div>
+                    <div className="text-cyan-400/70 text-xs">Use anytime, no rush</div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">Save up to 37% on bulk</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white text-sm">Mix video & notes credits</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => router.push('/credits/buy')}
+                className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-xl hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg mt-auto"
+              >
+                Buy Credits
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Additional Info */}
@@ -405,57 +547,8 @@ export default function PricingPage() {
           <p className="text-gray-400 text-sm">
             All plans include access to our full learning platform with AI-powered features.
             <br />
-            Credits reset monthly. No hidden fees or long-term commitments.
+            Subscriptions reset monthly. Pay as You Go credits never expire.
           </p>
-        </div>
-
-        {/* Pay as You Go Section */}
-        <div className="mt-20">
-          <div className="bg-gradient-to-br from-blue-950/30 to-purple-950/30 border border-blue-700/30 rounded-3xl p-12 text-center">
-            <div className="max-w-3xl mx-auto">
-              {/* Icon */}
-              <div className="w-16 h-16 mx-auto mb-6 bg-blue-500/20 border-2 border-blue-500/50 rounded-full flex items-center justify-center">
-                <Zap className="w-8 h-8 text-blue-400" />
-              </div>
-
-              {/* Heading */}
-              <h2 className="text-3xl md:text-4xl font-light text-white mb-4">
-                Prefer Pay as You Go?
-              </h2>
-              <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-                Not ready for a subscription? Purchase credits on-demand without any recurring commitment.
-                Your credits never expire.
-              </p>
-
-              {/* Features */}
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
-                  <div className="text-3xl mb-2">💳</div>
-                  <h3 className="text-white font-medium mb-1">No Commitment</h3>
-                  <p className="text-gray-400 text-sm">Buy only what you need</p>
-                </div>
-                <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
-                  <div className="text-3xl mb-2">♾️</div>
-                  <h3 className="text-white font-medium mb-1">Never Expires</h3>
-                  <p className="text-gray-400 text-sm">Credits stay forever</p>
-                </div>
-                <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
-                  <div className="text-3xl mb-2">💰</div>
-                  <h3 className="text-white font-medium mb-1">Better Value</h3>
-                  <p className="text-gray-400 text-sm">Bulk packs save more</p>
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <button
-                onClick={() => window.location.href = '/credits/buy'}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-blue-500 hover:bg-blue-400 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-500/20"
-              >
-                View Credit Packages
-                <TrendingUp className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </AuthenticatedLayout>
