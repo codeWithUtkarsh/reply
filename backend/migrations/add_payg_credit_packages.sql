@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS credit_packages (
 CREATE TABLE IF NOT EXISTS credit_purchases (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    package_id UUID NOT NULL REFERENCES credit_packages(id),
+    package_id UUID REFERENCES credit_packages(id),  -- Nullable for custom amount purchases
 
     -- Purchase details
     video_learning_credits INTEGER NOT NULL,

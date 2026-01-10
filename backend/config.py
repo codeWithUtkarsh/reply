@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     polar_credit_power_product_id: str = ""
     polar_credit_mega_product_id: str = ""
 
+    # Flexible PAYG Product (accepts any amount)
+    polar_payg_flexible_product_id: str = ""
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.cors_origins.split(",")]

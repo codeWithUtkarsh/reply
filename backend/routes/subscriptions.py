@@ -964,6 +964,111 @@ async def create_credit_purchase(
         raise HTTPException(status_code=500, detail=f"Failed to create checkout: {str(e)}")
 
 
+@router.post("/credits/purchase/custom")
+async def create_custom_credit_purchase(
+    amount_gbp: float,
+    user_id: str,
+    user_email: Optional[str] = None,
+):
+    """
+    Create a custom amount credit purchase checkout session
+    £1 = 20 credits (both video and notes)
+
+    Args:
+        amount_gbp: The amount in GBP (minimum £2)
+        user_id: The user's ID
+        user_email: User's email (optional)
+
+    Returns:
+        Dict with checkout_url and purchase_id
+    """
+    try:
+        # Validate amount
+        if amount_gbp < 2:
+            raise HTTPException(status_code=400, detail="Minimum amount is £2")
+
+        if amount_gbp > 1000:
+            raise HTTPException(status_code=400, detail="Maximum amount is £1,000")
+
+        # Calculate credits: £1 = 20 credits
+        credits_per_pound = 20
+        total_credits = int(amount_gbp * credits_per_pound)
+
+        # Create purchase record (without package_id for custom purchases)
+        purchase_data = {
+            'user_id': user_id,
+            'package_id': None,  # Custom purchase, no package
+            'video_learning_credits': total_credits,
+            'notes_generation_credits': total_credits,
+            'amount_gbp': float(amount_gbp),
+            'status': 'pending',
+            'metadata': {
+                'purchase_type': 'custom',
+                'credits_per_pound': credits_per_pound
+            }
+        }
+
+        purchase_response = await run_in_threadpool(
+            lambda: db.client.table('credit_purchases')
+            .insert(purchase_data)
+            .execute()
+        )
+
+        if not purchase_response.data:
+            raise HTTPException(status_code=500, detail="Failed to create purchase record")
+
+        purchase = purchase_response.data[0]
+
+        # Get flexible PAYG product ID
+        polar_product_id = settings.polar_payg_flexible_product_id
+
+        if not polar_product_id:
+            raise HTTPException(
+                status_code=500,
+                detail="Polar flexible product not configured. Please add POLAR_PAYG_FLEXIBLE_PRODUCT_ID to your .env"
+            )
+
+        # Create success URL
+        frontend_url = settings.cors_origins.split(',')[0]
+        success_url = f"{frontend_url}/credits/purchase/success?purchase_id={{CHECKOUT_ID}}"
+
+        # Create one-time checkout session with custom amount
+        checkout_session = await polar_service.create_checkout_session(
+            product_id=polar_product_id,
+            customer_email=user_email,
+            success_url=success_url,
+            is_subscription=False,  # One-time purchase
+            metadata={
+                "user_id": user_id,
+                "purchase_id": purchase['id'],
+                "purchase_type": "custom_credits",
+                "amount_gbp": str(amount_gbp),
+                "total_credits": str(total_credits),
+            }
+        )
+
+        # Update purchase with checkout ID
+        await run_in_threadpool(
+            lambda: db.client.table('credit_purchases')
+            .update({'polar_checkout_id': checkout_session.get('id')})
+            .eq('id', purchase['id'])
+            .execute()
+        )
+
+        return {
+            "checkout_url": checkout_session.get("url"),
+            "checkout_id": checkout_session.get("id"),
+            "purchase_id": purchase['id'],
+            "amount_gbp": amount_gbp,
+            "total_credits": total_credits,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create checkout: {str(e)}")
+
+
 @router.get("/credits/purchase/history/{user_id}")
 async def get_purchase_history(user_id: str):
     """
