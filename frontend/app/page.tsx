@@ -711,10 +711,7 @@ export default function Home() {
                   <ul className="space-y-3 mb-8 min-h-[240px]">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-gray-300 text-sm font-medium">75 mins video learning</div>
-                        <div className="text-gray-500 text-xs">~3 sessions</div>
-                      </div>
+                      <span className="text-gray-300 text-sm font-medium">75 mins video learning</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
@@ -770,7 +767,7 @@ export default function Home() {
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                       <div>
                         <div className="text-white text-sm font-medium">2.4x more video learning</div>
-                        <div className="text-emerald-400/70 text-xs">180 mins • ~7 sessions</div>
+                        <div className="text-emerald-400/70 text-xs">180 mins</div>
                       </div>
                     </li>
                     <li className="flex items-start gap-3">
@@ -826,7 +823,7 @@ export default function Home() {
                       <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                       <div>
                         <div className="text-white text-sm font-medium">12x more video learning</div>
-                        <div className="text-amber-400/70 text-xs">900 mins • ~36 sessions</div>
+                        <div className="text-amber-400/70 text-xs">900 mins</div>
                       </div>
                     </li>
                     <li className="flex items-start gap-3">
