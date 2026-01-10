@@ -689,7 +689,7 @@ export default function Home() {
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {/* Free Plan */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gray-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -725,7 +725,7 @@ export default function Home() {
               </div>
 
               {/* Student Plan */}
-              <div className="relative group md:scale-105">
+              <div className="relative group">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <div className="bg-emerald-500 text-black px-4 py-1 rounded-full text-sm font-medium">
                     Most Popular
@@ -799,6 +799,41 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+
+              {/* Pay as You Go */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-blue-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-blue-950 to-black border border-blue-700 group-hover:border-blue-600 rounded-2xl p-8 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center justify-center">
+                      <Zap className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <h3 className="text-2xl font-light text-white">Pay as You Go</h3>
+                  </div>
+
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-white">From £5</span>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-1">One-time purchase</p>
+                  </div>
+
+                  <ul className="space-y-4 mb-8">
+                    <PricingFeature text="No subscription required" />
+                    <PricingFeature text="Credits never expire" />
+                    <PricingFeature text="4 packages: £5 to £30" />
+                    <PricingFeature text="Up to 37% discount on bulk" />
+                    <PricingFeature text="Flexible credit allocation" />
+                  </ul>
+
+                  <button
+                    onClick={openSignUp}
+                    className="w-full py-3 px-6 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-400 transition-all shadow-lg"
+                  >
+                    Buy Credits
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Features comparison note */}
@@ -806,84 +841,8 @@ export default function Home() {
               <p className="text-gray-500 text-sm">
                 All plans include AI-powered learning, progress tracking, and mobile access.
                 <br />
-                Credits reset monthly. Upgrade or downgrade anytime.
+                Subscriptions reset monthly. Pay as You Go credits never expire.
               </p>
-            </div>
-
-            {/* Pay as You Go Section */}
-            <div className="mt-20">
-              <div className="bg-gradient-to-br from-blue-950/30 to-purple-950/30 border border-blue-700/30 rounded-3xl p-12 text-center">
-                <div className="max-w-3xl mx-auto">
-                  {/* Icon */}
-                  <div className="w-16 h-16 mx-auto mb-6 bg-blue-500/20 border-2 border-blue-500/50 rounded-full flex items-center justify-center">
-                    <Zap className="w-8 h-8 text-blue-400" />
-                  </div>
-
-                  {/* Heading */}
-                  <h2 className="text-3xl md:text-4xl font-light text-white mb-4">
-                    Prefer Pay as You Go?
-                  </h2>
-                  <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-                    Not ready for a subscription? Purchase credits on-demand without any recurring commitment.
-                    Your credits never expire.
-                  </p>
-
-                  {/* Features */}
-                  <div className="grid md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
-                      <div className="text-3xl mb-2">💳</div>
-                      <h3 className="text-white font-medium mb-1">No Commitment</h3>
-                      <p className="text-gray-400 text-sm">Buy only what you need</p>
-                    </div>
-                    <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
-                      <div className="text-3xl mb-2">♾️</div>
-                      <h3 className="text-white font-medium mb-1">Never Expires</h3>
-                      <p className="text-gray-400 text-sm">Credits stay forever</p>
-                    </div>
-                    <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
-                      <div className="text-3xl mb-2">💰</div>
-                      <h3 className="text-white font-medium mb-1">Better Value</h3>
-                      <p className="text-gray-400 text-sm">Bulk packs save more</p>
-                    </div>
-                  </div>
-
-                  {/* Credit Packages Preview */}
-                  <div className="grid md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-700 rounded-xl p-4">
-                      <div className="text-2xl font-bold text-white mb-1">£5</div>
-                      <div className="text-sm text-gray-400 mb-2">Starter</div>
-                      <div className="text-xs text-gray-500">60 + 30 mins</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-blue-900/30 to-black border border-blue-700/50 rounded-xl p-4">
-                      <div className="inline-block bg-blue-500/20 text-blue-400 text-xs px-2 py-0.5 rounded mb-1">Popular</div>
-                      <div className="text-2xl font-bold text-white mb-1">£10</div>
-                      <div className="text-sm text-gray-400 mb-2">Popular</div>
-                      <div className="text-xs text-gray-500">150 + 75 mins</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-emerald-900/30 to-black border border-emerald-700/50 rounded-xl p-4">
-                      <div className="inline-block bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded mb-1">Best Value</div>
-                      <div className="text-2xl font-bold text-white mb-1">£18</div>
-                      <div className="text-sm text-gray-400 mb-2">Power</div>
-                      <div className="text-xs text-gray-500">300 + 150 mins</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-900/30 to-black border border-purple-700/50 rounded-xl p-4">
-                      <div className="inline-block bg-purple-500/20 text-purple-400 text-xs px-2 py-0.5 rounded mb-1">Max Savings</div>
-                      <div className="text-2xl font-bold text-white mb-1">£30</div>
-                      <div className="text-sm text-gray-400 mb-2">Mega</div>
-                      <div className="text-xs text-gray-500">600 + 300 mins</div>
-                    </div>
-                  </div>
-
-                  {/* CTA Button */}
-                  <button
-                    onClick={openSignUp}
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-blue-500 hover:bg-blue-400 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-500/20"
-                  >
-                    View Credit Packages
-                    <Zap className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </section>
