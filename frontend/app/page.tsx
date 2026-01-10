@@ -691,9 +691,9 @@ export default function Home() {
             {/* Pricing Cards */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {/* Free Plan */}
-              <div className="relative group">
+              <div className="relative group h-full">
                 <div className="absolute inset-0 bg-gray-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-gray-700 group-hover:border-gray-600 rounded-2xl p-8 transition-all duration-300">
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-gray-700 group-hover:border-gray-600 rounded-2xl p-8 transition-all duration-300 h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-gray-500/10 border border-gray-500/30 rounded-xl flex items-center justify-center">
                       <Gift className="w-6 h-6 text-gray-400" />
@@ -732,7 +732,7 @@ export default function Home() {
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-800/50 hover:border-gray-600 transition-all"
+                    className="w-full py-3 px-6 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-800/50 hover:border-gray-600 transition-all mt-auto"
                   >
                     Start Free
                   </button>
@@ -740,14 +740,14 @@ export default function Home() {
               </div>
 
               {/* Student Plan */}
-              <div className="relative group">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <div className="relative group h-full">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                   <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-black px-4 py-1 rounded-full text-sm font-medium shadow-lg">
                     Most Popular
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl"></div>
-                <div className="relative bg-gradient-to-br from-emerald-950/80 to-black border-2 border-emerald-500/40 rounded-2xl p-8 shadow-2xl">
+                <div className="relative bg-gradient-to-br from-emerald-950/80 to-black border-2 border-emerald-500/40 rounded-2xl p-8 shadow-2xl h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center">
                       <Zap className="w-6 h-6 text-emerald-400" />
@@ -793,7 +793,7 @@ export default function Home() {
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-medium rounded-xl hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg"
+                    className="w-full py-3 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-medium rounded-xl hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg mt-auto"
                   >
                     Start Learning
                   </button>
@@ -801,9 +801,9 @@ export default function Home() {
               </div>
 
               {/* Professional Plan */}
-              <div className="relative group">
+              <div className="relative group h-full">
                 <div className="absolute inset-0 bg-amber-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative bg-gradient-to-br from-amber-950/50 to-black border border-amber-700/50 group-hover:border-amber-600/70 rounded-2xl p-8 transition-all duration-300">
+                <div className="relative bg-gradient-to-br from-amber-950/50 to-black border border-amber-700/50 group-hover:border-amber-600/70 rounded-2xl p-8 transition-all duration-300 h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30 rounded-xl flex items-center justify-center">
                       <Crown className="w-6 h-6 text-amber-400" />
@@ -853,7 +853,7 @@ export default function Home() {
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-medium rounded-xl hover:from-amber-400 hover:to-yellow-400 transition-all shadow-lg"
+                    className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-medium rounded-xl hover:from-amber-400 hover:to-yellow-400 transition-all shadow-lg mt-auto"
                   >
                     Go Pro
                   </button>
@@ -861,9 +861,9 @@ export default function Home() {
               </div>
 
               {/* Pay as You Go */}
-              <div className="relative group">
+              <div className="relative group h-full">
                 <div className="absolute inset-0 bg-cyan-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative bg-gradient-to-br from-cyan-950/50 to-black border border-cyan-700/50 group-hover:border-cyan-600/70 rounded-2xl p-8 transition-all duration-300">
+                <div className="relative bg-gradient-to-br from-cyan-950/50 to-black border border-cyan-700/50 group-hover:border-cyan-600/70 rounded-2xl p-8 transition-all duration-300 h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center">
                       <Zap className="w-6 h-6 text-cyan-400" />
@@ -902,7 +902,7 @@ export default function Home() {
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-xl hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg"
+                    className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-xl hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg mt-auto"
                   >
                     Buy Credits
                   </button>
