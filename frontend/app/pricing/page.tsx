@@ -44,6 +44,9 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [subscribing, setSubscribing] = useState(false);
+  const [showCustomAmountModal, setShowCustomAmountModal] = useState(false);
+  const [customAmount, setCustomAmount] = useState('');
+  const [customPurchasing, setCustomPurchasing] = useState(false);
 
   useEffect(() => {
     fetchPricingPlans();
@@ -142,6 +145,56 @@ export default function PricingPage() {
       alert('Failed to subscribe. Please try again.');
     } finally {
       setSubscribing(false);
+    }
+  };
+
+  const handleCustomAmountPurchase = async () => {
+    if (!user) {
+      alert('Please sign in to purchase credits');
+      return;
+    }
+
+    const amount = parseFloat(customAmount);
+    if (!amount || amount < 2) {
+      alert('Please enter a valid amount (minimum £2)');
+      return;
+    }
+
+    if (amount > 1000) {
+      alert('Maximum amount is £1,000 per transaction');
+      return;
+    }
+
+    setCustomPurchasing(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/credits/purchase/custom?amount_gbp=${amount}&user_id=${user.id}&user_email=${user.email || ''}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to Polar checkout
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+        } else {
+          alert('Failed to create checkout session');
+        }
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to create checkout: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Failed to purchase:', err);
+      alert('Failed to start purchase. Please try again.');
+    } finally {
+      setCustomPurchasing(false);
+      setShowCustomAmountModal(false);
     }
   };
 
@@ -533,7 +586,7 @@ export default function PricingPage() {
               </ul>
 
               <button
-                onClick={() => router.push('/credits/buy')}
+                onClick={() => setShowCustomAmountModal(true)}
                 className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-xl hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg mt-auto"
               >
                 Buy Credits
@@ -551,6 +604,83 @@ export default function PricingPage() {
           </p>
         </div>
       </div>
+
+      {/* Custom Amount Modal */}
+      {showCustomAmountModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900 to-black border border-cyan-700/50 rounded-2xl p-8 max-w-md w-full relative">
+            <button
+              onClick={() => {
+                setShowCustomAmountModal(false);
+                setCustomAmount('');
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center">
+                <Zap className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h3 className="text-2xl font-light text-white">Buy Credits</h3>
+            </div>
+
+            <p className="text-gray-300 mb-6">
+              Enter the amount you'd like to spend. You'll receive <span className="text-cyan-400 font-medium">20 credits per £1</span> for both video learning and notes generation.
+            </p>
+
+            <div className="mb-6">
+              <label className="block text-gray-400 text-sm mb-2">Amount (£)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">£</span>
+                <input
+                  type="number"
+                  min="2"
+                  max="1000"
+                  step="1"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  placeholder="Enter amount (min £2)"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                />
+              </div>
+              {customAmount && parseFloat(customAmount) >= 2 && (
+                <p className="mt-3 text-sm text-cyan-400">
+                  You'll receive: <span className="font-medium">{Math.floor(parseFloat(customAmount) * 20)} credits</span> (video + notes)
+                </p>
+              )}
+              <p className="mt-2 text-xs text-gray-500">Minimum: £2 • Maximum: £1,000</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCustomAmountModal(false);
+                  setCustomAmount('');
+                }}
+                className="flex-1 py-3 px-6 bg-gray-800 text-white font-medium rounded-xl hover:bg-gray-700 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCustomAmountPurchase}
+                disabled={customPurchasing || !customAmount || parseFloat(customAmount) < 2}
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-xl hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {customPurchasing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Continue to Checkout'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthenticatedLayout>
   );
 }
