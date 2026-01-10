@@ -693,12 +693,12 @@ export default function Home() {
               {/* Free Plan */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gray-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-gray-800 group-hover:border-gray-700 rounded-2xl p-8 transition-all duration-300">
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-gray-700 group-hover:border-gray-600 rounded-2xl p-8 transition-all duration-300">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-gray-500/10 border border-gray-500/30 rounded-xl flex items-center justify-center">
                       <Gift className="w-6 h-6 text-gray-400" />
                     </div>
-                    <h3 className="text-2xl font-light text-white">Free</h3>
+                    <h3 className="text-2xl font-light text-white">Starter</h3>
                   </div>
 
                   <div className="mb-8">
@@ -708,18 +708,36 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <ul className="space-y-4 mb-8">
-                    <PricingFeature text="75 mins video learning" />
-                    <PricingFeature text="300 mins notes generation" />
-                    <PricingFeature text="10% referral commission" />
-                    <PricingFeature text="Basic features" />
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-gray-300 text-sm font-medium">75 mins video learning</div>
+                        <div className="text-gray-500 text-xs">~3 sessions</div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-gray-300 text-sm font-medium">300 mins AI notes</div>
+                        <div className="text-gray-500 text-xs">Automated summaries</div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-300 text-sm">10% referral rewards</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-300 text-sm">Core features</span>
+                    </li>
                   </ul>
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-800/50 transition-all"
+                    className="w-full py-3 px-6 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-800/50 hover:border-gray-600 transition-all"
                   >
-                    Get Started
+                    Start Free
                   </button>
                 </div>
               </div>
@@ -727,14 +745,14 @@ export default function Home() {
               {/* Student Plan */}
               <div className="relative group">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="bg-emerald-500 text-black px-4 py-1 rounded-full text-sm font-medium">
+                  <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-black px-4 py-1 rounded-full text-sm font-medium shadow-lg">
                     Most Popular
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl"></div>
-                <div className="relative bg-gradient-to-br from-emerald-950 to-black border-2 border-emerald-500/40 rounded-2xl p-8 shadow-2xl">
+                <div className="relative bg-gradient-to-br from-emerald-950/80 to-black border-2 border-emerald-500/40 rounded-2xl p-8 shadow-2xl">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center">
                       <Zap className="w-6 h-6 text-emerald-400" />
                     </div>
                     <h3 className="text-2xl font-light text-white">Student</h3>
@@ -742,22 +760,43 @@ export default function Home() {
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-white">£9</span>
+                      <span className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">£9</span>
                       <span className="text-gray-400">/month</span>
                     </div>
                   </div>
 
-                  <ul className="space-y-4 mb-8">
-                    <PricingFeature text="180 mins video learning" />
-                    <PricingFeature text="900 mins notes generation" />
-                    <PricingFeature text="20% streak credit savings" />
-                    <PricingFeature text="15% referral commission" />
-                    <PricingFeature text="Priority support" />
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-white text-sm font-medium">2.4x more video learning</div>
+                        <div className="text-emerald-400/70 text-xs">180 mins • ~7 sessions</div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-white text-sm font-medium">3x more AI notes</div>
+                        <div className="text-emerald-400/70 text-xs">900 mins generation</div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">20% streak bonus saves</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">15% referral rewards</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">Priority support</span>
+                    </li>
                   </ul>
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 bg-emerald-500 text-black font-medium rounded-xl hover:bg-emerald-400 transition-all shadow-lg"
+                    className="w-full py-3 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-medium rounded-xl hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg"
                   >
                     Start Learning
                   </button>
@@ -766,34 +805,58 @@ export default function Home() {
 
               {/* Professional Plan */}
               <div className="relative group">
-                <div className="absolute inset-0 bg-purple-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative bg-gradient-to-br from-purple-950 to-black border border-purple-700 group-hover:border-purple-600 rounded-2xl p-8 transition-all duration-300">
+                <div className="absolute inset-0 bg-amber-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-amber-950/50 to-black border border-amber-700/50 group-hover:border-amber-600/70 rounded-2xl p-8 transition-all duration-300">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center">
-                      <Crown className="w-6 h-6 text-purple-400" />
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30 rounded-xl flex items-center justify-center">
+                      <Crown className="w-6 h-6 text-amber-400" />
                     </div>
-                    <h3 className="text-2xl font-light text-white">Professional</h3>
+                    <h3 className="text-2xl font-light text-white">Pro</h3>
                   </div>
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-white">£59</span>
+                      <span className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">£59</span>
                       <span className="text-gray-400">/month</span>
                     </div>
                   </div>
 
-                  <ul className="space-y-4 mb-8">
-                    <PricingFeature text="900 mins video learning" />
-                    <PricingFeature text="5,000 mins notes generation" />
-                    <PricingFeature text="50% streak credit savings" />
-                    <PricingFeature text="Priority processing" />
-                    <PricingFeature text="Bulk export features" />
-                    <PricingFeature text="15% referral commission" />
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-white text-sm font-medium">12x more video learning</div>
+                        <div className="text-amber-400/70 text-xs">900 mins • ~36 sessions</div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-white text-sm font-medium">16x more AI notes</div>
+                        <div className="text-amber-400/70 text-xs">5,000 mins generation</div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">50% streak bonus saves</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">Priority processing queue</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">Bulk export tools</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">15% referral rewards</span>
+                    </li>
                   </ul>
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-500 hover:to-purple-400 transition-all shadow-lg"
+                    className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-medium rounded-xl hover:from-amber-400 hover:to-yellow-400 transition-all shadow-lg"
                   >
                     Go Pro
                   </button>
@@ -802,33 +865,47 @@ export default function Home() {
 
               {/* Pay as You Go */}
               <div className="relative group">
-                <div className="absolute inset-0 bg-blue-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative bg-gradient-to-br from-blue-950 to-black border border-blue-700 group-hover:border-blue-600 rounded-2xl p-8 transition-all duration-300">
+                <div className="absolute inset-0 bg-cyan-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-cyan-950/50 to-black border border-cyan-700/50 group-hover:border-cyan-600/70 rounded-2xl p-8 transition-all duration-300">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center justify-center">
-                      <Zap className="w-6 h-6 text-blue-400" />
+                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center">
+                      <Zap className="w-6 h-6 text-cyan-400" />
                     </div>
-                    <h3 className="text-2xl font-light text-white">Pay as You Go</h3>
+                    <h3 className="text-2xl font-light text-white">Flex</h3>
                   </div>
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-white">From £5</span>
+                      <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">From £5</span>
                     </div>
-                    <p className="text-sm text-gray-400 mt-1">One-time purchase</p>
+                    <p className="text-sm text-cyan-400/70 mt-1">One-time • No subscription</p>
                   </div>
 
-                  <ul className="space-y-4 mb-8">
-                    <PricingFeature text="No subscription required" />
-                    <PricingFeature text="Credits never expire" />
-                    <PricingFeature text="4 packages: £5 to £30" />
-                    <PricingFeature text="Up to 37% discount on bulk" />
-                    <PricingFeature text="Flexible credit allocation" />
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">Pay only for what you use</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-white text-sm font-medium">Credits never expire</div>
+                        <div className="text-cyan-400/70 text-xs">Use anytime, no rush</div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">Save up to 37% on bulk</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-white text-sm">Mix video & notes credits</span>
+                    </li>
                   </ul>
 
                   <button
                     onClick={openSignUp}
-                    className="w-full py-3 px-6 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-400 transition-all shadow-lg"
+                    className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-xl hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg"
                   >
                     Buy Credits
                   </button>
