@@ -708,7 +708,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 min-h-[240px]">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                       <div>
@@ -765,7 +765,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 min-h-[240px]">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                       <div>
@@ -821,7 +821,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 min-h-[240px]">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                       <div>
@@ -881,7 +881,7 @@ export default function Home() {
                     <p className="text-sm text-cyan-400/70 mt-1">One-time • No subscription</p>
                   </div>
 
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 min-h-[240px]">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
                       <span className="text-white text-sm">Pay only for what you use</span>
