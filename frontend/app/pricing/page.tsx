@@ -378,6 +378,55 @@ export default function PricingPage() {
             Credits reset monthly. No hidden fees or long-term commitments.
           </p>
         </div>
+
+        {/* Pay as You Go Section */}
+        <div className="mt-20">
+          <div className="bg-gradient-to-br from-blue-950/30 to-purple-950/30 border border-blue-700/30 rounded-3xl p-12 text-center">
+            <div className="max-w-3xl mx-auto">
+              {/* Icon */}
+              <div className="w-16 h-16 mx-auto mb-6 bg-blue-500/20 border-2 border-blue-500/50 rounded-full flex items-center justify-center">
+                <Zap className="w-8 h-8 text-blue-400" />
+              </div>
+
+              {/* Heading */}
+              <h2 className="text-3xl md:text-4xl font-light text-white mb-4">
+                Prefer Pay as You Go?
+              </h2>
+              <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
+                Not ready for a subscription? Purchase credits on-demand without any recurring commitment.
+                Your credits never expire.
+              </p>
+
+              {/* Features */}
+              <div className="grid md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
+                  <div className="text-3xl mb-2">💳</div>
+                  <h3 className="text-white font-medium mb-1">No Commitment</h3>
+                  <p className="text-gray-400 text-sm">Buy only what you need</p>
+                </div>
+                <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
+                  <div className="text-3xl mb-2">♾️</div>
+                  <h3 className="text-white font-medium mb-1">Never Expires</h3>
+                  <p className="text-gray-400 text-sm">Credits stay forever</p>
+                </div>
+                <div className="bg-black/30 border border-blue-500/20 rounded-xl p-4">
+                  <div className="text-3xl mb-2">💰</div>
+                  <h3 className="text-white font-medium mb-1">Better Value</h3>
+                  <p className="text-gray-400 text-sm">Bulk packs save more</p>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <button
+                onClick={() => window.location.href = '/credits/buy'}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-blue-500 hover:bg-blue-400 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-500/20"
+              >
+                View Credit Packages
+                <TrendingUp className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </AuthenticatedLayout>
   );

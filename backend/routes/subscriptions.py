@@ -605,7 +605,15 @@ async def handle_polar_webhook(request: Request, polar_signature: str = Header(N
         
         # Handle checkout completion
         if event_type == "checkout.completed":
-            await handle_checkout_completed(event_data)
+            # Check if it's a subscription or credit purchase based on metadata
+            checkout_data = event_data.get("data", {})
+            metadata = checkout_data.get("metadata", {})
+            purchase_type = metadata.get("purchase_type", "subscription")
+            
+            if purchase_type == "credits":
+                await handle_credit_purchase_completed(event_data)
+            else:
+                await handle_checkout_completed(event_data)
         elif event_type == "subscription.created":
             await handle_subscription_event(event_data, "created")
         elif event_type == "subscription.updated":
@@ -776,3 +784,305 @@ async def checkout_success(session_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to verify checkout: {str(e)}")
+
+
+# ============================================================================
+# Pay as You Go Credit Purchase Endpoints
+# ============================================================================
+
+def row_to_credit_package(row: dict):
+    """Convert database row to CreditPackage model"""
+    from models import CreditPackage
+    
+    return CreditPackage(
+        id=row['id'],
+        name=row['name'],
+        display_name=row['display_name'],
+        video_learning_credits=row['video_learning_credits'],
+        notes_generation_credits=row['notes_generation_credits'],
+        price_gbp=float(row['price_gbp']),
+        description=row.get('description'),
+        is_popular=row.get('is_popular', False),
+        discount_percentage=row.get('discount_percentage', 0),
+        badge_text=row.get('badge_text'),
+        is_active=row.get('is_active', True),
+        sort_order=row.get('sort_order', 0),
+        created_at=str(row.get('created_at')) if row.get('created_at') else None,
+        updated_at=str(row.get('updated_at')) if row.get('updated_at') else None
+    )
+
+
+def row_to_credit_purchase(row: dict, package=None):
+    """Convert database row to CreditPurchase model"""
+    from models import CreditPurchase
+    
+    return CreditPurchase(
+        id=row['id'],
+        user_id=row['user_id'],
+        package_id=row['package_id'],
+        package=package,
+        video_learning_credits=row['video_learning_credits'],
+        notes_generation_credits=row['notes_generation_credits'],
+        amount_gbp=float(row['amount_gbp']),
+        polar_checkout_id=row.get('polar_checkout_id'),
+        polar_transaction_id=row.get('polar_transaction_id'),
+        status=row['status'],
+        completed_at=str(row['completed_at']) if row.get('completed_at') else None,
+        metadata=row.get('metadata'),
+        created_at=str(row.get('created_at')) if row.get('created_at') else None,
+        updated_at=str(row.get('updated_at')) if row.get('updated_at') else None
+    )
+
+
+@router.get("/credit-packages")
+async def get_credit_packages():
+    """
+    Get all active Pay as You Go credit packages
+    """
+    from models import CreditPackage
+    
+    response = await run_in_threadpool(
+        lambda: db.client.table('credit_packages')
+        .select('*')
+        .eq('is_active', True)
+        .order('sort_order')
+        .execute()
+    )
+
+    if not response.data:
+        return []
+
+    packages = [row_to_credit_package(row) for row in response.data]
+    return packages
+
+
+@router.post("/credits/purchase/create")
+async def create_credit_purchase(
+    package_id: str,
+    user_id: str,
+    user_email: Optional[str] = None,
+):
+    """
+    Create a one-time credit purchase checkout session
+    
+    Args:
+        package_id: The credit package ID
+        user_id: The user's ID
+        user_email: User's email (optional)
+        
+    Returns:
+        Dict with checkout_url and purchase_id
+    """
+    try:
+        # Get the package details
+        package_response = await run_in_threadpool(
+            lambda: db.client.table('credit_packages')
+            .select('*')
+            .eq('id', package_id)
+            .single()
+            .execute()
+        )
+        
+        if not package_response.data:
+            raise HTTPException(status_code=404, detail="Credit package not found")
+        
+        package = row_to_credit_package(package_response.data)
+        
+        # Create purchase record
+        purchase_data = {
+            'user_id': user_id,
+            'package_id': package_id,
+            'video_learning_credits': package.video_learning_credits,
+            'notes_generation_credits': package.notes_generation_credits,
+            'amount_gbp': float(package.price_gbp),
+            'status': 'pending',
+        }
+        
+        purchase_response = await run_in_threadpool(
+            lambda: db.client.table('credit_purchases')
+            .insert(purchase_data)
+            .execute()
+        )
+        
+        if not purchase_response.data:
+            raise HTTPException(status_code=500, detail="Failed to create purchase record")
+        
+        purchase = purchase_response.data[0]
+        
+        # Get Polar product ID (this should be configured for each package)
+        # For now, we'll use a generic product ID from config
+        # In production, each package should have its own Polar product
+        polar_product_id = settings.polar_student_product_id  # Placeholder
+        
+        if not polar_product_id:
+            raise HTTPException(
+                status_code=500,
+                detail="Polar product not configured for credit purchases"
+            )
+        
+        # Create success URL
+        frontend_url = settings.cors_origins.split(',')[0]
+        success_url = f"{frontend_url}/credits/purchase/success?purchase_id={{CHECKOUT_ID}}"
+        
+        # Create one-time checkout session
+        checkout_session = await polar_service.create_checkout_session(
+            product_id=polar_product_id,
+            customer_email=user_email,
+            success_url=success_url,
+            is_subscription=False,  # One-time purchase
+            metadata={
+                "user_id": user_id,
+                "purchase_id": purchase['id'],
+                "package_id": package_id,
+                "purchase_type": "credits",
+            }
+        )
+        
+        # Update purchase with checkout ID
+        await run_in_threadpool(
+            lambda: db.client.table('credit_purchases')
+            .update({'polar_checkout_id': checkout_session.get('id')})
+            .eq('id', purchase['id'])
+            .execute()
+        )
+        
+        return {
+            "checkout_url": checkout_session.get("url"),
+            "checkout_id": checkout_session.get("id"),
+            "purchase_id": purchase['id'],
+            "package_name": package.display_name,
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create checkout: {str(e)}")
+
+
+@router.get("/credits/purchase/history/{user_id}")
+async def get_purchase_history(user_id: str):
+    """
+    Get user's credit purchase history
+    """
+    from models import CreditPurchaseHistory
+    
+    response = await run_in_threadpool(
+        lambda: db.client.table('credit_purchases')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('status', 'completed')
+        .order('created_at', desc=True)
+        .execute()
+    )
+
+    purchases_data = response.data or []
+    
+    # Get packages for each purchase
+    purchases = []
+    for purchase_row in purchases_data:
+        package_response = await run_in_threadpool(
+            lambda: db.client.table('credit_packages')
+            .select('*')
+            .eq('id', purchase_row['package_id'])
+            .single()
+            .execute()
+        )
+        
+        package = row_to_credit_package(package_response.data) if package_response.data else None
+        purchases.append(row_to_credit_purchase(purchase_row, package))
+    
+    total_spent = sum(float(p.amount_gbp) for p in purchases)
+    total_video_credits = sum(p.video_learning_credits for p in purchases)
+    total_notes_credits = sum(p.notes_generation_credits for p in purchases)
+    
+    return CreditPurchaseHistory(
+        purchases=purchases,
+        total_spent=total_spent,
+        total_video_credits=total_video_credits,
+        total_notes_credits=total_notes_credits
+    )
+
+
+@router.get("/credits/purchase/success")
+async def credit_purchase_success(purchase_id: str):
+    """
+    Handle successful credit purchase redirect
+    Verify the purchase and return details
+    """
+    try:
+        # Get purchase record
+        purchase_response = await run_in_threadpool(
+            lambda: db.client.table('credit_purchases')
+            .select('*')
+            .eq('id', purchase_id)
+            .single()
+            .execute()
+        )
+        
+        if not purchase_response.data:
+            raise HTTPException(status_code=404, detail="Purchase not found")
+        
+        purchase_data = purchase_response.data
+        
+        # Get package details
+        package_response = await run_in_threadpool(
+            lambda: db.client.table('credit_packages')
+            .select('*')
+            .eq('id', purchase_data['package_id'])
+            .single()
+            .execute()
+        )
+        
+        package = row_to_credit_package(package_response.data) if package_response.data else None
+        
+        # Check if purchase is completed
+        if purchase_data['status'] == 'pending':
+            return {
+                "status": "processing",
+                "message": "Your payment is being processed. Please check back in a moment."
+            }
+        
+        return {
+            "status": "success",
+            "purchase": row_to_credit_purchase(purchase_data, package)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to verify purchase: {str(e)}")
+
+
+# Update webhook handler to process credit purchases
+async def handle_credit_purchase_completed(event_data: Dict):
+    """
+    Handle successful credit purchase completion
+    """
+    try:
+        checkout_data = event_data.get("data", {})
+        metadata = checkout_data.get("metadata", {})
+        
+        purchase_id = metadata.get("purchase_id")
+        
+        if not purchase_id:
+            print(f"Missing purchase_id in checkout metadata: {metadata}")
+            return
+        
+        # Update purchase status to completed
+        await run_in_threadpool(
+            lambda: db.client.table('credit_purchases')
+            .update({
+                'status': 'completed',
+                'completed_at': datetime.now().isoformat(),
+                'polar_transaction_id': checkout_data.get('id'),
+                'updated_at': datetime.now().isoformat()
+            })
+            .eq('id', purchase_id)
+            .execute()
+        )
+        
+        print(f"Credit purchase completed: {purchase_id}")
+        
+    except Exception as e:
+        print(f"Error handling credit purchase completed: {str(e)}")
+        raise

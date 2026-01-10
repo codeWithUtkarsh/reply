@@ -202,3 +202,51 @@ class ReferralStats(BaseModel):
     min_withdrawal_amount: float
     can_withdraw: bool
     referrals: List[Referral]
+
+
+# Pay as You Go Models
+
+class CreditPackage(BaseModel):
+    id: str
+    name: str
+    display_name: str
+    video_learning_credits: int
+    notes_generation_credits: int
+    price_gbp: float
+    description: Optional[str] = None
+    is_popular: bool = False
+    discount_percentage: int = 0
+    badge_text: Optional[str] = None
+    is_active: bool = True
+    sort_order: int = 0
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class CreditPurchase(BaseModel):
+    id: str
+    user_id: str
+    package_id: str
+    package: Optional[CreditPackage] = None
+    video_learning_credits: int
+    notes_generation_credits: int
+    amount_gbp: float
+    polar_checkout_id: Optional[str] = None
+    polar_transaction_id: Optional[str] = None
+    status: str  # pending, completed, failed, refunded
+    completed_at: Optional[str] = None
+    metadata: Optional[Dict] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class CreditPurchaseCreate(BaseModel):
+    package_id: str
+
+
+class CreditPurchaseHistory(BaseModel):
+    purchases: List[CreditPurchase]
+    total_spent: float
+    total_video_credits: int
+    total_notes_credits: int
+

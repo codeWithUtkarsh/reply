@@ -29,16 +29,18 @@ class PolarService:
         customer_name: Optional[str] = None,
         success_url: Optional[str] = None,
         metadata: Optional[Dict] = None,
+        is_subscription: bool = True,
     ) -> Dict:
         """
         Create a Polar checkout session
 
         Args:
-            product_id: The Polar product ID for the subscription
+            product_id: The Polar product ID for the subscription or one-time product
             customer_email: Customer's email address
             customer_name: Customer's name
             success_url: URL to redirect after successful payment
             metadata: Additional metadata to attach to the checkout
+            is_subscription: Whether this is a subscription or one-time purchase
 
         Returns:
             Dict containing checkout session data including URL
@@ -59,6 +61,10 @@ class PolarService:
 
             if metadata:
                 payload["metadata"] = metadata
+
+            # For one-time purchases, set subscription to false
+            if not is_subscription:
+                payload["is_subscription"] = False
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
