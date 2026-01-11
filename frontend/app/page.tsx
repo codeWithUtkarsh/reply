@@ -686,6 +686,12 @@ export default function Home() {
               <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">
                 Start free or unlock unlimited learning with our flexible plans
               </p>
+
+              {/* New User Bonus Badge */}
+              <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-full">
+                <Gift className="w-5 h-5 text-emerald-400" />
+                <span className="text-emerald-400 font-medium">New users get $10 bonus credits on signup!</span>
+              </div>
             </div>
 
             {/* Pricing Cards */}

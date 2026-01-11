@@ -271,6 +271,12 @@ export default function PricingPage() {
         <div className="text-center mb-10 max-w-3xl mx-auto">
           <h2 className="text-3xl font-light text-white mb-3">Compare All Plans</h2>
           <p className="text-gray-400">Choose the plan that best fits your learning goals. Upgrade or downgrade anytime.</p>
+
+          {/* New User Bonus Badge */}
+          <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-full">
+            <Gift className="w-5 h-5 text-emerald-400" />
+            <span className="text-emerald-400 font-medium">New users get $10 bonus credits instantly!</span>
+          </div>
         </div>
 
         {/* Pricing Cards - 4 Column Grid */}
