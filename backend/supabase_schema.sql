@@ -194,27 +194,34 @@ ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
 -- Row Level Security Policies
 
 -- Users: Users can read their own data, admins can read all
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
 CREATE POLICY "Users can view own profile" ON users
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
 CREATE POLICY "Users can update own profile" ON users
     FOR UPDATE USING (auth.uid() = id);
 
 -- Projects: Users can only access their own projects
+DROP POLICY IF EXISTS "Users can view own projects" ON projects;
 CREATE POLICY "Users can view own projects" ON projects
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own projects" ON projects;
 CREATE POLICY "Users can create own projects" ON projects
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own projects" ON projects;
 CREATE POLICY "Users can update own projects" ON projects
     FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own projects" ON projects;
 CREATE POLICY "Users can delete own projects" ON projects
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Videos: Allow viewing videos (no direct ownership)
 -- Access control is managed through project_videos junction table
+DROP POLICY IF EXISTS "Users can view videos in their projects" ON videos;
 CREATE POLICY "Users can view videos in their projects" ON videos
     FOR SELECT USING (
         EXISTS (
@@ -226,10 +233,12 @@ CREATE POLICY "Users can view videos in their projects" ON videos
     );
 
 -- Allow backend service to insert videos (will use service_role key)
+DROP POLICY IF EXISTS "Allow video creation" ON videos;
 CREATE POLICY "Allow video creation" ON videos
     FOR INSERT WITH CHECK (true);
 
 -- Project-Videos junction table: Users can link videos to their own projects
+DROP POLICY IF EXISTS "Users can view their project-video links" ON project_videos;
 CREATE POLICY "Users can view their project-video links" ON project_videos
     FOR SELECT USING (
         EXISTS (
@@ -239,6 +248,7 @@ CREATE POLICY "Users can view their project-video links" ON project_videos
         )
     );
 
+DROP POLICY IF EXISTS "Users can link videos to their projects" ON project_videos;
 CREATE POLICY "Users can link videos to their projects" ON project_videos
     FOR INSERT WITH CHECK (
         EXISTS (
@@ -248,6 +258,7 @@ CREATE POLICY "Users can link videos to their projects" ON project_videos
         )
     );
 
+DROP POLICY IF EXISTS "Users can remove videos from their projects" ON project_videos;
 CREATE POLICY "Users can remove videos from their projects" ON project_videos
     FOR DELETE USING (
         EXISTS (
@@ -258,27 +269,35 @@ CREATE POLICY "Users can remove videos from their projects" ON project_videos
     );
 
 -- For now, allow all operations on other tables (modify for production)
+DROP POLICY IF EXISTS "Allow all operations on questions" ON questions;
 CREATE POLICY "Allow all operations on questions" ON questions
     FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow all operations on quizzes" ON quizzes;
 CREATE POLICY "Allow all operations on quizzes" ON quizzes
     FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users can access own progress" ON user_progress;
 CREATE POLICY "Users can access own progress" ON user_progress
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can access own quiz results" ON quiz_results;
 CREATE POLICY "Users can access own quiz results" ON quiz_results
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can access own attempts" ON user_attempts;
 CREATE POLICY "Users can access own attempts" ON user_attempts
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can access own reports" ON learning_reports;
 CREATE POLICY "Users can access own reports" ON learning_reports
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Allow all operations on video_notes" ON video_notes;
 CREATE POLICY "Allow all operations on video_notes" ON video_notes
     FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users can access own activity log" ON activity_log;
 CREATE POLICY "Users can access own activity log" ON activity_log
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
@@ -583,44 +602,56 @@ ALTER TABLE credit_packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE credit_purchases ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for credit_history
+DROP POLICY IF EXISTS "Users can view own credit history" ON credit_history;
 CREATE POLICY "Users can view own credit history" ON credit_history
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "System can insert credit history" ON credit_history;
 CREATE POLICY "System can insert credit history" ON credit_history
     FOR INSERT WITH CHECK (true);
 
 -- RLS Policies for pricing_plans
+DROP POLICY IF EXISTS "Anyone can view active pricing plans" ON pricing_plans;
 CREATE POLICY "Anyone can view active pricing plans" ON pricing_plans
     FOR SELECT USING (is_active = true);
 
+DROP POLICY IF EXISTS "Admins can manage pricing plans" ON pricing_plans;
 CREATE POLICY "Admins can manage pricing plans" ON pricing_plans
     FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
 -- RLS Policies for subscriptions
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON subscriptions;
 CREATE POLICY "Users can view own subscriptions" ON subscriptions
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "System can manage subscriptions" ON subscriptions;
 CREATE POLICY "System can manage subscriptions" ON subscriptions
     FOR ALL WITH CHECK (true);
 
 -- RLS Policies for referrals
+DROP POLICY IF EXISTS "Users can view referrals they made" ON referrals;
 CREATE POLICY "Users can view referrals they made" ON referrals
     FOR SELECT USING (auth.uid() = referrer_user_id);
 
+DROP POLICY IF EXISTS "System can manage referrals" ON referrals;
 CREATE POLICY "System can manage referrals" ON referrals
     FOR ALL WITH CHECK (true);
 
 -- RLS Policies for credit_packages
+DROP POLICY IF EXISTS "Anyone can view active credit packages" ON credit_packages;
 CREATE POLICY "Anyone can view active credit packages" ON credit_packages
     FOR SELECT USING (is_active = true);
 
+DROP POLICY IF EXISTS "Admins can manage credit packages" ON credit_packages;
 CREATE POLICY "Admins can manage credit packages" ON credit_packages
     FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
 -- RLS Policies for credit_purchases
+DROP POLICY IF EXISTS "Users can view own purchases" ON credit_purchases;
 CREATE POLICY "Users can view own purchases" ON credit_purchases
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "System can manage purchases" ON credit_purchases;
 CREATE POLICY "System can manage purchases" ON credit_purchases
     FOR ALL WITH CHECK (true);
 
