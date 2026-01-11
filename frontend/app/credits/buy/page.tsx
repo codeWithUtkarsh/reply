@@ -23,7 +23,7 @@ export default function BuyCreditsPage() {
   const { user } = useAuth();
   const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
+  const [purchasingPackageId, setPurchasingPackageId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [customAmount, setCustomAmount] = useState('');
   const [customPurchasing, setCustomPurchasing] = useState(false);
@@ -53,7 +53,7 @@ export default function BuyCreditsPage() {
       return;
     }
 
-    setPurchasing(true);
+    setPurchasingPackageId(packageId);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/credits/purchase/create?package_id=${packageId}&user_id=${user.id}&user_email=${user.email || ''}`,
@@ -81,7 +81,7 @@ export default function BuyCreditsPage() {
       console.error('Failed to purchase:', err);
       alert('Failed to start purchase. Please try again.');
     } finally {
-      setPurchasing(false);
+      setPurchasingPackageId(null);
     }
   };
 
@@ -282,10 +282,10 @@ export default function BuyCreditsPage() {
                   {/* Buy Button */}
                   <button
                     onClick={() => handlePurchase(pkg.id)}
-                    disabled={purchasing}
+                    disabled={purchasingPackageId !== null}
                     className={`w-full py-3 px-6 rounded-xl font-medium text-white transition-all ${colors.button} shadow-lg flex items-center justify-center gap-2`}
                   >
-                    {purchasing ? (
+                    {purchasingPackageId === pkg.id ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Processing...
