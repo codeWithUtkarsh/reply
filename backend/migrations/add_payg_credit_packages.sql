@@ -63,7 +63,7 @@ VALUES
         'Starter Pack',
         60,  -- 60 mins video
         240, -- 240 mins notes
-        5.00,
+        7.00,
         'Perfect for trying out the platform',
         false,
         0,
@@ -75,7 +75,7 @@ VALUES
         'Popular Pack',
         150, -- 150 mins video
         600, -- 600 mins notes
-        10.00,
+        13.00,
         'Most popular choice for casual learners',
         true,
         17, -- 17% discount vs buying monthly
@@ -87,7 +87,7 @@ VALUES
         'Power Pack',
         300, -- 300 mins video
         1200, -- 1200 mins notes
-        18.00,
+        24.00,
         'Great for heavy users',
         false,
         25, -- 25% discount
@@ -99,7 +99,7 @@ VALUES
         'Mega Pack',
         600, -- 600 mins video
         2500, -- 2500 mins notes
-        30.00,
+        40.00,
         'Maximum value for professionals',
         false,
         38, -- 38% discount

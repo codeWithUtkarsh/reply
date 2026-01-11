@@ -93,12 +93,12 @@ export default function BuyCreditsPage() {
 
     const amount = parseFloat(customAmount);
     if (!amount || amount < 1) {
-      alert('Please enter a valid amount (minimum £1)');
+      alert('Please enter a valid amount (minimum $1)');
       return;
     }
 
     if (amount > 1000) {
-      alert('Maximum amount is £1,000 per transaction');
+      alert('Maximum amount is $1,000 per transaction');
       return;
     }
 
@@ -243,7 +243,7 @@ export default function BuyCreditsPage() {
                   {/* Price */}
                   <div className="mb-4">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-white">£{pkg.price_gbp}</span>
+                      <span className="text-4xl font-bold text-white">${pkg.price_gbp}</span>
                       {pkg.discount_percentage > 0 && (
                         <span className="text-emerald-400 text-sm font-medium">
                           Save {pkg.discount_percentage}%

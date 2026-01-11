@@ -703,7 +703,7 @@ export default function Home() {
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-white">£0</span>
+                      <span className="text-4xl font-bold text-white">$0</span>
                       <span className="text-gray-500">/month</span>
                     </div>
                   </div>
@@ -757,7 +757,7 @@ export default function Home() {
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">£9</span>
+                      <span className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">$12</span>
                       <span className="text-gray-400">/month</span>
                     </div>
                   </div>
@@ -813,7 +813,7 @@ export default function Home() {
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">£59</span>
+                      <span className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">$79</span>
                       <span className="text-gray-400">/month</span>
                     </div>
                   </div>
@@ -873,7 +873,7 @@ export default function Home() {
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">From £5</span>
+                      <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">From $7</span>
                     </div>
                     <p className="text-sm text-cyan-400/70 mt-1">One-time • No subscription</p>
                   </div>

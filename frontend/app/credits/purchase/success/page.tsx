@@ -136,7 +136,7 @@ export default function CreditPurchaseSuccessPage() {
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-gray-700">
                     <span className="text-gray-400">Amount Paid</span>
-                    <span className="text-white font-medium">£{purchase.amount_gbp.toFixed(2)}</span>
+                    <span className="text-white font-medium">${purchase.amount_gbp.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

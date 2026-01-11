@@ -109,12 +109,12 @@ VALUES
     (
         'student',
         'Student',
-        9.00,
+        12.00,
         180,  -- 180 mins video learning credits
         900,  -- 900 mins notes generation
         20,   -- Save 20% of credits for maintaining streak
         15.00, -- 15% referral commission
-        20.00, -- Min withdrawal £20
+        27.00, -- Min withdrawal $27
         '{"priority_processing": false, "bulk_export": false}'::jsonb,
         2,
         'Perfect for students - 180 mins video learning and 900 mins notes generation with streak bonuses'
@@ -122,12 +122,12 @@ VALUES
     (
         'professional',
         'Professional',
-        59.00,
+        79.00,
         900,   -- 900 mins video learning credits
         5000,  -- 5000 mins notes generation
         50,    -- Save 50% of credits for maintaining streak
         15.00, -- 15% referral commission
-        10.00, -- Min withdrawal £10
+        13.00, -- Min withdrawal $13
         '{"priority_processing": true, "bulk_export": true}'::jsonb,
         3,
         'For professionals - 900 mins video learning and 5,000 mins notes generation with premium features'
