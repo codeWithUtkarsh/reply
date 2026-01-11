@@ -297,3 +297,382 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
+-- ============================================================================
+-- PRICING AND SUBSCRIPTION SYSTEM
+-- ============================================================================
+
+-- Add credit tracking columns to users table
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS transcription_credits INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS notes_credits INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS total_credits_purchased_video INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS total_credits_purchased_notes INTEGER DEFAULT 0;
+
+-- Credit history table for tracking credit changes
+CREATE TABLE IF NOT EXISTS credit_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    credit_type VARCHAR(50) NOT NULL,
+    amount INTEGER NOT NULL,
+    operation VARCHAR(20) NOT NULL,
+    balance_before INTEGER NOT NULL,
+    balance_after INTEGER NOT NULL,
+    description TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Pricing plans table
+CREATE TABLE IF NOT EXISTS pricing_plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(50) NOT NULL UNIQUE,
+    display_name VARCHAR(100) NOT NULL,
+    price_gbp DECIMAL(10, 2) NOT NULL DEFAULT 0.00,  -- Stores USD despite column name
+    billing_period VARCHAR(20) DEFAULT 'monthly',
+
+    -- Credit allocations (in minutes)
+    video_learning_credits INTEGER NOT NULL DEFAULT 0,
+    notes_generation_credits INTEGER NOT NULL DEFAULT 0,
+
+    -- Streak savings percentage
+    streak_credit_save_percentage INTEGER DEFAULT 0,
+
+    -- Referral program
+    referral_percentage DECIMAL(5, 2) DEFAULT 0.00,
+    min_withdrawal_gbp DECIMAL(10, 2) DEFAULT 0.00,  -- Stores USD despite column name
+
+    -- Features (stored as JSONB for flexibility)
+    features JSONB DEFAULT '{}',
+
+    -- Plan metadata
+    is_active BOOLEAN DEFAULT true,
+    sort_order INTEGER DEFAULT 0,
+    description TEXT,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Subscriptions table
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    plan_id UUID NOT NULL REFERENCES pricing_plans(id),
+
+    -- Subscription status
+    status VARCHAR(20) NOT NULL DEFAULT 'active',
+
+    -- Billing dates
+    start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    current_period_start TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    current_period_end TIMESTAMP WITH TIME ZONE,
+    cancelled_at TIMESTAMP WITH TIME ZONE,
+
+    -- Payment tracking (Polar)
+    stripe_subscription_id VARCHAR(255),  -- Used for Polar checkout ID
+    stripe_customer_id VARCHAR(255),
+
+    -- Credits tracking (remaining credits for current period)
+    video_learning_credits_remaining INTEGER DEFAULT 0,
+    notes_generation_credits_remaining INTEGER DEFAULT 0,
+    credits_reset_at TIMESTAMP WITH TIME ZONE,
+
+    -- Metadata
+    metadata JSONB DEFAULT '{}',
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Referrals table
+CREATE TABLE IF NOT EXISTS referrals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    referrer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    referred_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Referral tracking
+    referral_code VARCHAR(50),
+    commission_percentage DECIMAL(5, 2) NOT NULL,
+    commission_amount_gbp DECIMAL(10, 2) DEFAULT 0.00,  -- Stores USD despite column name
+
+    -- Payment status
+    payment_status VARCHAR(20) DEFAULT 'pending',
+    paid_at TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    CONSTRAINT unique_referred_user UNIQUE (referred_user_id)
+);
+
+-- Credit packages table (Pay as You Go)
+CREATE TABLE IF NOT EXISTS credit_packages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+
+    -- Credits included
+    video_learning_credits INTEGER NOT NULL DEFAULT 0,
+    notes_generation_credits INTEGER NOT NULL DEFAULT 0,
+
+    -- Pricing
+    price_gbp DECIMAL(10, 2) NOT NULL,  -- Stores USD despite column name
+
+    -- Marketing
+    description TEXT,
+    is_popular BOOLEAN DEFAULT false,
+    discount_percentage INTEGER DEFAULT 0,
+    badge_text VARCHAR(50),
+
+    -- Status
+    is_active BOOLEAN DEFAULT true,
+    sort_order INTEGER DEFAULT 0,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Credit purchases table
+CREATE TABLE IF NOT EXISTS credit_purchases (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    package_id UUID REFERENCES credit_packages(id),  -- Nullable for custom purchases
+
+    -- Purchase details
+    video_learning_credits INTEGER NOT NULL,
+    notes_generation_credits INTEGER NOT NULL,
+    amount_gbp DECIMAL(10, 2) NOT NULL,  -- Stores USD despite column name
+
+    -- Payment tracking
+    polar_checkout_id VARCHAR(255),
+    polar_transaction_id VARCHAR(255),
+
+    -- Status
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    completed_at TIMESTAMP WITH TIME ZONE,
+
+    -- Metadata
+    metadata JSONB DEFAULT '{}',
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insert default pricing plans (USD pricing)
+INSERT INTO pricing_plans (name, display_name, price_gbp, video_learning_credits, notes_generation_credits,
+                          streak_credit_save_percentage, referral_percentage, min_withdrawal_gbp, features, sort_order, description)
+VALUES
+    (
+        'free',
+        'Free',
+        0.00,
+        75,
+        300,
+        0,
+        10.00,
+        0.00,
+        '{"sessions_estimate": "5-7 full learning sessions", "priority_processing": false, "bulk_export": false}'::jsonb,
+        1,
+        '75 mins video learning credits (about 5-7 full learning sessions) and 300 mins notes generation'
+    ),
+    (
+        'student',
+        'Student',
+        12.00,
+        180,
+        900,
+        20,
+        15.00,
+        27.00,
+        '{"priority_processing": false, "bulk_export": false}'::jsonb,
+        2,
+        'Perfect for students - 180 mins video learning and 900 mins notes generation with streak bonuses'
+    ),
+    (
+        'professional',
+        'Professional',
+        79.00,
+        900,
+        5000,
+        50,
+        15.00,
+        13.00,
+        '{"priority_processing": true, "bulk_export": true}'::jsonb,
+        3,
+        'For professionals - 900 mins video learning and 5,000 mins notes generation with premium features'
+    )
+ON CONFLICT (name) DO NOTHING;
+
+-- Insert default credit packages (USD pricing)
+INSERT INTO credit_packages (name, display_name, video_learning_credits, notes_generation_credits,
+                            price_gbp, description, is_popular, discount_percentage, badge_text, sort_order)
+VALUES
+    (
+        'starter',
+        'Starter Pack',
+        60,
+        240,
+        7.00,
+        'Perfect for trying out the platform',
+        false,
+        0,
+        NULL,
+        1
+    ),
+    (
+        'popular',
+        'Popular Pack',
+        150,
+        600,
+        13.00,
+        'Most popular choice for casual learners',
+        true,
+        17,
+        'Best Value',
+        2
+    ),
+    (
+        'power',
+        'Power Pack',
+        300,
+        1200,
+        24.00,
+        'Great for heavy users',
+        false,
+        25,
+        'Save 25%',
+        3
+    ),
+    (
+        'mega',
+        'Mega Pack',
+        600,
+        2500,
+        40.00,
+        'Maximum value for professionals',
+        false,
+        38,
+        'Save 38%',
+        4
+    )
+ON CONFLICT DO NOTHING;
+
+-- Indexes for pricing tables
+CREATE INDEX IF NOT EXISTS idx_credit_history_user_id ON credit_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_plan_id ON subscriptions(plan_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_subscription_id ON subscriptions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer_user_id ON referrals(referrer_user_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referred_user_id ON referrals(referred_user_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_payment_status ON referrals(payment_status);
+CREATE INDEX IF NOT EXISTS idx_credit_packages_active ON credit_packages(is_active);
+CREATE INDEX IF NOT EXISTS idx_credit_packages_sort ON credit_packages(sort_order);
+CREATE INDEX IF NOT EXISTS idx_credit_purchases_user_id ON credit_purchases(user_id);
+CREATE INDEX IF NOT EXISTS idx_credit_purchases_status ON credit_purchases(status);
+CREATE INDEX IF NOT EXISTS idx_credit_purchases_polar_checkout ON credit_purchases(polar_checkout_id);
+
+-- Enable Row Level Security
+ALTER TABLE credit_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pricing_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE credit_packages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE credit_purchases ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for credit_history
+CREATE POLICY "Users can view own credit history" ON credit_history
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "System can insert credit history" ON credit_history
+    FOR INSERT WITH CHECK (true);
+
+-- RLS Policies for pricing_plans
+CREATE POLICY "Anyone can view active pricing plans" ON pricing_plans
+    FOR SELECT USING (is_active = true);
+
+CREATE POLICY "Admins can manage pricing plans" ON pricing_plans
+    FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+
+-- RLS Policies for subscriptions
+CREATE POLICY "Users can view own subscriptions" ON subscriptions
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "System can manage subscriptions" ON subscriptions
+    FOR ALL WITH CHECK (true);
+
+-- RLS Policies for referrals
+CREATE POLICY "Users can view referrals they made" ON referrals
+    FOR SELECT USING (auth.uid() = referrer_user_id);
+
+CREATE POLICY "System can manage referrals" ON referrals
+    FOR ALL WITH CHECK (true);
+
+-- RLS Policies for credit_packages
+CREATE POLICY "Anyone can view active credit packages" ON credit_packages
+    FOR SELECT USING (is_active = true);
+
+CREATE POLICY "Admins can manage credit packages" ON credit_packages
+    FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+
+-- RLS Policies for credit_purchases
+CREATE POLICY "Users can view own purchases" ON credit_purchases
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "System can manage purchases" ON credit_purchases
+    FOR ALL WITH CHECK (true);
+
+-- Function to apply credit purchases
+CREATE OR REPLACE FUNCTION apply_credit_purchase()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'completed' AND (OLD IS NULL OR OLD.status != 'completed') THEN
+        -- Add credits to user's account
+        UPDATE users
+        SET
+            transcription_credits = COALESCE(transcription_credits, 0) + NEW.video_learning_credits,
+            notes_credits = COALESCE(notes_credits, 0) + NEW.notes_generation_credits,
+            total_credits_purchased_video = COALESCE(total_credits_purchased_video, 0) + NEW.video_learning_credits,
+            total_credits_purchased_notes = COALESCE(total_credits_purchased_notes, 0) + NEW.notes_generation_credits,
+            updated_at = NOW()
+        WHERE id = NEW.user_id;
+
+        -- Log video credits
+        INSERT INTO credit_history (
+            user_id, credit_type, amount, operation,
+            balance_before, balance_after, description, metadata
+        )
+        SELECT
+            NEW.user_id, 'transcription', NEW.video_learning_credits, 'add',
+            u.transcription_credits - NEW.video_learning_credits,
+            u.transcription_credits,
+            'Pay as You Go credit purchase',
+            jsonb_build_object('purchase_id', NEW.id, 'package_id', NEW.package_id, 'amount_paid', NEW.amount_gbp)
+        FROM users u WHERE u.id = NEW.user_id;
+
+        -- Log notes credits
+        INSERT INTO credit_history (
+            user_id, credit_type, amount, operation,
+            balance_before, balance_after, description, metadata
+        )
+        SELECT
+            NEW.user_id, 'notes', NEW.notes_generation_credits, 'add',
+            u.notes_credits - NEW.notes_generation_credits,
+            u.notes_credits,
+            'Pay as You Go credit purchase',
+            jsonb_build_object('purchase_id', NEW.id, 'package_id', NEW.package_id, 'amount_paid', NEW.amount_gbp)
+        FROM users u WHERE u.id = NEW.user_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to auto-apply credits
+DROP TRIGGER IF EXISTS apply_credit_purchase_trigger ON credit_purchases;
+CREATE TRIGGER apply_credit_purchase_trigger
+    AFTER INSERT OR UPDATE ON credit_purchases
+    FOR EACH ROW
+    EXECUTE FUNCTION apply_credit_purchase();
