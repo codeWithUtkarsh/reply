@@ -1,12 +1,44 @@
 -- Migration: Create Credit History View with Details
 -- Date: 2026-01-17
--- Description: Creates a view that joins credit_history with videos and projects tables
---              to provide detailed transaction information for the credits page
+-- Description: Adds missing columns to credit_history table and creates a view that
+--              joins credit_history with videos and projects tables to provide
+--              detailed transaction information for the credits page
 
--- Drop the view if it exists (for re-running the migration)
+-- Step 1: Add missing columns to credit_history table if they don't exist
+-- Check and add video_id column
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'credit_history' AND column_name = 'video_id'
+    ) THEN
+        ALTER TABLE credit_history
+        ADD COLUMN video_id VARCHAR(255) REFERENCES videos(id) ON DELETE SET NULL;
+
+        -- Create index for video_id
+        CREATE INDEX IF NOT EXISTS idx_credit_history_video_id ON credit_history(video_id);
+    END IF;
+END $$;
+
+-- Check and add project_id column
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'credit_history' AND column_name = 'project_id'
+    ) THEN
+        ALTER TABLE credit_history
+        ADD COLUMN project_id UUID REFERENCES projects(id) ON DELETE SET NULL;
+
+        -- Create index for project_id
+        CREATE INDEX IF NOT EXISTS idx_credit_history_project_id ON credit_history(project_id);
+    END IF;
+END $$;
+
+-- Step 2: Drop the view if it exists (for re-running the migration)
 DROP VIEW IF EXISTS credit_history_with_details;
 
--- Create the view for easy credit history reporting
+-- Step 3: Create the view for easy credit history reporting
 CREATE OR REPLACE VIEW credit_history_with_details AS
 SELECT
     ch.id,
