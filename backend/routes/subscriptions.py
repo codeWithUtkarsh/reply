@@ -559,6 +559,7 @@ async def create_polar_checkout(
             customer_email=user_email,
             customer_name=user_name,
             success_url=success_url,
+            allow_discount_codes=True,  # Allow users to enter discount codes
             metadata={
                 "user_id": user_id,
                 "plan_id": plan_id,
@@ -935,6 +936,7 @@ async def create_credit_purchase(
             customer_email=user_email,
             success_url=success_url,
             is_subscription=False,  # One-time purchase
+            allow_discount_codes=True,  # Allow users to enter discount codes
             metadata={
                 "user_id": user_id,
                 "purchase_id": purchase['id'],
@@ -1038,6 +1040,7 @@ async def create_custom_credit_purchase(
             customer_email=user_email,
             success_url=success_url,
             is_subscription=False,  # One-time purchase
+            allow_discount_codes=True,  # Allow users to enter discount codes
             metadata={
                 "user_id": user_id,
                 "purchase_id": purchase['id'],

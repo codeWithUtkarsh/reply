@@ -30,6 +30,7 @@ class PolarService:
         success_url: Optional[str] = None,
         metadata: Optional[Dict] = None,
         is_subscription: bool = True,
+        allow_discount_codes: bool = False,
     ) -> Dict:
         """
         Create a Polar checkout session
@@ -41,6 +42,7 @@ class PolarService:
             success_url: URL to redirect after successful payment
             metadata: Additional metadata to attach to the checkout
             is_subscription: Whether this is a subscription or one-time purchase
+            allow_discount_codes: Whether to allow customers to enter discount codes at checkout
 
         Returns:
             Dict containing checkout session data including URL
@@ -66,6 +68,10 @@ class PolarService:
             # For one-time purchases, set subscription to false
             if not is_subscription:
                 payload["is_subscription"] = False
+
+            # Enable discount codes if requested
+            if allow_discount_codes:
+                payload["allow_discount_codes"] = True
 
             async with httpx.AsyncClient(follow_redirects=True) as client:
                 response = await client.post(
