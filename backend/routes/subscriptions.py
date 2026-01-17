@@ -559,6 +559,7 @@ async def create_polar_checkout(
             customer_email=user_email,
             customer_name=user_name,
             success_url=success_url,
+            allow_discount_codes=True,  # Allow users to enter discount codes
             metadata={
                 "user_id": user_id,
                 "plan_id": plan_id,
@@ -935,6 +936,7 @@ async def create_credit_purchase(
             customer_email=user_email,
             success_url=success_url,
             is_subscription=False,  # One-time purchase
+            allow_discount_codes=True,  # Allow users to enter discount codes
             metadata={
                 "user_id": user_id,
                 "purchase_id": purchase['id'],
@@ -1038,6 +1040,7 @@ async def create_custom_credit_purchase(
             customer_email=user_email,
             success_url=success_url,
             is_subscription=False,  # One-time purchase
+            allow_discount_codes=True,  # Allow users to enter discount codes
             metadata={
                 "user_id": user_id,
                 "purchase_id": purchase['id'],
@@ -1167,17 +1170,46 @@ async def credit_purchase_success(purchase_id: str):
 async def handle_credit_purchase_completed(event_data: Dict):
     """
     Handle successful credit purchase completion
+    Marks purchase as completed and adds credits to user's account
     """
     try:
         checkout_data = event_data.get("data", {})
         metadata = checkout_data.get("metadata", {})
-        
+
         purchase_id = metadata.get("purchase_id")
-        
+
         if not purchase_id:
             print(f"Missing purchase_id in checkout metadata: {metadata}")
             return
-        
+
+        # Get purchase details first
+        purchase_response = await run_in_threadpool(
+            lambda: db.client.table('credit_purchases')
+            .select('*')
+            .eq('id', purchase_id)
+            .single()
+            .execute()
+        )
+
+        if not purchase_response.data:
+            print(f"Purchase not found: {purchase_id}")
+            return
+
+        purchase = purchase_response.data
+        user_id = purchase['user_id']
+        video_credits = purchase['video_learning_credits']
+        notes_credits = purchase['notes_generation_credits']
+        amount_gbp = purchase['amount_gbp']
+
+        # Get user's current credit balance for logging
+        user = await db.get_user_profile(user_id)
+        if not user:
+            print(f"User not found: {user_id}")
+            return
+
+        video_balance_before = user.get('transcription_credits', 0)
+        notes_balance_before = user.get('notes_credits', 0)
+
         # Update purchase status to completed
         await run_in_threadpool(
             lambda: db.client.table('credit_purchases')
@@ -1190,9 +1222,58 @@ async def handle_credit_purchase_completed(event_data: Dict):
             .eq('id', purchase_id)
             .execute()
         )
-        
-        print(f"Credit purchase completed: {purchase_id}")
-        
+
+        # Add credits to user's account
+        await db.add_credits(
+            user_id=user_id,
+            transcription_credits=video_credits,
+            notes_credits=notes_credits
+        )
+
+        # Log video credits transaction in credit_history
+        await run_in_threadpool(
+            lambda: db.client.table('credit_history')
+            .insert({
+                'user_id': user_id,
+                'credit_type': 'transcription',
+                'amount': video_credits,
+                'operation': 'add',
+                'balance_before': video_balance_before,
+                'balance_after': video_balance_before + video_credits,
+                'description': f'Credit purchase - {amount_gbp} GBP',
+                'metadata': {
+                    'purchase_id': purchase_id,
+                    'package_id': purchase.get('package_id'),
+                    'amount_gbp': str(amount_gbp),
+                    'source': 'credit_purchase'
+                }
+            })
+            .execute()
+        )
+
+        # Log notes credits transaction in credit_history
+        await run_in_threadpool(
+            lambda: db.client.table('credit_history')
+            .insert({
+                'user_id': user_id,
+                'credit_type': 'notes',
+                'amount': notes_credits,
+                'operation': 'add',
+                'balance_before': notes_balance_before,
+                'balance_after': notes_balance_before + notes_credits,
+                'description': f'Credit purchase - {amount_gbp} GBP',
+                'metadata': {
+                    'purchase_id': purchase_id,
+                    'package_id': purchase.get('package_id'),
+                    'amount_gbp': str(amount_gbp),
+                    'source': 'credit_purchase'
+                }
+            })
+            .execute()
+        )
+
+        print(f"Credit purchase completed: {purchase_id} - Added {video_credits} video credits and {notes_credits} notes credits to user {user_id}")
+
     except Exception as e:
         print(f"Error handling credit purchase completed: {str(e)}")
         raise
