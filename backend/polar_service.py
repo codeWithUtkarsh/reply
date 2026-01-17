@@ -48,6 +48,7 @@ class PolarService:
         try:
             payload = {
                 "product_id": product_id,
+                    "allow_discount_codes": True,
             }
 
             if customer_email:
