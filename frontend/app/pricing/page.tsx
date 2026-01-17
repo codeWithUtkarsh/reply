@@ -275,7 +275,7 @@ export default function PricingPage() {
           {/* New User Bonus Badge */}
           <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-full">
             <Gift className="w-5 h-5 text-emerald-400" />
-            <span className="text-emerald-400 font-medium">New users get $10 bonus credits instantly!</span>
+            <span className="text-emerald-400 font-medium">New users get 500 bonus credits instantly!</span>
           </div>
         </div>
 
@@ -370,7 +370,7 @@ export default function PricingPage() {
 
               <div className="mb-8">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">$12</span>
+                  <span className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">$10</span>
                   <span className="text-gray-400">/month</span>
                 </div>
               </div>
@@ -446,7 +446,7 @@ export default function PricingPage() {
 
               <div className="mb-8">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">$79</span>
+                  <span className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">$49</span>
                   <span className="text-gray-400">/month</span>
                 </div>
               </div>
@@ -511,7 +511,7 @@ export default function PricingPage() {
 
               <div className="mb-8">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">From $7</span>
+                  <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">From $5</span>
                 </div>
                 <p className="text-sm text-cyan-400/70 mt-1">One-time • No subscription</p>
               </div>

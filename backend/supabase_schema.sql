@@ -302,16 +302,16 @@ CREATE POLICY "Users can access own activity log" ON activity_log
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- Function to automatically create user profile on signup
--- Gives new users a $10 welcome bonus (85 video credits + 340 notes credits)
+-- Gives new users 500 credits welcome bonus (250 video credits + 250 notes credits)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
-    bonus_video_credits INTEGER := 85;  -- Approx $10 worth based on $7 = 60 credits
-    bonus_notes_credits INTEGER := 340; -- Approx $10 worth based on $7 = 240 credits
+    bonus_video_credits INTEGER := 250;  -- 250 video credits from 500 total bonus
+    bonus_notes_credits INTEGER := 250;  -- 250 notes credits from 500 total bonus
 BEGIN
     -- Create user profile with welcome bonus
     INSERT INTO public.users (id, role, credit_available, transcription_credits, notes_credits)
-    VALUES (NEW.id, 'user', 10, bonus_video_credits, bonus_notes_credits);
+    VALUES (NEW.id, 'user', 500, bonus_video_credits, bonus_notes_credits);
 
     -- Log video credits bonus in credit_history
     INSERT INTO public.credit_history (
@@ -331,7 +331,7 @@ BEGIN
         0,
         bonus_video_credits,
         'Welcome bonus - New user signup',
-        jsonb_build_object('bonus_type', 'signup', 'bonus_value_usd', 10)
+        jsonb_build_object('bonus_type', 'signup', 'bonus_value_credits', 500)
     );
 
     -- Log notes credits bonus in credit_history
@@ -352,7 +352,7 @@ BEGIN
         0,
         bonus_notes_credits,
         'Welcome bonus - New user signup',
-        jsonb_build_object('bonus_type', 'signup', 'bonus_value_usd', 10)
+        jsonb_build_object('bonus_type', 'signup', 'bonus_value_credits', 500)
     );
 
     RETURN NEW;
@@ -547,7 +547,7 @@ VALUES
     (
         'student',
         'Student',
-        12.00,
+        10.00,
         180,
         900,
         20,
@@ -560,7 +560,7 @@ VALUES
     (
         'professional',
         'Professional',
-        79.00,
+        49.00,
         900,
         5000,
         50,
@@ -581,7 +581,7 @@ VALUES
         'Starter Pack',
         60,
         240,
-        7.00,
+        5.00,
         'Perfect for trying out the platform',
         false,
         0,
