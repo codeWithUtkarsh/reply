@@ -861,37 +861,14 @@ class Database:
         """Get credit transaction history for a user"""
         try:
             result = await run_in_threadpool(
-                lambda: self.client.from_("credit_history")
-                .select("id, user_id, video_id, project_id, credit_type, amount, operation, balance_before, balance_after, description, metadata, created_at, videos(title), projects(project_name)")
+                lambda: self.client.from_("credit_history_with_details")
+                .select("*")
                 .eq("user_id", user_id)
                 .order("created_at", desc=True)
                 .limit(limit)
                 .execute()
             )
-
-            # Flatten the nested structure from foreign key expansion
-            if result.data:
-                flattened_data = []
-                for entry in result.data:
-                    flattened_entry = {
-                        "id": entry.get("id"),
-                        "user_id": entry.get("user_id"),
-                        "video_id": entry.get("video_id"),
-                        "video_title": entry.get("videos", {}).get("title") if entry.get("videos") else None,
-                        "project_id": entry.get("project_id"),
-                        "project_name": entry.get("projects", {}).get("project_name") if entry.get("projects") else None,
-                        "credit_type": entry.get("credit_type"),
-                        "amount": entry.get("amount"),
-                        "operation": entry.get("operation"),
-                        "balance_before": entry.get("balance_before"),
-                        "balance_after": entry.get("balance_after"),
-                        "description": entry.get("description"),
-                        "metadata": entry.get("metadata"),
-                        "created_at": entry.get("created_at"),
-                    }
-                    flattened_data.append(flattened_entry)
-                return flattened_data
-            return []
+            return result.data or []
         except Exception as e:
             logger.error(f"Failed to fetch credit history: {str(e)}")
             return []
