@@ -342,10 +342,11 @@ async def get_user_analytics(user_id: str):
                 pass
 
             # Calculate mean score across all attempts
-            mean_score = round(sum(a['score'] for a in attempts) / len(attempts), 2)
+            mean_score = round(sum(a['score'] for a in attempts) / len(attempts), 1)
 
             # Get most recent attempt date
-            latest_date = max(a['date_taken'] for a in attempts if a['date_taken'])
+            dates_with_values = [a['date_taken'] for a in attempts if a['date_taken']]
+            latest_date = max(dates_with_values) if dates_with_values else None
 
             # Use data from first attempt for domain and video_type (should be same for all)
             first_attempt = attempts[0]
