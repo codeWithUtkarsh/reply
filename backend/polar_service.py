@@ -50,7 +50,6 @@ class PolarService:
         try:
             payload = {
                 "product_id": product_id,
-                    "allow_discount_codes": True,
             }
 
             if customer_email:
@@ -73,6 +72,8 @@ class PolarService:
             if allow_discount_codes:
                 payload["allow_discount_codes"] = True
 
+            logger.info(f"Creating Polar checkout with payload: {payload}")
+
             async with httpx.AsyncClient(follow_redirects=True) as client:
                 response = await client.post(
                     f"{self.base_url}/checkouts",
@@ -84,6 +85,11 @@ class PolarService:
                 response.raise_for_status()
                 return response.json()
 
+        except httpx.HTTPStatusError as e:
+            error_detail = e.response.text if hasattr(e, 'response') else str(e)
+            logger.error(f"Failed to create Polar checkout session: {str(e)}")
+            logger.error(f"Response body: {error_detail}")
+            raise Exception(f"Polar API error: {str(e)} - {error_detail}")
         except httpx.HTTPError as e:
             logger.error(f"Failed to create Polar checkout session: {str(e)}")
             raise Exception(f"Polar API error: {str(e)}")
