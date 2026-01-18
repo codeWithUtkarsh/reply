@@ -381,6 +381,8 @@ ADD COLUMN IF NOT EXISTS total_credits_purchased_notes INTEGER DEFAULT 0;
 CREATE TABLE IF NOT EXISTS credit_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    video_id VARCHAR(255) REFERENCES videos(id) ON DELETE SET NULL,
+    project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
     credit_type VARCHAR(50) NOT NULL,
     amount INTEGER NOT NULL,
     operation VARCHAR(20) NOT NULL,
@@ -628,6 +630,10 @@ ON CONFLICT DO NOTHING;
 
 -- Indexes for pricing tables
 CREATE INDEX IF NOT EXISTS idx_credit_history_user_id ON credit_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_credit_history_video_id ON credit_history(video_id);
+CREATE INDEX IF NOT EXISTS idx_credit_history_project_id ON credit_history(project_id);
+CREATE INDEX IF NOT EXISTS idx_credit_history_created_at ON credit_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_credit_history_credit_type ON credit_history(credit_type);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_plan_id ON subscriptions(plan_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
@@ -640,6 +646,33 @@ CREATE INDEX IF NOT EXISTS idx_credit_packages_sort ON credit_packages(sort_orde
 CREATE INDEX IF NOT EXISTS idx_credit_purchases_user_id ON credit_purchases(user_id);
 CREATE INDEX IF NOT EXISTS idx_credit_purchases_status ON credit_purchases(status);
 CREATE INDEX IF NOT EXISTS idx_credit_purchases_polar_checkout ON credit_purchases(polar_checkout_id);
+
+-- Views
+-- Credit history with details view (joins with videos and projects)
+CREATE OR REPLACE VIEW credit_history_with_details AS
+SELECT
+    ch.id,
+    ch.user_id,
+    ch.video_id,
+    v.title as video_title,
+    ch.project_id,
+    p.project_name,
+    ch.credit_type,
+    ch.amount,
+    ch.operation,
+    ch.balance_before,
+    ch.balance_after,
+    ch.description,
+    ch.metadata,
+    ch.created_at
+FROM credit_history ch
+LEFT JOIN videos v ON ch.video_id = v.id
+LEFT JOIN projects p ON ch.project_id = p.id
+ORDER BY ch.created_at DESC;
+
+-- Grant access to the view
+GRANT SELECT ON credit_history_with_details TO authenticated;
+GRANT SELECT ON credit_history_with_details TO service_role;
 
 -- Enable Row Level Security
 ALTER TABLE credit_history ENABLE ROW LEVEL SECURITY;
