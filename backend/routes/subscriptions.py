@@ -596,8 +596,9 @@ async def create_polar_checkout(
             )
         
         # Create success URL
+        # Polar automatically appends 'checkout_id' as query parameter on redirect
         frontend_url = settings.cors_origins.split(',')[0]  # Get first origin
-        success_url = f"{frontend_url}/pricing/success?session_id={{CHECKOUT_ID}}"
+        success_url = f"{frontend_url}/pricing/success"
         
         # Create checkout session
         checkout_session = await polar_service.create_checkout_session(
@@ -1023,7 +1024,8 @@ async def create_credit_purchase(
         
         # Create success URL
         frontend_url = settings.cors_origins.split(',')[0]
-        success_url = f"{frontend_url}/credits/purchase/success?purchase_id={{CHECKOUT_ID}}"
+        # Polar automatically appends 'checkout_id' as query parameter
+        success_url = f"{frontend_url}/credits/purchase/success"
         
         # Create one-time checkout session
         checkout_session = await polar_service.create_checkout_session(
@@ -1127,7 +1129,8 @@ async def create_custom_credit_purchase(
 
         # Create success URL
         frontend_url = settings.cors_origins.split(',')[0]
-        success_url = f"{frontend_url}/credits/purchase/success?purchase_id={{CHECKOUT_ID}}"
+        # Polar automatically appends 'checkout_id' as query parameter
+        success_url = f"{frontend_url}/credits/purchase/success"
 
         # Create one-time checkout session with custom amount
         checkout_session = await polar_service.create_checkout_session(

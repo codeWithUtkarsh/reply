@@ -15,7 +15,8 @@ export default function PaymentSuccessPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
+    // Polar sends 'checkout_id' in the redirect, fallback to 'session_id'
+    const sessionId = searchParams.get('checkout_id') || searchParams.get('session_id');
 
     if (!sessionId) {
       setStatus('error');
