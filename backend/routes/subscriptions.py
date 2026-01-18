@@ -219,13 +219,59 @@ async def create_subscription(user_id: str, subscription: SubscriptionCreate):
     if not response.data:
         raise HTTPException(status_code=500, detail="Failed to create subscription")
 
+    created_subscription = response.data[0]
+
+    # Log video learning credits to credit_history
+    if plan.video_learning_credits > 0:
+        await run_in_threadpool(
+            lambda: db.client.table('credit_history').insert({
+                'user_id': user_id,
+                'credit_type': 'transcription',
+                'amount': plan.video_learning_credits,
+                'operation': 'add',
+                'balance_before': 0,  # Subscription credits are separate from pay-as-you-go
+                'balance_after': plan.video_learning_credits,
+                'description': f"Subscription credit allocation - {plan.display_name}",
+                'metadata': json.dumps({
+                    'subscription_id': created_subscription['id'],
+                    'plan_id': plan.id,
+                    'plan_name': plan.name,
+                    'billing_period': plan.billing_period,
+                    'period_start': created_subscription['current_period_start'],
+                    'period_end': created_subscription['current_period_end']
+                })
+            }).execute()
+        )
+
+    # Log notes generation credits to credit_history
+    if plan.notes_generation_credits > 0:
+        await run_in_threadpool(
+            lambda: db.client.table('credit_history').insert({
+                'user_id': user_id,
+                'credit_type': 'notes',
+                'amount': plan.notes_generation_credits,
+                'operation': 'add',
+                'balance_before': 0,  # Subscription credits are separate from pay-as-you-go
+                'balance_after': plan.notes_generation_credits,
+                'description': f"Subscription credit allocation - {plan.display_name}",
+                'metadata': json.dumps({
+                    'subscription_id': created_subscription['id'],
+                    'plan_id': plan.id,
+                    'plan_name': plan.name,
+                    'billing_period': plan.billing_period,
+                    'period_start': created_subscription['current_period_start'],
+                    'period_end': created_subscription['current_period_end']
+                })
+            }).execute()
+        )
+
     # Handle referral if provided
     if subscription.referral_code:
         # Find referrer by referral code (you may need to implement referral code generation)
         # For now, we'll skip this part - can be implemented later
         pass
 
-    return row_to_subscription(response.data[0], plan)
+    return row_to_subscription(created_subscription, plan)
 
 
 @router.patch("/subscription/{subscription_id}", response_model=Subscription)
@@ -704,14 +750,63 @@ async def handle_checkout_completed(event_data: Dict):
             }
         }
         
-        await run_in_threadpool(
+        response = await run_in_threadpool(
             lambda: db.client.table('subscriptions')
             .insert(new_subscription)
             .execute()
         )
-        
+
+        if response.data:
+            created_subscription = response.data[0]
+
+            # Log video learning credits to credit_history
+            if plan.video_learning_credits > 0:
+                await run_in_threadpool(
+                    lambda: db.client.table('credit_history').insert({
+                        'user_id': user_id,
+                        'credit_type': 'transcription',
+                        'amount': plan.video_learning_credits,
+                        'operation': 'add',
+                        'balance_before': 0,
+                        'balance_after': plan.video_learning_credits,
+                        'description': f"Subscription credit allocation - {plan.display_name}",
+                        'metadata': json.dumps({
+                            'subscription_id': created_subscription['id'],
+                            'plan_id': plan.id,
+                            'plan_name': plan.name,
+                            'billing_period': plan.billing_period,
+                            'period_start': created_subscription['current_period_start'],
+                            'period_end': created_subscription['current_period_end'],
+                            'polar_checkout_id': checkout_data.get('id')
+                        })
+                    }).execute()
+                )
+
+            # Log notes generation credits to credit_history
+            if plan.notes_generation_credits > 0:
+                await run_in_threadpool(
+                    lambda: db.client.table('credit_history').insert({
+                        'user_id': user_id,
+                        'credit_type': 'notes',
+                        'amount': plan.notes_generation_credits,
+                        'operation': 'add',
+                        'balance_before': 0,
+                        'balance_after': plan.notes_generation_credits,
+                        'description': f"Subscription credit allocation - {plan.display_name}",
+                        'metadata': json.dumps({
+                            'subscription_id': created_subscription['id'],
+                            'plan_id': plan.id,
+                            'plan_name': plan.name,
+                            'billing_period': plan.billing_period,
+                            'period_start': created_subscription['current_period_start'],
+                            'period_end': created_subscription['current_period_end'],
+                            'polar_checkout_id': checkout_data.get('id')
+                        })
+                    }).execute()
+                )
+
         print(f"Subscription created for user {user_id}, plan {plan.display_name}")
-        
+
     except Exception as e:
         print(f"Error handling checkout completed: {str(e)}")
         raise
