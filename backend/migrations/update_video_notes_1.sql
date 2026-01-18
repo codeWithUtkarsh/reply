@@ -1,3 +1,0 @@
-ALTER TABLE public.video_notes
-ADD COLUMN IF NOT EXISTS review_questions TEXT[] DEFAULT ARRAY[]::TEXT[],
-ADD COLUMN IF NOT EXISTS summary TEXT;
